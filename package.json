@@ -1,0 +1,24 @@
+{
+  "name": "bicycle",
+  "version": "0.0.0",
+  "description": "Data loading for redux",
+  "keywords": [],
+  "dependencies": {
+    "is-promise": "^2.0.0",
+    "promise": "^7.0.4"
+  },
+  "devDependencies": {
+    "babel": "^5.8.21",
+    "github-basic": "^5.0.0",
+    "mocha": "*"
+  },
+  "scripts": {
+    "test": "mocha -R spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ForbesLindesay/bicycle.git"
+  },
+  "author": "ForbesLindesay",
+  "license": "MIT"
+}
