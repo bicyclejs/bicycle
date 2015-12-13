@@ -1,0 +1,35 @@
+{
+  "name": "bicycle",
+  "version": "0.0.0",
+  "description": "A data synchronisation library for JavaScript",
+  "keywords": [],
+  "dependencies": {
+    "promise": "^7.0.4"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.3.17",
+    "babel-plugin-transform-export-extensions": "^6.3.13",
+    "babel-plugin-transform-object-rest-spread": "^6.3.13",
+    "babel-preset-es2015": "^6.3.13",
+    "install": "^0.4.1",
+    "npm": "^3.5.2"
+  },
+  "scripts": {
+    "build": "babel src --out-dir lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bicyclejs/bicycle.git"
+  },
+  "author": "ForbesLindesay",
+  "license": "MIT",
+  "babel": {
+    "plugins": [
+      "transform-export-extensions",
+      "transform-object-rest-spread"
+    ],
+    "presets": [
+      "es2015"
+    ]
+  }
+}
