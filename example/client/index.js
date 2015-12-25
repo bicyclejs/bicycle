@@ -203,11 +203,21 @@ client.subscribe(Bicycle.QL`
   console.dir(result);
 });
 */
-client.subscribe(Bicycle.QL`
-  query {
-    blah: todoById(id: "blah") {
+const q = Bicycle.QL`
+  query ($taskId: ID!){
+    task: todoById(id: $taskId) {
       title
       completed
     }
   }
-`, result => console.log('getById', result));
+`;
+client.subscribe(
+  q,
+  {taskId: 'blah'},
+  result => console.log('getById', result),
+);
+client.subscribe(
+  q,
+  {taskId: 'blob'},
+  result => console.log('getById', result),
+);

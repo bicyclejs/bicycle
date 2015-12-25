@@ -11,42 +11,66 @@ function Client(network) {
   this._network = network || defaultNetworkLayer('/bicycle');
   this._cache = {};
 }
-Client.prototype._select = function (node, subFields) {
+Client.prototype._select = function (node, subFields, cacheAliases) {
   const result = {};
   Object.keys(subFields).forEach(cacheKey => {
     const resultName = subFields[cacheKey].alias || subFields[cacheKey].source;
+    let cacheAlias = cacheKey;
+    if (cacheAliases[cacheKey]) cacheAlias = cacheAliases[cacheKey];
     if (!subFields[cacheKey].subFields) {
-      result[resultName] = node[cacheKey];
-    } else if (Array.isArray(node[cacheKey])) {
-      result[resultName] = node[cacheKey].map(id => {
-        return this._select(this._cache[id], subFields[cacheKey].subFields);
+      result[resultName] = node[cacheAlias];
+    } else if (Array.isArray(node[cacheAlias])) {
+      result[resultName] = node[cacheAlias].map(id => {
+        return this._select(this._cache[id], subFields[cacheKey].subFields, cacheAliases);
       });
     } else {
-      result[resultName] = this._select(this._cache[node[cacheKey]], subFields[cacheKey].subFields);
+      result[resultName] = this._select(this._cache[node[cacheAlias]], subFields[cacheKey].subFields, cacheAliases);
     }
   });
   return result;
 };
-Client.prototype.subscribe = function (q, fn) {
+Client.prototype.subscribe = function (q, params, fn) {
   console.log(q.str);
+  const cacheAliases = {};
+  Object.keys(q.cacheAliases).forEach(key => {
+    cacheAliases[key] = q.cacheAliases[key](params);
+  });
   this._network({
     query: q.str,
+    params,
   }).done(result => {
     Object.keys(result.data).forEach(key => {
-      deepMerge(this._cache, result.data);
+      deepMergeCache(this._cache, result.data, cacheAliases);
     });
-    fn(this._select(this._cache['QueryRoot'], q.ast));
+    fn(this._select(this._cache['QueryRoot'], q.ast, cacheAliases));
+    console.log(this._cache);
   });
 };
-function inputValueToString(value) {
+function inputValueToString(value, params) {
   switch (value.kind) {
     case 'StringValue':
-      return JSON.stringify(value.value);
+      return {str: JSON.stringify(value.value), constant: true};
+    case 'Variable':
+      if (params && (value.name.value in params)) {
+        return {str: JSON.stringify(params[value.name.value]), constant: true};
+      }
+      return {str: '$' + value.name.value, constant: false};
     default:
       throw new Error('Unexpected input type ' + value.kind);
   }
 }
-function normalizeQuery(selectionSet) {
+function inputTypeToString(t) {
+  switch (t.kind) {
+    case 'NonNullType':
+      return inputTypeToString(t.type) + '!';
+    case 'NamedType':
+      return t.name.value;
+    default:
+      debugger;
+      throw new Error('Unexpected input type ' + t.kind);
+  }
+}
+function normalizeQuery(selectionSet, cacheAliases) {
   const results = {
     'id': {source: 'id', args: null, subFields: null},
   };
@@ -57,21 +81,39 @@ function normalizeQuery(selectionSet) {
       subFields: null,
       alias: selection.alias && selection.alias.value,
     };
-    let cacheName = selection.name.value;
+    let requestAlias = selection.name.value;
     if (selection.arguments && selection.arguments.length) {
+      let isConstant = true;
       const args = selection.arguments.sort(
         (a, b) => {
           return a.name.value < b.name.value ? 1 : -1;
         }
-      ).map(arg => arg.name.value + ': ' + inputValueToString(arg.value)).join(', ');
-      cacheName += '_' + objectKey(args);
+      ).map(arg => {
+        const {str, constant} = inputValueToString(arg.value);
+        if (!constant) isConstant = false;
+        return arg.name.value + ': ' + str;
+      }).join(', ');
+      requestAlias += '_' + objectKey(args);
       result.args = args;
+      if (!isConstant) {
+        cacheAliases[requestAlias] = (params) => {
+          const concreteArgs = selection.arguments.sort(
+            (a, b) => {
+              return a.name.value < b.name.value ? 1 : -1;
+            }
+          ).map(arg => {
+            const {str} = inputValueToString(arg.value, params);
+            return arg.name.value + ': ' + str;
+          }).join(', ');
+          return selection.name.value + '_' + objectKey(concreteArgs);
+        };
+      }
     }
 
     if (selection.selectionSet) {
-      result.subFields = normalizeQuery(selection.selectionSet);
+      result.subFields = normalizeQuery(selection.selectionSet, cacheAliases);
     }
-    results[cacheName] = deepMerge(results[cacheName], result);
+    results[requestAlias] = deepMerge(results[requestAlias], result);
   });
   return results;
 }
@@ -92,12 +134,22 @@ function normalQueryToString(query) {
   }).join(',');
 }
 Client.QL = function (query, ...params) {
-  const ast = normalizeQuery(
-    parse(new Source(query.join(''), 'Bicycle Request')).definitions[0].selectionSet
+  const basicAst = parse(new Source(query.join(''), 'Bicycle Request'));
+  const cacheAliases = {};
+  const ast = normalizeQuery(basicAst.definitions[0].selectionSet, cacheAliases);
+  const str = (
+    'query ' +
+    (
+      basicAst.definitions[0].variableDefinitions && basicAst.definitions[0].variableDefinitions.length ?
+      '(' +
+      basicAst.definitions[0].variableDefinitions.map(v => {
+        return '$' + v.variable.name.value + ': ' + inputTypeToString(v.type);
+      }).join(', ') +
+      ')' : ''
+    ) +
+    '{' + normalQueryToString(ast) + '}'
   );
-  console.dir(ast);
-  const str = 'query {' + normalQueryToString(ast) + '}';
-  return {str, ast};
+  return {str, ast, cacheAliases};
 };
 
 function deepMerge(oldObj, newObj) {
@@ -116,6 +168,30 @@ function deepMerge(oldObj, newObj) {
     oldObj = oldObj || {};
     Object.keys(newObj).forEach(key => {
       oldObj[key] = deepMerge(oldObj[key], newObj[key]);
+    });
+    return oldObj;
+  } else {
+    return newObj;
+  }
+}
+function deepMergeCache(oldObj, newObj, cacheAliases) {
+  if (Array.isArray(newObj)) {
+    oldObj = oldObj || [];
+    const result = [];
+    for (let i = 0; i < Math.max(oldObj.length, newObj.length); i++) {
+      if (i < newObj.length) {
+        result.push(deepMergeCache(oldObj[i], newObj[i]));
+      } else {
+        result.push(oldObj[i]);
+      }
+    }
+    return result;
+  } else if (newObj && typeof newObj === 'object') {
+    oldObj = oldObj || {};
+    Object.keys(newObj).forEach(key => {
+      let cacheAlias = key;
+      if (key in cacheAliases) cacheAlias = cacheAliases[key];
+      oldObj[cacheAlias] = deepMergeCache(oldObj[cacheAlias], newObj[key], cacheAliases);
     });
     return oldObj;
   } else {

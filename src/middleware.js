@@ -4,7 +4,7 @@ import bodyParser from 'body-parser';
 
 import {formatError} from 'graphql/error';
 import {execute} from 'graphql/execution';
-import {parse, Source} from 'graphql/language';
+import {parse, Source, visit} from 'graphql/language';
 import {validate} from 'graphql/validation';
 
 const jsonBody = bodyParser.json();
@@ -50,6 +50,38 @@ export default function (schema, rawSchema, rootValue) {
         res.status(400);
         return {errors: [syntaxError]};
       }
+      visit(documentAST, {
+        Variable(node) {
+          const value = req.body.params[node.name.value];
+          switch (typeof value) {
+            case 'string':
+              return {
+                kind: 'StringValue',
+                loc: node.loc,
+                value,
+              };
+            case 'number':
+              if (value === (value | 0)) {
+                return {
+                  kind: 'IntValue',
+                  loc: node.loc,
+                  value,
+                };
+              }
+              return {
+                kind: 'FloatValue',
+                loc: node.loc,
+                value,
+              };
+            case 'boolean':
+              return {
+                kind: 'BooleanValue',
+                loc: node.loc,
+                value,
+              };
+          }
+        },
+      });
 
       // Validate AST, reporting any errors.
       const validationErrors = validate(schema, documentAST);
@@ -66,7 +98,7 @@ export default function (schema, rawSchema, rootValue) {
           schema,
           documentAST,
           rv,
-          {}
+          req.body.params,
         );
       } catch (contextError) {
         // Return 400: Bad Request if any execution context errors exist.
