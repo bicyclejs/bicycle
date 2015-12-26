@@ -25,6 +25,7 @@ function Client(networkLayer) {
   this._updateHandlers = [];
 
   this._currentRequest = null;
+  this._requestInFlight = false;
   this._requests = [{action: INIT_SESSION}];
 }
 Client.prototype._request = function (action, args) {
@@ -44,11 +45,13 @@ Client.prototype._request = function (action, args) {
     });
     this._currentRequest = {promise, resolve, reject};
   }
-  this._requestTimeout = setTimeout(() => this._requestImmediately(), 0);
+  if (!this._requestInFlight) {
+    this._requestTimeout = setTimeout(() => this._requestImmediately(), 0);
+  }
   return this._currentRequest.promise;
 };
 Client.prototype._requestImmediately = function () {
-  this._currentRequest.inFlight = true;
+  this._requestInFlight = true;
   const requests = this._requests;
   const currentRequest = this._currentRequest;
   this._requests = [];
@@ -58,8 +61,18 @@ Client.prototype._requestImmediately = function () {
       this._cache = mergeCache(this._cache, response);
       currentRequest.resolve();
       this._asyncUpdate();
+      this._requestInFlight = false;
+      if (this._currentRequest) {
+        this._requestTimeout = setTimeout(() => this._requestImmediately(), 0);
+      }
     },
-    err => currentRequest.reject(err)
+    err => {
+      currentRequest.reject(err);
+      this._requestInFlight = false;
+      if (this._currentRequest) {
+        this._requestTimeout = setTimeout(() => this._requestImmediately(), 0);
+      }
+    }
   );
 };
 Client.prototype._asyncUpdate = function () {
