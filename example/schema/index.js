@@ -1,5 +1,5 @@
 import fs from 'fs';
-import server from '../../src/server';
+import loadSchema from '../../src/node-store/load-schema';
 
 const schema = {};
 fs.readdirSync(__dirname).forEach(folder => {
@@ -12,4 +12,4 @@ fs.readdirSync(__dirname).forEach(folder => {
   });
 });
 
-export default server(schema, () => {});
+export default loadSchema(schema);

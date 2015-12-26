@@ -175,49 +175,25 @@ model.subscribe(render);
 window.addEventListener('hashchange', render, false);
 render();
 
-import Bicycle from '../../src/client';
-const client = new Bicycle();
+import BicycleClient from '../../src/node-store/client';
 
-/*
-client.subscribe(Bicycle.QL`
-  query {
-    id
-    todos {
-      id
-      name: title
-    }
-  }
-`, result => {
-  console.dir(result);
-});
 
-client.subscribe(Bicycle.QL`
-  query {
-    id
-    todos {
-      id
-      completed
-    }
-  }
-`, result => {
-  console.dir(result);
-});
-*/
-const q = Bicycle.QL`
-  query ($taskId: ID!){
-    task: todoById(id: $taskId) {
-      title
-      completed
-    }
-  }
-`;
-client.subscribe(
-  q,
-  {taskId: 'blah'},
-  result => console.log('getById', result),
-);
-client.subscribe(
-  q,
-  {taskId: 'blob'},
-  result => console.log('getById', result),
-);
+const client = new BicycleClient();
+
+client.subscribe({
+  todos: {
+    title: true,
+  },
+}, res => console.log('query result', res)).loaded.done();
+client.subscribe({
+  [`todoById(id: "blah") as todo`]: {
+    title: true,
+    completed: true,
+  },
+}, res => console.log('single todo', res)).loaded.done();
+window.read = function (query, name) {
+  return client.subscribe(query, result => console.log(name, result));
+};
+setTimeout(() => {
+  client.update('Todo.markComplete', {id: 'blah'}).done();
+}, 1000);

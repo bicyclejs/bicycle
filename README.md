@@ -10,6 +10,38 @@ A data synchronisation library for JavaScript
 
     npm install bicycle
 
+## Client API
+
+APIs:
+
+```
+// server side
+get(id, context) => Promise<Node>
+query(obj, context) => Promise<Array<id>>
+```
+
+client:
+
+```
+{
+  fields: {
+    name: {args: [], subFields: null}
+  }
+}
+client.get(id)
+
+
+client.set(NodeID, property, value) => Promise // optimisticly set value of property on node, wraps `.mutate`
+client.mutate(name, args, optimisticUpdate?) => Promise
+
+client.query(obj, fn(ns: Array<Node>)) => Function(unsubscribe)
+```
+
+session state:
+
+ - versions: `Map<NodeID, VersionID>` - the versions of nodes currently on the client
+ -
+
 ## License
 
   MIT

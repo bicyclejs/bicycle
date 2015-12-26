@@ -2,6 +2,8 @@ import fs from 'fs';
 import express from 'express';
 import browserify from 'browserify-middleware';
 import babelify from 'babelify';
+import {createMiddleware} from '../src/node-store/server';
+import MemoryStore from '../src/node-store/sessions/memory';
 import schema from './schema';
 
 const app = express();
@@ -19,6 +21,7 @@ app.get('/style.css', (req, res, next) => {
 
 app.get('/client.js', browserify(__dirname + '/client/index.js', {transform: [babelify]}));
 
-app.use('/bicycle', schema);
+const sessionStore = new MemoryStore();
+app.use('/bicycle', createMiddleware(schema, sessionStore, req => ({user: req.user})));
 
 app.listen(3000);
