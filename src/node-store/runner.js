@@ -1,8 +1,40 @@
 import Promise from 'promise';
 import cp from 'character-parser';
 
+function getArgTypeMatcher(schema, parseApi) {
+  return function matchArgType(type, value, errContext) {
+    switch (type.kind) {
+      case 'NotNull':
+        if (value === '') throw new Error('Unexpected null value for ' + errContext);
+        const result = matchArgType(type.type, value, errContext);
+        if (result === null || result === undefined) throw new Error('Unexpected null value for ' + errContext);
+        return result;
+      case 'List':
+        if (!Array.isArray(value)) {
+          throw new Error('Expected an array for ' + errContext);
+        }
+        return value.map((v, i) => matchArgType(type.type, v, errContext + '[' + i + ']'));
+      case 'NamedTypeReference':
+        const namedType = schema[type.value];
+        if (!namedType) throw new Error('Unrecognized type ' + type.value + ' for ' + errContext);
+        switch (namedType.kind) {
+          case 'ScalarType':
+            return namedType[parseApi](value);
+          default:
+            console.log(namedType);
+            throw new TypeError('Unrecognised named type kind ' + namedType.kind + ' for ' + errContext);
+        }
+        break;
+      default:
+        console.log(type);
+        throw new TypeError('Unrecognised arg type kind ' + type.kind + ' for ' + errContext);
+    }
+  };
+}
+
 export function runQuery(query, schema, context) {
   const result = {};
+  const matchArgType = getArgTypeMatcher(schema, 'parse');
 
   function parseArgs(args, type) {
     let state = 'key';
@@ -53,34 +85,6 @@ export function runQuery(query, schema, context) {
       typedResult[key] = matchArgType(type[key].type, result[key], 'arg: ' + key);
     });
     return typedResult;
-  }
-  function matchArgType(type, value, errContext) {
-    switch (type.kind) {
-      case 'NotNull':
-        if (value === '') throw new Error('Unexpected null value for ' + errContext);
-        const result = matchArgType(type.type, value, errContext);
-        if (result === null || result === undefined) throw new Error('Unexpected null value for ' + errContext);
-        return result;
-      case 'List':
-        if (!Array.isArray(value)) {
-          throw new Error('Expected an array for ' + errContext);
-        }
-        return value.map((v, i) => matchArgType(type.type, v, errContext + '[' + i + ']'));
-      case 'NamedTypeReference':
-        const namedType = schema[type.value];
-        if (!namedType) throw new Error('Unrecognized type ' + type.value + ' for ' + errContext);
-        switch (namedType.kind) {
-          case 'ScalarType':
-            return namedType.parse(value);
-          default:
-            console.log(namedType);
-            throw new TypeError('Unrecognised named type kind ' + namedType.kind + ' for ' + errContext);
-        }
-        break;
-      default:
-        console.log(type);
-        throw new TypeError('Unrecognised arg type kind ' + type.kind + ' for ' + errContext);
-    }
   }
   function matchType(type, value, subQuery, errContext) {
     switch (type.kind) {
@@ -141,14 +145,22 @@ export function runQuery(query, schema, context) {
       ).then(() => id);
     });
   }
-  return run(query, schema.root, context).then(() => result);
+  return run(query, schema.Root, context).then(() => result);
 }
 
 export function runMutation(mutation, schema, context) {
+  const matchArgType = getArgTypeMatcher(schema, 'parseValue');
   const [type, name] = mutation.method.split('.');
   const args = mutation.args;
   const Type = schema[type];
   if (!Type) throw new TypeError('Unrecognised type for mutation: ' + type);
   if (!Type.mutations) throw new TypeError('The type ' + type + ' does not define any mutations.');
-  console.dir(mutation);
+  const method = Type.mutations[name];
+  if (!method) throw new TypeError('The type ' + type + ' does not define a mutation ' + name);
+
+  const typedArgs = {};
+  Object.keys(method.args).forEach(key => {
+    typedArgs[key] = matchArgType(method.args[key].type, args[key], type + '.' + name + ' - ' + key);
+  });
+  return method.resolve(typedArgs, context);
 }

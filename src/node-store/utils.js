@@ -62,8 +62,16 @@ export function runQueryAgainstCache(cache, node, query) {
       } else if (query[key] === true) {
         result[resultKey] = node[cacheKey];
       } else if (Array.isArray(node[cacheKey])) {
-        result[resultKey] = node[cacheKey].map(id => recurse(cache[id], query[key]));
+        result[resultKey] = node[cacheKey].map(id => {
+          if (!cache[id]) {
+            throw new Error('Missing ' + id + ' object from cache');
+          }
+          return recurse(cache[id], query[key]);
+        });
       } else {
+        if (!cache[node[cacheKey]]) {
+          throw new Error('Missing ' + node[cacheKey] + ' object from cache');
+        }
         result[resultKey] = recurse(cache[node[cacheKey]], query[key]);
       }
     });
@@ -137,6 +145,6 @@ export function diffCache(before, after) {
       changed = true;
       result[key] = {_type: DELETE_FIELD};
     }
-  })
+  });
   return {result, changed};
 }

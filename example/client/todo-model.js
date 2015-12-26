@@ -1,8 +1,17 @@
+import BicycleClient from '../../src/node-store/client'; // in a real app, the path should be 'bicycle/client'
 import {uuid} from './utils.js';
 
 export default function TodoModel() {
   this.todos = [];
   this.onChanges = [];
+
+  this._client = new BicycleClient();
+  this._subscription = this._client.subscribe({todos: {id: true, title: true, completed: true}}, (result, loaded) => {
+    if (loaded) { // ignore partial results
+      this.todos = result.todos;
+      this.inform();
+    }
+  });
 }
 
 TodoModel.prototype.subscribe = function (onChange) {
@@ -14,60 +23,68 @@ TodoModel.prototype.inform = function () {
 };
 
 TodoModel.prototype.addTodo = function (title) {
-  this.todos = this.todos.concat({
-    id: uuid(),
-    title,
-    completed: false,
-  });
-
-  this.inform();
+  this._client.update('Todo.addTodo', {id: uuid(), title, completed: false}, (mutation, cache) => {
+    if (cache.root.todos) {
+      return {
+        ['Todo:' + mutation.args.id]: mutation.args,
+        root: {
+          todos: ['Todo:' + mutation.args.id].concat(cache.root.todos),
+        },
+      };
+    }
+    return {};
+  }).done();
 };
 
 TodoModel.prototype.toggleAll = function (checked) {
-  // Note: it's usually better to use immutable data structures since they're
-  // easier to reason about and React works very well with them. That's why
-  // we use map() and filter() everywhere instead of mutating the array or
-  // to-do items themselves.
-  this.todos = this.todos.map((todo) => {
-    return {...todo, completed: checked};
+  this._client.update('Todo.toggleAll', {checked}, (mutation, cache) => {
+    if (cache.root.todos) {
+      const result = {};
+      cache.root.todos.forEach(key => {
+        result[key] = {completed: checked};
+      });
+      return result;
+    }
+    return {};
   });
-
-  this.inform();
 };
 
 TodoModel.prototype.toggle = function (todoToToggle) {
-  this.todos = this.todos.map(todo => {
-    return todo !== todoToToggle ?
-      todo :
-      {...todo, completed: !todo.completed};
+  this._client.update('Todo.toggle', {id: todoToToggle.id, checked: !todoToToggle.completed}, (mutation, cache) => {
+    return {['Todo:' + mutation.args.id]: {completed: mutation.args.checked}};
   });
-
-  this.inform();
 };
 
 TodoModel.prototype.destroy = function (todo) {
-  this.todos = this.todos.filter(candidate => candidate !== todo);
-
-  this.inform();
+  this._client.update('Todo.destroy', {id: todo.id}, (mutation, cache) => {
+    if (cache.root.todos) {
+      return {
+        root: {
+          todos: cache.root.todos.filter(id => id !== 'Todo:' + mutation.args.id),
+        },
+      };
+    }
+    return {};
+  });
 };
 
 TodoModel.prototype.save = function (todoToSave, text) {
-  this.todos = this.todos.map(todo => {
-    return todo !== todoToSave ? todo : {...todo, title: text};
+  this._client.update('Todo.save', {id: todoToSave.id, title: text}, (mutation, cache) => {
+    return {
+      ['Todo:' + mutation.args.id]: {title: mutation.args.title},
+    };
   });
-
-  this.inform();
 };
 
 TodoModel.prototype.clearCompleted = function () {
-  this.todos = this.todos.filter(todo => !todo.completed);
-
-  this.inform();
-};
-
-function BicycleStore() {
-}
-BicycleStore.prototype.request = function (query) {
-};
-BicycleStore.prototype.subscribe = function (query, fn) {
+  this._client.update('Todo.clearCompleted', {}, (mutation, cache) => {
+    if (cache.root.todos) {
+      return {
+        root: {
+          todos: cache.root.todos.filter(id => !cache[id].completed),
+        },
+      };
+    }
+    return {};
+  });
 };

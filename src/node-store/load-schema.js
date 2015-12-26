@@ -116,7 +116,7 @@ export default function (input) {
     const fields = {};
     const mutations = {};
     if (!idGetter) {
-      if (Type.name === 'root') {
+      if (Type.name === 'Root') {
         idGetter = () => 'root';
       } else {
         idGetter = (node) => {
@@ -151,9 +151,9 @@ export default function (input) {
       field = {...field, type: getType(field.type, Type.name + '.' + name)};
       fields[name] = field;
     });
-    Object.keys(Type.mutations).forEach(name => {
-      let mutation = Type.mutations[name];
-      if (mutation.args) {
+    if (Type.mutations) {
+      Object.keys(Type.mutations).forEach(name => {
+        let mutation = Type.mutations[name];
         const args = {...mutation.args};
         Object.keys(args).forEach(argName => {
           if (typeof args[argName] === 'string') {
@@ -168,10 +168,9 @@ export default function (input) {
           ...mutation,
           args,
         };
-      }
-      mutation = {...mutation, type: getType(mutation.type, Type.name + '.' + name)};
-      mutations[name] = mutation;
-    });
+        mutations[name] = mutation;
+      });
+    }
     types[Type.name] = {
       kind: 'NodeType',
       name: Type.name,

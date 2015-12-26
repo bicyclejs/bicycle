@@ -1,7 +1,7 @@
 import {getTodo, getTodos} from '../../data';
 
 export default {
-  name: 'root',
+  name: 'Root',
   fields: {
     todoById: {
       type: 'Todo',

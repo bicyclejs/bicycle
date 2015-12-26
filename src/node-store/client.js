@@ -56,12 +56,8 @@ Client.prototype._requestImmediately = function () {
   this._networkLayer.batch(this._sessionID, requests).done(
     response => {
       this._cache = mergeCache(this._cache, response);
+      currentRequest.resolve();
       this._asyncUpdate();
-      const onUpdate = () => {
-        this.offUpdate(onUpdate);
-        currentRequest.resolve();
-      };
-      this.onUpdate(onUpdate);
     },
     err => currentRequest.reject(err)
   );
@@ -136,7 +132,7 @@ Client.prototype.update = function (method, args, optimisticUpdate) {
   const mutation = {method, args};
   let op;
   if (optimisticUpdate) {
-    op = cache => optimisticUpdate(mutation, q => runQueryAgainstCache(cache, cache['root'], q));
+    op = cache => optimisticUpdate(mutation, cache);
     this._optimisticUpdates.push(op);
     this._syncUpdate();
   }

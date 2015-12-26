@@ -174,26 +174,3 @@ function render() {
 model.subscribe(render);
 window.addEventListener('hashchange', render, false);
 render();
-
-import BicycleClient from '../../src/node-store/client';
-
-
-const client = new BicycleClient();
-
-client.subscribe({
-  todos: {
-    title: true,
-  },
-}, res => console.log('query result', res)).loaded.done();
-client.subscribe({
-  [`todoById(id: "blah") as todo`]: {
-    title: true,
-    completed: true,
-  },
-}, res => console.log('single todo', res)).loaded.done();
-window.read = function (query, name) {
-  return client.subscribe(query, result => console.log(name, result));
-};
-setTimeout(() => {
-  client.update('Todo.markComplete', {id: 'blah'}).done();
-}, 1000);
