@@ -10,37 +10,187 @@ A data synchronisation library for JavaScript
 
     npm install bicycle
 
-## Client API
+## Usage
 
-APIs:
+### Client
 
+```js
+import BicycleClient from 'bicycle/lib/client';
+
+const client = new BicycleClient();
+
+const subscription = client.subscribe(
+  {todos: {id: true, title: true, completed: true}},
+  (result, loaded) => {
+    // note that if `loaded` is `false`, `result` is a partial result
+    console.dir(result.todos);
+  },
+);
+
+// to dispose of the subscription:
+subscription.unsubscribe();
+
+// Use `update` to trigger mutations on the server. Any relevant subscriptions are updated automatically
+client.update('Todo.toggle', {id: todoToToggle.id, checked: !todoToToggle.completed}).done(
+  () => console.log('updated!'),
+);
 ```
-// server side
-get(id, context) => Promise<Node>
-query(obj, context) => Promise<Array<id>>
+
+Queries can also take parameters and have aliases, e.g.
+
+```js
+const subscription = client.subscribe(
+  {'todosById(id: "whatever") as todo': {id: true, title: true, completed: true}},
+  (result, loaded) => {
+    console.dir(result.todo);
+  },
+);
 ```
 
-client:
+### Server
 
+```js
+import express from 'express';
+import loadSchema from 'bicycle/lib/load-schema';
+import {createMiddleware} from 'bicycle/lib/server';
+import MemoryStore from 'bicycle/lib/sessions/memory';
+
+const app = express();
+
+// other routes etc. here
+
+// create the schema.
+// in a real app you'd want to split schema definition across multiple files
+const schema = loadSchema({
+  objects: [
+    {
+      name: 'Root',
+      fields: {
+        todoById: {
+          type: 'Todo',
+          args: {id: 'string'},
+          resolve(root, {id}, {user}) {
+            return getTodo(id);
+          },
+        },
+        todos: {
+          type: 'Todo[]',
+          resolve(root, args, {user}) {
+            return getTodos();
+          },
+        },
+      },
+    },
+
+    {
+      name: 'Todo',
+      fields: {
+        id: 'id',
+        title: 'string',
+        completed: 'boolean',
+      },
+      mutations: {
+        addTodo: {
+          args: {id: 'id', title: 'string', completed: 'boolean'},
+          resolve({id, title, completed}, {user}) {
+            return addTodo({id, title, completed});
+          },
+        },
+        toggleAll: {
+          args: {checked: 'boolean'},
+          resolve({checked}) {
+            return toggleAll(checked);
+          },
+        },
+        toggle: {
+          args: {id: 'id', checked: 'boolean'},
+          resolve({id, checked}, {user}) {
+            return toggle(id, checked);
+          },
+        },
+        destroy: {
+          args: {id: 'id'},
+          resolve({id}, {user}) {
+            return destroy(id);
+          },
+        },
+        save: {
+          args: {id: 'id', title: 'string'},
+          resolve({id, title}, {user}) {
+            return setTitle(id, title);
+          },
+        },
+        clearCompleted: {
+          resolve(args, {user}) {
+            return clearCompleted();
+          },
+        },
+      },
+    },
+  ];
+});
+
+// bicycle requires a session store, you can configure things like session timeouts here
+const sessionStore = new MemoryStore();
+
+// createMiddleware takes a function that returns the context given a request
+// this allows you to only expose information the user is allowed to see
+app.use('/bicycle', createMiddleware(schema, sessionStore, req => ({user: req.user})));
+
+app.listen(3000);
 ```
-{
+
+#### schema
+
+Your schema consists of a collection of type definitions.  Type definitions can be:
+
+ - objects (a collection of fields, with an ID)
+ - scalars (there are built in values for `'string'`, `'number'` and `'boolean'`, but you may wish to add your own)
+ - enums (these take a value from a predetermined set)
+
+##### Root Object
+
+You must always define an ObjectType called `'Root'`.  This type is a singleton and is the entry point for all queries.
+
+e.g.
+
+```js
+export default {
+  name: 'Root',
   fields: {
-    name: {args: [], subFields: null}
-  }
-}
-client.get(id)
-
-
-client.set(NodeID, property, value) => Promise // optimisticly set value of property on node, wraps `.mutate`
-client.mutate(name, args, optimisticUpdate?) => Promise
-
-client.query(obj, fn(ns: Array<Node>)) => Function(unsubscribe)
+    todoById: {
+      type: 'Todo',
+      args: {id: 'string'},
+      resolve(root, {id}, {user}) {
+        return getTodo(id);
+      },
+    },
+    todos: {
+      type: 'Todo[]',
+      resolve(root, args, {user}) {
+        return getTodos();
+      },
+    },
+  },
+};
 ```
 
-session state:
+##### Object types
 
- - versions: `Map<NodeID, VersionID>` - the versions of nodes currently on the client
- -
+Object types have the following properties:
+
+ - id (`Function`) - A function that takes an object of this type and returns a globally unique id, defaults to `obj => TypeName + obj.id`
+ - name (`string`, required) - The name of your Object Type
+ - description (`string`) - An optional string that may be useful for generating automated documentation
+ - fields (`Map<string, Field>`) - An object mapping field names onto field definitions.
+ - mutations (`Map<string, Mutation>`) - An object mapping field names onto mutation definitions.
+
+Fields can have:
+
+ - type (`typeString`, required) - The type of the field
+ - args (`Map<string, typeString>`) - The type of any arguments the field takes
+ - description (`string`) - An optional string that may be useful for generating automated documentation
+ - resolve (`Function`) - A function that takes the object, the args (that have been type checked) and the context and returns the value of the field.  Defaults to `obj => obj.fieldName`
 
 ## License
 

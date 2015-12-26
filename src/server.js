@@ -1,12 +1,9 @@
-import {randomBytes} from 'crypto';
 import Promise from 'promise';
 import bodyParser from 'body-parser';
 import MemoryStore from './sessions/memory';
 import handleMessages from './message-handler';
 import {runQuery, runMutation} from './runner';
 import responseDiff from './response-diff';
-
-const randomBytesAsync = Promise.denodeify(randomBytes);
 
 const jsonBody = bodyParser.json();
 export function createMiddleware(schema, sessionStore, getContext) {
