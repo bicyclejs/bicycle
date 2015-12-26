@@ -2,8 +2,8 @@ import fs from 'fs';
 import express from 'express';
 import browserify from 'browserify-middleware';
 import babelify from 'babelify';
-import {createMiddleware} from '../src/node-store/server';
-import MemoryStore from '../src/node-store/sessions/memory';
+import {createMiddleware} from '../src/server';
+import MemoryStore from '../src/sessions/memory';
 import schema from './schema';
 
 const app = express();

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import loadSchema from '../../src/node-store/load-schema';
+import loadSchema from '../../src/load-schema';
 
 const schema = {};
 fs.readdirSync(__dirname).forEach(folder => {

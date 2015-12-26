@@ -1,200 +1,187 @@
-import request from 'then-request';
-import {parse, Source} from 'graphql/language';
-import objectKey from './object-key';
+import Promise from 'promise';
+import DefaultNetworkLayer from './default-network-layer';
+import {
+  mergeQueries,
+  diffQueries,
+  runQueryAgainstCache,
+  areDifferent,
+  mergeCache,
+  MUTATE,
+  UPDATE_QUERY,
+  INIT_SESSION,
+} from './utils';
 
-function defaultNetworkLayer(url, options = {}) {
-  return req => request('POST', url, {...options, json: req}).getBody('utf8').then(JSON.parse);
-}
 export default Client;
+function Client(networkLayer) {
+  this._sessionID = (Date.now()).toString(35) + Math.random().toString(35).substr(2, 7);
+  this._networkLayer = networkLayer || new DefaultNetworkLayer();
+  this._query = {};
+  this._queries = [];
+  this._queriesCount = [];
+  this._queriesLoaded = [];
+  this._cache = {root: {}};
+  this._optimisticCache = {root: {}};
+  this._optimisticUpdates = [];
+  this._updateHandlers = [];
 
-function Client(network) {
-  this._network = network || defaultNetworkLayer('/bicycle');
-  this._cache = {};
+  this._currentRequest = null;
+  this._requestInFlight = false;
+  this._requests = [{action: INIT_SESSION}];
 }
-Client.prototype._select = function (node, subFields, cacheAliases) {
-  const result = {};
-  Object.keys(subFields).forEach(cacheKey => {
-    const resultName = subFields[cacheKey].alias || subFields[cacheKey].source;
-    let cacheAlias = cacheKey;
-    if (cacheAliases[cacheKey]) cacheAlias = cacheAliases[cacheKey];
-    if (!subFields[cacheKey].subFields) {
-      result[resultName] = node[cacheAlias];
-    } else if (Array.isArray(node[cacheAlias])) {
-      result[resultName] = node[cacheAlias].map(id => {
-        return this._select(this._cache[id], subFields[cacheKey].subFields, cacheAliases);
-      });
-    } else {
-      result[resultName] = this._select(this._cache[node[cacheAlias]], subFields[cacheKey].subFields, cacheAliases);
-    }
-  });
-  return result;
-};
-Client.prototype.subscribe = function (q, params, fn) {
-  console.log(q.str);
-  const cacheAliases = {};
-  Object.keys(q.cacheAliases).forEach(key => {
-    cacheAliases[key] = q.cacheAliases[key](params);
-  });
-  this._network({
-    query: q.str,
-    params,
-  }).done(result => {
-    Object.keys(result.data).forEach(key => {
-      deepMergeCache(this._cache, result.data, cacheAliases);
+Client.prototype._request = function (action, args) {
+  if (action === UPDATE_QUERY) {
+    this._requests = this._requests.filter((req, i) => {
+      return req.action !== UPDATE_QUERY;
     });
-    fn(this._select(this._cache['QueryRoot'], q.ast, cacheAliases));
-    console.log(this._cache);
-  });
+  }
+  this._requests.push({action, args});
+  if (this._currentRequest) {
+    clearTimeout(this._requestTimeout);
+  } else {
+    let resolve, reject;
+    const promise = new Promise((_resolve, _reject) => {
+      resolve = _resolve;
+      reject = _reject;
+    });
+    this._currentRequest = {promise, resolve, reject};
+  }
+  if (!this._requestInFlight) {
+    this._requestTimeout = setTimeout(() => this._requestImmediately(), 0);
+  }
+  return this._currentRequest.promise;
 };
-function inputValueToString(value, params) {
-  switch (value.kind) {
-    case 'StringValue':
-      return {str: JSON.stringify(value.value), constant: true};
-    case 'Variable':
-      if (params && (value.name.value in params)) {
-        return {str: JSON.stringify(params[value.name.value]), constant: true};
+Client.prototype._requestImmediately = function () {
+  this._requestInFlight = true;
+  const requests = this._requests;
+  const currentRequest = this._currentRequest;
+  this._requests = [];
+  this._currentRequest = null;
+  this._networkLayer.batch(this._sessionID, requests).done(
+    response => {
+      this._cache = mergeCache(this._cache, response);
+      currentRequest.resolve();
+      this._asyncUpdate();
+      this._requestInFlight = false;
+      if (this._currentRequest) {
+        this._requestTimeout = setTimeout(() => this._requestImmediately(), 0);
       }
-      return {str: '$' + value.name.value, constant: false};
-    default:
-      throw new Error('Unexpected input type ' + value.kind);
-  }
-}
-function inputTypeToString(t) {
-  switch (t.kind) {
-    case 'NonNullType':
-      return inputTypeToString(t.type) + '!';
-    case 'NamedType':
-      return t.name.value;
-    default:
-      debugger;
-      throw new Error('Unexpected input type ' + t.kind);
-  }
-}
-function normalizeQuery(selectionSet, cacheAliases) {
-  const results = {
-    'id': {source: 'id', args: null, subFields: null},
-  };
-  selectionSet.selections.forEach(selection => {
-    const result = {
-      source: selection.name.value,
-      args: null,
-      subFields: null,
-      alias: selection.alias && selection.alias.value,
-    };
-    let requestAlias = selection.name.value;
-    if (selection.arguments && selection.arguments.length) {
-      let isConstant = true;
-      const args = selection.arguments.sort(
-        (a, b) => {
-          return a.name.value < b.name.value ? 1 : -1;
-        }
-      ).map(arg => {
-        const {str, constant} = inputValueToString(arg.value);
-        if (!constant) isConstant = false;
-        return arg.name.value + ': ' + str;
-      }).join(', ');
-      requestAlias += '_' + objectKey(args);
-      result.args = args;
-      if (!isConstant) {
-        cacheAliases[requestAlias] = (params) => {
-          const concreteArgs = selection.arguments.sort(
-            (a, b) => {
-              return a.name.value < b.name.value ? 1 : -1;
-            }
-          ).map(arg => {
-            const {str} = inputValueToString(arg.value, params);
-            return arg.name.value + ': ' + str;
-          }).join(', ');
-          return selection.name.value + '_' + objectKey(concreteArgs);
-        };
+    },
+    err => {
+      currentRequest.reject(err);
+      this._requestInFlight = false;
+      if (this._currentRequest) {
+        this._requestTimeout = setTimeout(() => this._requestImmediately(), 0);
       }
     }
-
-    if (selection.selectionSet) {
-      result.subFields = normalizeQuery(selection.selectionSet, cacheAliases);
-    }
-    results[requestAlias] = deepMerge(results[requestAlias], result);
-  });
-  return results;
-}
-function normalQueryToString(query) {
-  return Object.keys(query).map(alias => {
-    return (
-      (
-        alias === query[alias].source ? '' : alias + ': '
-      ) +
-      query[alias].source +
-      (
-        query[alias].args ? '(' + query[alias].args + ')' : ''
-      ) +
-      (
-        query[alias].subFields ? '{' + normalQueryToString(query[alias].subFields) + '}' : ''
-      )
-    );
-  }).join(',');
-}
-Client.QL = function (query, ...params) {
-  const basicAst = parse(new Source(query.join(''), 'Bicycle Request'));
-  const cacheAliases = {};
-  const ast = normalizeQuery(basicAst.definitions[0].selectionSet, cacheAliases);
-  const str = (
-    'query ' +
-    (
-      basicAst.definitions[0].variableDefinitions && basicAst.definitions[0].variableDefinitions.length ?
-      '(' +
-      basicAst.definitions[0].variableDefinitions.map(v => {
-        return '$' + v.variable.name.value + ': ' + inputTypeToString(v.type);
-      }).join(', ') +
-      ')' : ''
-    ) +
-    '{' + normalQueryToString(ast) + '}'
   );
-  return {str, ast, cacheAliases};
 };
-
-function deepMerge(oldObj, newObj) {
-  if (Array.isArray(newObj)) {
-    oldObj = oldObj || [];
-    const result = [];
-    for (let i = 0; i < Math.max(oldObj.length, newObj.length); i++) {
-      if (i < newObj.length) {
-        result.push(deepMerge(oldObj[i], newObj[i]));
-      } else {
-        result.push(oldObj[i]);
-      }
+Client.prototype._asyncUpdate = function () {
+  clearTimeout(this._updateTimeout);
+  this._updateTimeout = setTimeout(() => {
+    this._syncUpdate();
+  }, 0);
+};
+Client.prototype._syncUpdate = function () {
+  clearTimeout(this._updateTimeout);
+  this._optimisticCache = this._optimisticUpdates.reduce((cache, update) => {
+    return mergeCache(cache, update(cache));
+  }, this._cache);
+  this._updateHandlers.forEach(handler => {
+    handler();
+  });
+};
+Client.prototype.onUpdate = function (fn) {
+  this._updateHandlers.push(fn);
+};
+Client.prototype.offUpdate = function (fn) {
+  this._updateHandlers.splice(this._updateHandlers.indexOf(fn), 1);
+};
+Client.prototype._getQuery = function () {
+  return this._queries.reduce(mergeQueries, {});
+};
+Client.prototype._updateQuery = function () {
+  const oldQuery = this._query;
+  const newQuery = this._getQuery();
+  const diff = diffQueries(oldQuery, newQuery);
+  if (diff === undefined) return Promise.resolve(null);
+  const updateQueryId = {};
+  this._updateQueryId = updateQueryId;
+  return this._request(UPDATE_QUERY, diff).then(() => {
+    if (this._updateQueryId === updateQueryId) {
+      this._query = newQuery;
+      this._asyncUpdate();
     }
-    return result;
-  } else if (newObj && typeof newObj === 'object') {
-    oldObj = oldObj || {};
-    Object.keys(newObj).forEach(key => {
-      oldObj[key] = deepMerge(oldObj[key], newObj[key]);
-    });
-    return oldObj;
-  } else {
-    return newObj;
+  });
+};
+Client.prototype.addQuery = function (query) {
+  const i = this._queries.indexOf(query);
+  if (i !== -1) {
+    this._queriesCount[i]++;
+    return this._queriesLoaded[i];
   }
-}
-function deepMergeCache(oldObj, newObj, cacheAliases) {
-  if (Array.isArray(newObj)) {
-    oldObj = oldObj || [];
-    const result = [];
-    for (let i = 0; i < Math.max(oldObj.length, newObj.length); i++) {
-      if (i < newObj.length) {
-        result.push(deepMergeCache(oldObj[i], newObj[i]));
-      } else {
-        result.push(oldObj[i]);
+  this._queries.push(query);
+  this._queriesCount.push(1);
+  const response = this._updateQuery();
+  this._queriesLoaded.push(response);
+  return response;
+};
+Client.prototype.removeQuery = function (query) {
+  const i = this._queries.indexOf(query);
+  if (i === -1) {
+    console.warn('You attempted to remove a query that does not exist.');
+    return Promise.resolve(null);
+  }
+  this._queriesCount[i]--;
+  if (this._queriesCount[i] !== 0) return Promise.resolve(null);
+  this._queries.splice(i, 1);
+  this._queriesCount.splice(i, 1);
+  this._queriesLoaded.splice(i, 1);
+  return this._updateQuery();
+};
+Client.prototype.queryCache = function (query) {
+  return runQueryAgainstCache(this._optimisticCache, this._optimisticCache['root'], query);
+};
+Client.prototype.update = function (method, args, optimisticUpdate) {
+  const mutation = {method, args};
+  let op;
+  if (optimisticUpdate) {
+    op = cache => optimisticUpdate(mutation, cache);
+    this._optimisticUpdates.push(op);
+    this._syncUpdate();
+  }
+  return this._request(MUTATE, mutation).then(
+    () => {
+      if (optimisticUpdate) {
+        this._optimisticUpdates.splice(this._optimisticUpdates.indexOf(op), 1);
+        this._asyncUpdate();
       }
+    },
+    err => {
+      if (optimisticUpdate) {
+        this._optimisticUpdates.splice(this._optimisticUpdates.indexOf(op), 1);
+        this._asyncUpdate();
+      }
+      throw err;
+    },
+  );
+};
+Client.prototype.subscribe = function (query, fn) {
+  let lastValue = this.queryCache(query);
+  fn(lastValue.result, !lastValue.notLoaded);
+  const onUpdate = () => {
+    const nextValue = this.queryCache(query);
+    if (areDifferent(lastValue, nextValue)) {
+      lastValue = nextValue;
+      fn(nextValue.result, !nextValue.notLoaded);
     }
-    return result;
-  } else if (newObj && typeof newObj === 'object') {
-    oldObj = oldObj || {};
-    Object.keys(newObj).forEach(key => {
-      let cacheAlias = key;
-      if (key in cacheAliases) cacheAlias = cacheAliases[key];
-      oldObj[cacheAlias] = deepMergeCache(oldObj[cacheAlias], newObj[key], cacheAliases);
-    });
-    return oldObj;
-  } else {
-    return newObj;
-  }
-}
+  };
+  this.onUpdate(onUpdate);
+  onUpdate();
+  return {
+    loaded: this.addQuery(query),
+    unsubscribe: () => {
+      this.offUpdate(onUpdate);
+      this.removeQuery(query);
+    },
+  };
+};

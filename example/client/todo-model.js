@@ -1,4 +1,4 @@
-import BicycleClient from '../../src/node-store/client'; // in a real app, the path should be 'bicycle/client'
+import BicycleClient from '../../src/client'; // in a real app, the path should be 'bicycle/client'
 import {uuid} from './utils.js';
 
 export default function TodoModel() {
