@@ -1,13 +1,27 @@
 import Promise from 'promise';
 import cp from 'character-parser';
 
+function typeString(type) {
+  switch (type.kind) {
+    case 'NotNull':
+      return 'NotNull<' + typeString(type.type) + '>';
+    case 'List':
+      return 'Array<' + typeString(type.type) + '>';
+    case 'NamedTypeReference':
+      return type.value;
+  }
+}
 function getArgTypeMatcher(schema: Object, parseApi: string) {
   return function matchArgType(type, value, errContext) {
     switch (type.kind) {
       case 'NotNull':
-        if (value === '') throw new Error('Unexpected null value for ' + errContext);
+        if (value === '') {
+          throw new Error('Expected ' + typeString(type) + ' but got ' + value);
+        }
         const result = matchArgType(type.type, value, errContext);
-        if (result === null || result === undefined) throw new Error('Unexpected null value for ' + errContext);
+        if (result === null || result === undefined) {
+          throw new Error('Expected ' + typeString(type) + ' but got ' + value);
+        }
         return result;
       case 'List':
         if (!Array.isArray(value)) {
@@ -15,11 +29,16 @@ function getArgTypeMatcher(schema: Object, parseApi: string) {
         }
         return value.map((v, i) => matchArgType(type.type, v, errContext + '[' + i + ']'));
       case 'NamedTypeReference':
+        if (value === 'null' || value === 'undefined') return null;
         const namedType = schema[type.value];
         if (!namedType) throw new Error('Unrecognized type ' + type.value + ' for ' + errContext);
         switch (namedType.kind) {
           case 'ScalarType':
-            return namedType[parseApi](value);
+            try {
+              return namedType[parseApi](value);
+            } catch (ex) {
+              throw new Error('Expected ' + type.value + ' but got "' + value.trim() + '" for ' + errContext);
+            }
           default:
             console.log(namedType);
             throw new TypeError('Unrecognised named type kind ' + namedType.kind + ' for ' + errContext);
