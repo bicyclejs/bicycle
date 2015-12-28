@@ -72,7 +72,7 @@ Client.prototype._requestImmediately = function () {
         return;
       }
       if (response.newSession) {
-        this._cache = response.data;
+        this._cache = mergeCache({root: {}}, response.data);
       } else {
         this._cache = mergeCache(this._cache, response.data);
       }
