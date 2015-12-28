@@ -9,10 +9,8 @@ function MemorySession(expiresAfter: number = HALF_AN_HOUR) {
   this._timeout = {};
 }
 MemorySession.prototype._onAccess = function (sessionId: string) {
-  console.log('Access: ' + sessionId);
   clearTimeout(this._timeout[sessionId]);
   this._timeout[sessionId] = setTimeout(() => {
-    console.log('Clear: ' + sessionId);
     if (sessionId in this._cache) delete this._cache[sessionId];
     if (sessionId in this._queries) delete this._queries[sessionId];
     if (sessionId in this._timeout) delete this._timeout[sessionId];
