@@ -2,6 +2,7 @@ export const MUTATE = 'MUTATE';
 export const UPDATE_QUERY = 'UPDATE_QUERY';
 export const LOADING = {loading: true};
 export const DELETE_FIELD = 'DELETE_FIELD';
+export const INIT_SESSION = 'INIT_SESSION';
 
 export function mergeQueries(a, b) {
   const result = {};

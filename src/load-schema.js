@@ -1,6 +1,6 @@
 import BUILT_IN_SCALARS from './scalars';
 
-export default function (input) {
+export default function (input: Object) {
   const types = {};
   function getInputObjectType(objType, context) {
     if (

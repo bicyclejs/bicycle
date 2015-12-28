@@ -1,7 +1,7 @@
 import Promise from 'promise';
 import cp from 'character-parser';
 
-function getArgTypeMatcher(schema, parseApi) {
+function getArgTypeMatcher(schema: Object, parseApi: string) {
   return function matchArgType(type, value, errContext) {
     switch (type.kind) {
       case 'NotNull':
@@ -32,11 +32,11 @@ function getArgTypeMatcher(schema, parseApi) {
   };
 }
 
-export function runQuery(query, schema, context) {
+export function runQuery(query: Object, schema: Object, context: any): Promise<Object> {
   const result = {};
   const matchArgType = getArgTypeMatcher(schema, 'parse');
 
-  function parseArgs(args, type) {
+  function parseArgs(args: string, type: Object) {
     let state = 'key';
     args = args.trim().substr(1); // ignore initial open bracket
     const result = {};
@@ -86,7 +86,7 @@ export function runQuery(query, schema, context) {
     });
     return typedResult;
   }
-  function matchType(type, value, subQuery, errContext) {
+  function matchType(type: {kind: string}, value: any, subQuery, errContext: string) {
     switch (type.kind) {
       case 'NotNull':
         if (value === null || value === undefined) throw new Error('Unexpected null value for ' + errContext);
@@ -119,11 +119,13 @@ export function runQuery(query, schema, context) {
         throw new TypeError('Unrecognised field type kind ' + type.kind + ' for ' + errContext);
     }
   }
-  function resolve(type, value, name, subQuery) {
+  function resolve(type: {fields: Object}, value: any, name: string, subQuery) {
     const fname = name.split('(')[0];
     const args = name.indexOf('(') !== -1 ? '(' + name.split('(').slice(1).join('(') : '()';
     return Promise.resolve(null).then(() => {
-      if (type.fields[fname].resolve) {
+      if (!type.fields[fname]) {
+        throw new Error('Field "' + fname + '" does not exit on type "' + type.name + '"');
+      } else if (type.fields[fname].resolve) {
         const argsObj = parseArgs(args, type.fields[fname].args);
         return type.fields[fname].resolve(value, argsObj, context);
       } else if (type.fields[fname]) {
@@ -133,7 +135,7 @@ export function runQuery(query, schema, context) {
       return matchType(type.fields[fname].type, value, subQuery, type.name + '.' + name);
     });
   }
-  function run(query, type, value) {
+  function run(query: Object, type: Object, value: any) {
     return Promise.resolve(null).then(() => type.id(value)).then(id => {
       if (!result[id]) result[id] = {};
       return Promise.all(
@@ -148,7 +150,7 @@ export function runQuery(query, schema, context) {
   return run(query, schema.Root, context).then(() => result);
 }
 
-export function runMutation(mutation, schema, context) {
+export function runMutation(mutation: {method: string, args: Object}, schema: Object, context: any): Promise {
   const matchArgType = getArgTypeMatcher(schema, 'parseValue');
   const [type, name] = mutation.method.split('.');
   const args = mutation.args;

@@ -12,23 +12,28 @@ import {
 } from './utils';
 
 export default Client;
-function Client(networkLayer) {
-  this._sessionID = (Date.now()).toString(35) + Math.random().toString(35).substr(2, 7);
+function Client(
+  networkLayer: {batch: Function},
+  serverPreparation: {sessionID?: string, query?: Object, cache?: Object} = {}
+) {
+  this._sessionID = serverPreparation.sessionID || (Date.now()).toString(35) + Math.random().toString(35).substr(2, 7);
   this._networkLayer = networkLayer || new DefaultNetworkLayer();
-  this._query = {};
+  this._query = serverPreparation.query || {};
   this._queries = [];
   this._queriesCount = [];
   this._queriesLoaded = [];
-  this._cache = {root: {}};
+  this._cache = serverPreparation.cache || {root: {}};
   this._optimisticCache = {root: {}};
   this._optimisticUpdates = [];
   this._updateHandlers = [];
 
   this._currentRequest = null;
   this._requestInFlight = false;
-  this._requests = [{action: INIT_SESSION}];
+
+  this._requests = serverPreparation.sessionID ? [] : [{action: INIT_SESSION}];
+  this._syncUpdate();
 }
-Client.prototype._request = function (action, args) {
+Client.prototype._request = function (action: string, args: Object) {
   if (action === UPDATE_QUERY) {
     this._requests = this._requests.filter((req, i) => {
       return req.action !== UPDATE_QUERY;
@@ -58,7 +63,19 @@ Client.prototype._requestImmediately = function () {
   this._currentRequest = null;
   this._networkLayer.batch(this._sessionID, requests).done(
     response => {
-      this._cache = mergeCache(this._cache, response);
+      if (response.expiredSession) {
+        console.warn('session expired, starting new session');
+        this._requests.unshift({action: INIT_SESSION});
+        this._requests.push({action: UPDATE_QUERY, args: this._getQuery()});
+        this._currentRequest = currentRequest;
+        this._requestImmediately();
+        return;
+      }
+      if (response.newSession) {
+        this._cache = response.data;
+      } else {
+        this._cache = mergeCache(this._cache, response.data);
+      }
       currentRequest.resolve();
       this._asyncUpdate();
       this._requestInFlight = false;
@@ -90,10 +107,10 @@ Client.prototype._syncUpdate = function () {
     handler();
   });
 };
-Client.prototype.onUpdate = function (fn) {
+Client.prototype.onUpdate = function (fn: Function) {
   this._updateHandlers.push(fn);
 };
-Client.prototype.offUpdate = function (fn) {
+Client.prototype.offUpdate = function (fn: Function) {
   this._updateHandlers.splice(this._updateHandlers.indexOf(fn), 1);
 };
 Client.prototype._getQuery = function () {
@@ -113,7 +130,7 @@ Client.prototype._updateQuery = function () {
     }
   });
 };
-Client.prototype.addQuery = function (query) {
+Client.prototype.addQuery = function (query: Object): Promise {
   const i = this._queries.indexOf(query);
   if (i !== -1) {
     this._queriesCount[i]++;
@@ -125,7 +142,7 @@ Client.prototype.addQuery = function (query) {
   this._queriesLoaded.push(response);
   return response;
 };
-Client.prototype.removeQuery = function (query) {
+Client.prototype.removeQuery = function (query: Object): Promise {
   const i = this._queries.indexOf(query);
   if (i === -1) {
     console.warn('You attempted to remove a query that does not exist.');
@@ -138,10 +155,10 @@ Client.prototype.removeQuery = function (query) {
   this._queriesLoaded.splice(i, 1);
   return this._updateQuery();
 };
-Client.prototype.queryCache = function (query) {
+Client.prototype.queryCache = function (query: Object) {
   return runQueryAgainstCache(this._optimisticCache, this._optimisticCache['root'], query);
 };
-Client.prototype.update = function (method, args, optimisticUpdate) {
+Client.prototype.update = function (method: string, args: Object, optimisticUpdate?: Function): Promise {
   const mutation = {method, args};
   let op;
   if (optimisticUpdate) {
@@ -165,7 +182,7 @@ Client.prototype.update = function (method, args, optimisticUpdate) {
     },
   );
 };
-Client.prototype.subscribe = function (query, fn) {
+Client.prototype.subscribe = function (query: Object, fn: Function) {
   let lastValue = this.queryCache(query);
   fn(lastValue.result, !lastValue.notLoaded);
   const onUpdate = () => {
