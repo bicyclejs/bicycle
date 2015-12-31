@@ -19,7 +19,7 @@ export default function (
       if (query === null) {
         console.warn('session expired');
         return {
-          query: updateQuery[updateQuery.length - 1].args,
+          query: {},
           newSession: false,
           expiredSession: true,
         };

@@ -154,6 +154,16 @@ export default function (input: Object) {
     });
     if (Type.mutations) {
       Object.keys(Type.mutations).forEach(name => {
+        if (name === 'set') {
+          mutations[name] = Type.mutations[name];
+          if (typeof mutations[name] !== 'function') {
+            throw new Error(
+              'The `set` mutation is a special case, it automatically takes `id`, `field` and `value`. ' +
+              'You don\'t need to specify argument types for it so you should just use a function as shorthand.'
+            );
+          }
+          return;
+        }
         let mutation = Type.mutations[name];
         const args = {...mutation.args};
         Object.keys(args).forEach(argName => {

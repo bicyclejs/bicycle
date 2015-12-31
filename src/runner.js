@@ -39,6 +39,7 @@ function getArgTypeMatcher(schema: Object, parseApi: string) {
             } catch (ex) {
               throw new Error('Expected ' + type.value + ' but got "' + value.trim() + '" for ' + errContext);
             }
+            break;
           default:
             console.log(namedType);
             throw new TypeError('Unrecognised named type kind ' + namedType.kind + ' for ' + errContext);
@@ -179,8 +180,30 @@ export function runMutation(mutation: {method: string, args: Object}, schema: Ob
   if (!method) throw new TypeError('The type ' + type + ' does not define a mutation ' + name);
 
   const typedArgs = {};
-  Object.keys(method.args).forEach(key => {
-    typedArgs[key] = matchArgType(method.args[key].type, args[key], type + '.' + name + ' - ' + key);
-  });
-  return Promise.resolve(method.resolve(typedArgs, context));
+  if (name === 'set') {
+    if (typeof args.id !== 'number' && typeof args.id !== 'string') {
+      return Promise.reject(
+        new Error('Expected number or string for ' + mutation.method + '(id)')
+      );
+    }
+    typedArgs.id = args.id;
+    if (typeof args.field !== 'string') {
+      return Promise.reject(
+        new Error('Expected string for ' + mutation.method + '(field)')
+      );
+    }
+    if (!(args.field in Type.fields)) {
+      return Promise.reject(
+        new Error(args.field + ' was not found in ' + Type.name)
+      );
+    }
+    typedArgs.field = args.field;
+    typedArgs.value = matchArgType(Type.fields[args.field].type, args.value, type + '.' + name + ' - ' + args.field);
+    return Promise.resolve(method(typedArgs, context));
+  } else {
+    Object.keys(method.args).forEach(key => {
+      typedArgs[key] = matchArgType(method.args[key].type, args[key], type + '.' + name + ' - ' + key);
+    });
+    return Promise.resolve(method.resolve(typedArgs, context));
+  }
 }

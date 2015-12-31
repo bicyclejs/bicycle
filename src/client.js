@@ -14,8 +14,10 @@ import {
 export default Client;
 function Client(
   networkLayer: {batch: Function},
-  serverPreparation: {sessionID?: string, query?: Object, cache?: Object} = {}
+  serverPreparation: {sessionID?: string, query?: Object, cache?: Object} = {},
+  options = {}
 ) {
+  this._options = options;
   this._sessionID = serverPreparation.sessionID || (Date.now()).toString(35) + Math.random().toString(35).substr(2, 7);
   this._networkLayer = networkLayer || new DefaultNetworkLayer();
   this._query = serverPreparation.query || {};
@@ -211,7 +213,11 @@ Client.prototype.subscribe = function (query: Object, fn: Function) {
     loaded: this.addQuery(query),
     unsubscribe: () => {
       this.offUpdate(onUpdate);
-      this.removeQuery(query);
+      if (this._options.cacheTimeout) {
+        setTimeout(() => this.removeQuery(query), this._options.cacheTimeout);
+      } else {
+        this.removeQuery(query);
+      }
     },
   };
 };
