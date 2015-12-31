@@ -99,8 +99,7 @@ export function runQuery(query: Object, schema: Object, context: any): Promise<O
       }
     }
     const typedResult = {};
-    Object.keys(result).map(key => {
-      if (!type[key]) return;
+    Object.keys(type).map(key => {
       typedResult[key] = matchArgType(type[key].type, result[key], 'arg: ' + key);
     });
     return typedResult;
@@ -183,5 +182,5 @@ export function runMutation(mutation: {method: string, args: Object}, schema: Ob
   Object.keys(method.args).forEach(key => {
     typedArgs[key] = matchArgType(method.args[key].type, args[key], type + '.' + name + ' - ' + key);
   });
-  return method.resolve(typedArgs, context);
+  return Promise.resolve(method.resolve(typedArgs, context));
 }

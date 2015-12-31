@@ -129,6 +129,7 @@ export default function (input: Object) {
     }
     Object.keys(Type.fields).forEach(name => {
       let field = Type.fields[name];
+      if (field === undefined) return;
       if (typeof field === 'string') {
         field = {type: field};
       }
