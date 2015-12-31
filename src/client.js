@@ -25,6 +25,7 @@ function Client(
   this._cache = serverPreparation.cache || {root: {}};
   this._optimisticCache = {root: {}};
   this._optimisticUpdates = [];
+  this._optimisticUpdaters = {};
   this._updateHandlers = [];
 
   this._currentRequest = null;
@@ -158,11 +159,23 @@ Client.prototype.removeQuery = function (query: Object): Promise {
 Client.prototype.queryCache = function (query: Object) {
   return runQueryAgainstCache(this._optimisticCache, this._optimisticCache['root'], query);
 };
+Client.prototype.definieOptimisticUpdaters = function (updates: Object) {
+  Object.keys(updates).forEach(t => {
+    if (!this._optimisticUpdaters[t]) this._optimisticUpdaters[t] = {};
+    Object.keys(updates[t]).forEach(k => {
+      this._optimisticUpdaters[t][k] = updates[t][k];
+    });
+  });
+};
 Client.prototype.update = function (method: string, args: Object, optimisticUpdate?: Function): Promise {
   const mutation = {method, args};
   let op;
+  if (!optimisticUpdate) {
+    const split = method.split('.');
+    optimisticUpdate = this._optimisticUpdaters[split[0]] && this._optimisticUpdaters[split[0]][split[1]];
+  }
   if (optimisticUpdate) {
-    op = cache => optimisticUpdate(mutation, cache);
+    op = cache => optimisticUpdate(args, cache);
     this._optimisticUpdates.push(op);
     this._syncUpdate();
   }
