@@ -20,91 +20,115 @@ function Client(
   this._options = options;
   this._sessionID = serverPreparation.sessionID || (Date.now()).toString(35) + Math.random().toString(35).substr(2, 7);
   this._networkLayer = networkLayer || new DefaultNetworkLayer();
-  this._query = serverPreparation.query || {};
+
   this._queries = [];
   this._queriesCount = [];
   this._queriesLoaded = [];
+
+  this._query = serverPreparation.query || {};
+
   this._cache = serverPreparation.cache || {root: {}};
   this._optimisticCache = {root: {}};
-  this._optimisticUpdates = [];
-  this._optimisticUpdaters = {};
   this._updateHandlers = [];
+
+  this._optimisticUpdaters = {};
+
+  this._newSession = !serverPreparation.sessionID;
+  this._serverQuery = serverPreparation.query || {};
+  this._pendingMutations = [];
 
   this._currentRequest = null;
   this._requestInFlight = false;
+  this._requestQueued = false;
 
-  this._requests = serverPreparation.sessionID ? [] : [{action: INIT_SESSION}];
   this._syncUpdate();
 }
-Client.prototype._request = function (action: string, args: Object) {
-  if (action === UPDATE_QUERY) {
-    this._requests = this._requests.filter((req, i) => {
-      return req.action !== UPDATE_QUERY;
-    });
+Client.prototype._queueRequest = function () {
+  if (this._requestInFlight) {
+    this._requestQueued = true;
   }
-  this._requests.push({action, args});
-  if (this._currentRequest) {
-    clearTimeout(this._requestTimeout);
-  } else {
-    let resolve, reject;
-    const promise = new Promise((_resolve, _reject) => {
-      resolve = _resolve;
-      reject = _reject;
-    });
-    this._currentRequest = {promise, resolve, reject};
+  if (!this._currentRequest) {
+    this._fireRequest(30);
   }
-  if (!this._requestInFlight) {
-    this._requestTimeout = setTimeout(() => this._requestImmediately(), 0);
-  }
-  return this._currentRequest.promise;
+  return this._currentRequest;
 };
-Client.prototype._requestImmediately = function () {
-  this._requestInFlight = true;
-  const requests = this._requests;
-  const currentRequest = this._currentRequest;
-  this._requests = [];
-  this._currentRequest = null;
-  this._networkLayer.batch(this._sessionID, requests).done(
-    response => {
-      if (response.expiredSession) {
-        console.warn('session expired, starting new session');
-        this._requests.unshift({action: INIT_SESSION});
-        this._requests.push({action: UPDATE_QUERY, args: this._getQuery()});
-        this._currentRequest = currentRequest;
-        this._requestImmediately();
-        return;
-      }
-      if (response.newSession) {
-        this._cache = mergeCache({root: {}}, response.data);
-      } else {
-        this._cache = mergeCache(this._cache, response.data);
-      }
-      currentRequest.resolve();
-      this._asyncUpdate();
-      this._requestInFlight = false;
-      if (this._currentRequest) {
-        this._requestTimeout = setTimeout(() => this._requestImmediately(), 0);
-      }
-    },
-    err => {
-      currentRequest.reject(err);
-      this._requestInFlight = false;
-      if (this._currentRequest) {
-        this._requestTimeout = setTimeout(() => this._requestImmediately(), 0);
-      }
-    }
-  );
+Client.prototype._fireRequest = function (timeout, errCount = 0) {
+  this._requestQueued = false;
+  return this._currentRequest = new Promise((resolve, reject) => {
+    setTimeout(() => {
+      this._requestInFlight = true;
+      this._doRequest().done(
+        () => {
+          this._requestInFlight = false;
+          this._currentRequest = null;
+          if (this._requestQueued) {
+            this._fireRequest(0);
+          }
+          resolve();
+        },
+        err => {
+          this._requestInFlight = false;
+          this._currentRequest = null;
+          this._fireRequest(timeout + (1000 * (errCount + Math.random())), errCount + 1);
+          reject(err);
+        },
+      );
+    }, timeout);
+  });
 };
-Client.prototype._asyncUpdate = function () {
-  clearTimeout(this._updateTimeout);
-  this._updateTimeout = setTimeout(() => {
-    this._syncUpdate();
-  }, 0);
+Client.prototype._doRequest = function () {
+  return new Promise((resolve, reject) => {
+    const attempt = () => {
+      const pendingMutations = this._pendingMutations.slice();
+      const requests = pendingMutations.map(update => ({action: MUTATE, args: update.mutation}));
+      if (this._newSession) {
+        requests.push({action: INIT_SESSION});
+      }
+      const localQuery = this._query;
+      const diff = diffQueries(this._serverQuery, localQuery);
+      if (diff !== undefined) {
+        requests.push({action: UPDATE_QUERY, args: diff});
+      } else if (this._newSession) {
+        requests.push({action: UPDATE_QUERY, args: localQuery});
+      }
+      if (requests.length === 0) return resolve(null);
+      this._networkLayer.batch(this._sessionID, requests).done(
+        response => {
+          // clear pending mutations
+          this._pendingMutations.splice(0, pendingMutations.length);
+          if (response.expiredSession) {
+            console.warn('session expired, starting new session');
+            this._newSession = true;
+            this._serverQuery = {root: {}};
+            attempt();
+            return;
+          }
+          this._newSession = false;
+          this._serverQuery = localQuery;
+          if (response.newSession) {
+            this._cache = mergeCache({root: {}}, response.data);
+          } else {
+            this._cache = mergeCache(this._cache, response.data);
+          }
+          this._syncUpdate();
+          resolve();
+        },
+        err => {
+          // clear pending mutations
+          this._pendingMutations.splice(0, pendingMutations.length);
+          this._syncUpdate();
+          reject(err);
+        }
+      );
+    };
+    attempt();
+  });
 };
+
 Client.prototype._syncUpdate = function () {
   clearTimeout(this._updateTimeout);
-  this._optimisticCache = this._optimisticUpdates.reduce((cache, update) => {
-    return mergeCache(cache, update(cache));
+  this._optimisticCache = this._pendingMutations.reduce((cache, update) => {
+    return mergeCache(cache, update.optimisticUpdate(cache));
   }, this._cache);
   this._updateHandlers.forEach(handler => {
     handler();
@@ -116,22 +140,12 @@ Client.prototype.onUpdate = function (fn: Function) {
 Client.prototype.offUpdate = function (fn: Function) {
   this._updateHandlers.splice(this._updateHandlers.indexOf(fn), 1);
 };
-Client.prototype._getQuery = function () {
+Client.prototype._getQuery = function (): Object {
   return this._queries.reduce(mergeQueries, {});
 };
-Client.prototype._updateQuery = function () {
-  const oldQuery = this._query;
-  const newQuery = this._getQuery();
-  const diff = diffQueries(oldQuery, newQuery);
-  if (diff === undefined) return Promise.resolve(null);
-  const updateQueryId = {};
-  this._updateQueryId = updateQueryId;
-  return this._request(UPDATE_QUERY, diff).then(() => {
-    if (this._updateQueryId === updateQueryId) {
-      this._query = newQuery;
-      this._asyncUpdate();
-    }
-  });
+Client.prototype._updateQuery = function (): Promise {
+  this._query = this._getQuery();
+  return this._queueRequest();
 };
 Client.prototype.addQuery = function (query: Object): Promise {
   const i = this._queries.indexOf(query);
@@ -171,31 +185,17 @@ Client.prototype.definieOptimisticUpdaters = function (updates: Object) {
 };
 Client.prototype.update = function (method: string, args: Object, optimisticUpdate?: Function): Promise {
   const mutation = {method, args};
-  let op;
   if (!optimisticUpdate) {
     const split = method.split('.');
     optimisticUpdate = this._optimisticUpdaters[split[0]] && this._optimisticUpdaters[split[0]][split[1]];
   }
-  if (optimisticUpdate) {
-    op = cache => optimisticUpdate(args, cache);
-    this._optimisticUpdates.push(op);
-    this._syncUpdate();
-  }
-  return this._request(MUTATE, mutation).then(
-    () => {
-      if (optimisticUpdate) {
-        this._optimisticUpdates.splice(this._optimisticUpdates.indexOf(op), 1);
-        this._asyncUpdate();
-      }
+  this._pendingMutations.push({
+    mutation,
+    optimisticUpdate(cache) {
+      return optimisticUpdate ? optimisticUpdate(args, cache) : cache;
     },
-    err => {
-      if (optimisticUpdate) {
-        this._optimisticUpdates.splice(this._optimisticUpdates.indexOf(op), 1);
-        this._asyncUpdate();
-      }
-      throw err;
-    },
-  );
+  });
+  this._syncUpdate();
 };
 Client.prototype.subscribe = function (query: Object, fn: Function) {
   let lastValue = this.queryCache(query);
