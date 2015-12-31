@@ -116,6 +116,9 @@ Client.prototype._doRequest = function () {
         err => {
           // clear pending mutations
           this._pendingMutations.splice(0, pendingMutations.length);
+          // reset to a new session (hopefully clearing the error in the process)
+          this._newSession = true;
+          this._serverQuery = {root: {}};
           this._syncUpdate();
           reject(err);
         }

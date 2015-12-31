@@ -4,7 +4,7 @@ import {mergeQueries, UPDATE_QUERY, MUTATE, INIT_SESSION} from './utils';
 export default function (
   batch: Array<Object>,
   sessionID: string,
-  sessionStore: {setQuery: Function, getQuery: Function},
+  sessionStore: {setQuery: Function, getQuery: Function, setCache: Function},
   runMutation: Function,
 ): Promise<{query: Object, newSession: boolean, expiredSession: boolean}> {
   const initSession = !!(batch.filter(request => request.action === INIT_SESSION).length);
@@ -12,7 +12,10 @@ export default function (
   const mutations = batch.filter(request => request.action === MUTATE).reverse();
   const queryPromise = (
     initSession
-    ? sessionStore.setQuery(sessionID, updateQuery[updateQuery.length - 1].args).then(
+    ? Promise.all([
+      sessionStore.setQuery(sessionID, updateQuery[updateQuery.length - 1].args),
+      sessionStore.setCache(sessionID, {}),
+    ]).then(
       () => ({query: updateQuery[updateQuery.length - 1].args, newSession: true, expiredSession: false})
     )
     : sessionStore.getQuery(sessionID).then(query => {
