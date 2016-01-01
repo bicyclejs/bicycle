@@ -99,7 +99,7 @@ Client.prototype._doRequest = function () {
           if (response.expiredSession) {
             console.warn('session expired, starting new session');
             this._newSession = true;
-            this._serverQuery = {root: {}};
+            this._serverQuery = {};
             attempt();
             return;
           }
@@ -118,7 +118,7 @@ Client.prototype._doRequest = function () {
           this._pendingMutations.splice(0, pendingMutations.length);
           // reset to a new session (hopefully clearing the error in the process)
           this._newSession = true;
-          this._serverQuery = {root: {}};
+          this._serverQuery = {};
           this._syncUpdate();
           reject(err);
         }
