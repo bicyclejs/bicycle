@@ -5,12 +5,15 @@ export default [
     name: 'string',
     description: 'A string of arbitrary text',
     serialize(value): string {
+      if (typeof value !== 'string') {
+        throw new Error('Expected string but got ' + typeof value);
+      }
       return '' + value;
     },
     parse(value): string {
-      return '' + JSON.parse(value);
-    },
-    parseValue(value): string {
+      if (typeof value !== 'string') {
+        throw new Error('Expected string but got ' + typeof value);
+      }
       return '' + value;
     },
   },
@@ -18,12 +21,15 @@ export default [
     name: 'boolean',
     description: 'Either `true` or `false`',
     serialize(value): boolean {
+      if (typeof value !== 'boolean' && value !== 0 && value !== 1) {
+        throw new Error('Expected boolean but got ' + typeof value);
+      }
       return !!value;
     },
     parse(value): boolean {
-      return !!JSON.parse(value);
-    },
-    parseValue(value): boolean {
+      if (typeof value !== 'boolean' && value !== 0 && value !== 1) {
+        throw new Error('Expected boolean but got ' + typeof value);
+      }
       return !!value;
     },
   },
@@ -37,13 +43,6 @@ export default [
       return value;
     },
     parse(value): number {
-      const result = JSON.parse(value);
-      if (typeof result !== 'number') {
-        throw new Error('Expected number but got ' + typeof result);
-      }
-      return result;
-    },
-    parseValue(value): number {
       if (typeof value !== 'number') {
         throw new Error('Expected number but got ' + typeof value);
       }

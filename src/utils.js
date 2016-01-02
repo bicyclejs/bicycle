@@ -68,12 +68,17 @@ export function runQueryAgainstCache(cache, node, query) {
         result[resultKey] = node[cacheKey];
       } else if (Array.isArray(node[cacheKey])) {
         result[resultKey] = node[cacheKey].map(id => {
+          if (id === null) return null;
           if (!cache[id]) {
             throw new Error('Missing ' + id + ' object from cache');
           }
           return recurse(cache[id], query[key]);
         });
       } else {
+        if (node[cacheKey] === null) {
+          result[resultKey] = null;
+          return;
+        }
         if (!cache[node[cacheKey]]) {
           throw new Error('Missing ' + node[cacheKey] + ' object from cache');
         }

@@ -11,11 +11,11 @@ function typeString(type) {
       return type.value;
   }
 }
-function getArgTypeMatcher(schema: Object, parseApi: string) {
+function getArgTypeMatcher(schema: Object) {
   return function matchArgType(type, value, errContext) {
     switch (type.kind) {
       case 'NotNull':
-        if (value === '') {
+        if (value === null) {
           throw new Error('Expected ' + typeString(type) + ' but got ' + value);
         }
         const result = matchArgType(type.type, value, errContext);
@@ -24,6 +24,7 @@ function getArgTypeMatcher(schema: Object, parseApi: string) {
         }
         return result;
       case 'List':
+        if (value === null) return null;
         if (!Array.isArray(value)) {
           throw new Error('Expected an array for ' + errContext);
         }
@@ -35,7 +36,8 @@ function getArgTypeMatcher(schema: Object, parseApi: string) {
         switch (namedType.kind) {
           case 'ScalarType':
             try {
-              return namedType[parseApi](value);
+              if (value === null) return null;
+              return namedType.parse(value);
             } catch (ex) {
               throw new Error('Expected ' + type.value + ' but got "' + value.trim() + '" for ' + errContext);
             }
@@ -54,7 +56,7 @@ function getArgTypeMatcher(schema: Object, parseApi: string) {
 
 export function runQuery(query: Object, schema: Object, context: any): Promise<Object> {
   const result = {};
-  const matchArgType = getArgTypeMatcher(schema, 'parse');
+  const matchArgType = getArgTypeMatcher(schema);
 
   function parseArgs(args: string, type: Object) {
     let state = 'key';
@@ -101,7 +103,11 @@ export function runQuery(query: Object, schema: Object, context: any): Promise<O
     }
     const typedResult = {};
     Object.keys(type).map(key => {
-      typedResult[key] = matchArgType(type[key].type, result[key], 'arg: ' + key);
+      typedResult[key] = matchArgType(
+        type[key].type,
+        (result[key] === 'undefined' || !result[key]) ? null : JSON.parse(result[key]),
+        'arg: ' + key
+      );
     });
     return typedResult;
   }
@@ -116,11 +122,13 @@ export function runQuery(query: Object, schema: Object, context: any): Promise<O
           }
         );
       case 'List':
+        if (value === null || value === undefined) return null;
         if (!Array.isArray(value)) {
           throw new Error('Expected an array for ' + errContext);
         }
         return Promise.all(value.map((v, i) => matchType(type.type, v, subQuery, errContext + '[' + i + ']')));
       case 'NamedTypeReference':
+        if (value === null || value === undefined) return null;
         const namedType = schema[type.value];
         if (!namedType) throw new Error('Unrecognized type ' + type.value + ' for ' + errContext);
         switch (namedType.kind) {
@@ -170,7 +178,7 @@ export function runQuery(query: Object, schema: Object, context: any): Promise<O
 }
 
 export function runMutation(mutation: {method: string, args: Object}, schema: Object, context: any): Promise {
-  const matchArgType = getArgTypeMatcher(schema, 'parseValue');
+  const matchArgType = getArgTypeMatcher(schema);
   const [type, name] = mutation.method.split('.');
   const args = mutation.args;
   const Type = schema[type];
@@ -198,11 +206,19 @@ export function runMutation(mutation: {method: string, args: Object}, schema: Ob
       );
     }
     typedArgs.field = args.field;
-    typedArgs.value = matchArgType(Type.fields[args.field].type, args.value, type + '.' + name + ' - ' + args.field);
+    typedArgs.value = matchArgType(
+      Type.fields[args.field].type,
+      args.value === undefined ? null : args.value,
+      type + '.' + name + ' - ' + args.field
+    );
     return Promise.resolve(method(typedArgs, context));
   } else {
     Object.keys(method.args).forEach(key => {
-      typedArgs[key] = matchArgType(method.args[key].type, args[key], type + '.' + name + ' - ' + key);
+      typedArgs[key] = matchArgType(
+        method.args[key].type,
+        args[key] === undefined ? null : args[key],
+        type + '.' + name + ' - ' + key
+      );
     });
     return Promise.resolve(method.resolve(typedArgs, context));
   }
