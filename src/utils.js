@@ -15,12 +15,10 @@ export function mergeQueries(a, b) {
     const resultKey = key.replace(/ as [a-zA-Z0-9]+$/, '');
     if (b[key] === false) {
       if (resultKey in result) delete result[resultKey];
-    } else if (!result[resultKey]) {
-      result[resultKey] = b[key];
-    } else if (result[resultKey] === true) {
+    } else if (b[key] === true) {
       result[resultKey] = b[key];
     } else {
-      result[resultKey] = mergeQueries(result[resultKey], b[key]);
+      result[resultKey] = mergeQueries(result[resultKey] || {}, b[key]);
     }
   });
   return result;
@@ -60,7 +58,7 @@ export function runQueryAgainstCache(cache, node, query) {
     Object.keys(query).forEach(key => {
       if (key[0] === '_') return;
       const cacheKey = key.replace(/ as [a-zA-Z0-9]+$/, '');
-      const resultKey = / as [a-zA-Z0-9]+$/.test(key) ? key.split(' as ').pop() : cacheKey;
+      const resultKey = / as [a-zA-Z0-9]+$/.test(key) ? key.split(' as ').pop() : cacheKey.split('(')[0];
       if (node[cacheKey] === undefined) {
         notLoaded = true;
         result[resultKey] = LOADING;
