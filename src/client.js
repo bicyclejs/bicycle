@@ -199,6 +199,7 @@ Client.prototype.update = function (method: string, args: Object, optimisticUpda
     },
   });
   this._syncUpdate();
+  return this._queueRequest();
 };
 Client.prototype.subscribe = function (query: Object, fn: Function) {
   let lastValue = this.queryCache(query);
