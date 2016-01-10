@@ -1,6 +1,6 @@
 {
   "name": "bicycle",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "A data synchronisation library for JavaScript",
   "keywords": [],
   "dependencies": {
