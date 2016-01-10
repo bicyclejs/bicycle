@@ -13,7 +13,7 @@ function typeString(type) {
   }
 }
 function getArgTypeMatcher(schema: Object) {
-  return function matchArgType(type, value, errContext) {
+  return function matchArgType(type: {kind: string}, value: any, errContext: string) {
     switch (type.kind) {
       case 'NotNull':
         if (value === null) {
@@ -40,7 +40,7 @@ function getArgTypeMatcher(schema: Object) {
               if (value === null) return null;
               return namedType.parse(value);
             } catch (ex) {
-              throw new Error('Expected ' + type.value + ' but got "' + value.trim() + '" for ' + errContext);
+              throw new Error(ex.message + ' for ' + errContext);
             }
             break;
           default:
