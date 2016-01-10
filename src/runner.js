@@ -167,6 +167,7 @@ export function runQuery(query: Object, schema: Object, context: any): Promise<O
             } catch (ex) {
               throw new Error(ex.message + ' for ' + errContext);
             }
+            break;
           default:
             console.log(namedType);
             throw new TypeError('Unrecognised named type kind ' + namedType.kind + ' for ' + errContext);
