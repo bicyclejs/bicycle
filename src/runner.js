@@ -17,17 +17,17 @@ function getArgTypeMatcher(schema: Object) {
     switch (type.kind) {
       case 'NotNull':
         if (value === null) {
-          throw new Error('Expected ' + typeString(type) + ' but got ' + value);
+          throw new Error('Expected ' + typeString(type) + ' but got ' + value + ' for ' + errContext);
         }
         const result = matchArgType(type.type, value, errContext);
         if (result === null || result === undefined) {
-          throw new Error('Expected ' + typeString(type) + ' but got ' + value);
+          throw new Error('Expected ' + typeString(type) + ' but got ' + value + ' for ' + errContext);
         }
         return result;
       case 'List':
         if (value === null) return null;
         if (!Array.isArray(value)) {
-          throw new Error('Expected an array for ' + errContext);
+          throw new Error('Expected an array for ' + errContext + ' for ' + errContext);
         }
         return value.map((v, i) => matchArgType(type.type, v, errContext + '[' + i + ']'));
       case 'NamedTypeReference':
@@ -182,7 +182,7 @@ export function runQuery(query: Object, schema: Object, context: any): Promise<O
     const args = name.indexOf('(') !== -1 ? '(' + name.split('(').slice(1).join('(') : '()';
     return Promise.resolve(null).then(() => {
       if (!type.fields[fname]) {
-        throw new Error('Field "' + fname + '" does not exit on type "' + type.name + '"');
+        throw new Error('Field "' + fname + '" does not exist on type "' + type.name + '"');
       } else if (type.fields[fname].resolve) {
         if (typeof type.fields[fname].resolve !== 'function') {
           throw new Error('Expected ' + type.name + '.' + fname + '.resolve to be a function.');
