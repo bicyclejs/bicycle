@@ -1,5 +1,6 @@
 import Promise from 'promise';
 import cp from 'character-parser';
+import leven from 'leven';
 
 function typeString(type) {
   switch (type.kind) {
@@ -58,7 +59,7 @@ export function runQuery(query: Object, schema: Object, context: any): Promise<O
   const result = {};
   const matchArgType = getArgTypeMatcher(schema);
 
-  function parseArgs(args: string, type: Object) {
+  function parseArgs(args: string, type: Object, errContext: string) {
     let state = 'key';
     args = args.trim().substr(1); // ignore initial open bracket
     const result = {};
@@ -98,15 +99,35 @@ export function runQuery(query: Object, schema: Object, context: any): Promise<O
           }
           break;
         case 'terminated':
-          throw new Error('Closing bracket was reached before end of arguments');
+          throw new Error('Closing bracket was reached before end of arguments in ' + errContext);
       }
     }
+
+    Object.keys(result).forEach(key => {
+      if (!(key in type)) {
+        const closestMatch = Object.keys(type).reduce((best, validKey) => {
+          const distance = leven(key, validKey);
+          return distance < best.distance ? {distance, validKey} : best;
+        }, {distance: Infinity});
+        throw new Error(
+          'Unexpected argument "' + key + '" for ' + errContext +
+          ((closestMatch.distance < (key.length / 2)) ? ' maybe you meant to use ' + closestMatch.validKey : '')
+        );
+      }
+    });
+
     const typedResult = {};
     Object.keys(type).map(key => {
+      let value;
+      try {
+        value = (result[key] === 'undefined' || !result[key]) ? null : JSON.parse(result[key]);
+      } catch (ex) {
+        throw new Error(ex.message + ' for ' + errContext + '(' + key + ')');
+      }
       typedResult[key] = matchArgType(
         type[key].type,
-        (result[key] === 'undefined' || !result[key]) ? null : JSON.parse(result[key]),
-        'arg: ' + key
+        value,
+        errContext + '(' + key + ')'
       );
     });
     return typedResult;
@@ -133,9 +154,19 @@ export function runQuery(query: Object, schema: Object, context: any): Promise<O
         if (!namedType) throw new Error('Unrecognized type ' + type.value + ' for ' + errContext);
         switch (namedType.kind) {
           case 'NodeType':
+            if (typeof value !== 'object') {
+              throw new Error('Expected an object but got ' + (typeof value) + ' for ' + errContext);
+            }
+            if (Array.isArray(value)) {
+              throw new Error('Expected an object but got an array for ' + errContext);
+            }
             return run(subQuery, namedType, value);
           case 'ScalarType':
-            return namedType.serialize(value);
+            try {
+              return namedType.serialize(value);
+            } catch (ex) {
+              throw new Error(ex.message + ' for ' + errContext);
+            }
           default:
             console.log(namedType);
             throw new TypeError('Unrecognised named type kind ' + namedType.kind + ' for ' + errContext);
@@ -153,13 +184,22 @@ export function runQuery(query: Object, schema: Object, context: any): Promise<O
       if (!type.fields[fname]) {
         throw new Error('Field "' + fname + '" does not exit on type "' + type.name + '"');
       } else if (type.fields[fname].resolve) {
-        const argsObj = parseArgs(args, type.fields[fname].args);
-        return type.fields[fname].resolve(value, argsObj, context);
+        if (typeof type.fields[fname].resolve !== 'function') {
+          throw new Error('Expected ' + type.name + '.' + fname + '.resolve to be a function.');
+        }
+        const argsObj = (
+          type.fields[fname].args ?
+          parseArgs(args, type.fields[fname].args, type.name + '.' + fname) :
+          {}
+        );
+        return Promise.resolve(type.fields[fname].resolve(value, argsObj, context)).then(null, err => {
+          throw new Error(err.message + ' in ' + type.name + '.' + fname);
+        });
       } else if (type.fields[fname]) {
         return value[fname];
       }
     }).then(value => {
-      return matchType(type.fields[fname].type, value, subQuery, type.name + '.' + name);
+      return matchType(type.fields[fname].type, value, subQuery, type.name + '.' + fname);
     });
   }
   function run(query: Object, type: Object, value: any) {

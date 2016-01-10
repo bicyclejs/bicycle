@@ -8,6 +8,7 @@
     "character-parser": "^2.1.1",
     "express-graphql": "^0.4.5",
     "graphql": "^0.4.14",
+    "leven": "^2.0.0",
     "promise": "^7.0.4",
     "stable-sha1": "^1.0.1",
     "then-request": "^2.1.1"

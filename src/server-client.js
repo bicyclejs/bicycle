@@ -36,7 +36,7 @@ export default function prepare(schema: Object, sessionStore: {setCache: Functio
             }
             client._cache = response.data;
             next();
-          });
+          }, reject);
         } catch (ex) {
           reject(ex);
         }
