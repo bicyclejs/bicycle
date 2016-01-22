@@ -24,7 +24,7 @@ export function mergeQueries(a, b) {
   return result;
 }
 
-export function diffQueries(oldQuery, newQuery) {
+export function diffQueries(oldQuery: Object, newQuery: Object) {
   const result = {};
   let updated = false;
   Object.keys(oldQuery).forEach(key => {
@@ -39,7 +39,10 @@ export function diffQueries(oldQuery, newQuery) {
     if (!oldQuery[key]) {
       result[key] = newQuery[key];
       updated = true;
-    } else {
+    } else if (typeof oldQuery[key] !== typeof newQuery[key]) {
+      result[key] = newQuery[key];
+      updated = true;
+    } else if (oldQuery[key] !== newQuery[key]) {
       const d = diffQueries(oldQuery[key], newQuery[key]);
       if (d !== undefined) {
         result[key] = d;
