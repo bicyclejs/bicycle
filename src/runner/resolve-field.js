@@ -1,3 +1,4 @@
+import Promise from 'promise';
 import freeze from 'bicycle/utils/freeze';
 import suggestMatch from 'bicycle/utils/suggest-match';
 import parseArgs from './args-parser';

@@ -3,6 +3,8 @@
 import loadSchema, {loadSchemaFromFiles} from './load-schema';
 import {runQuery, runMutation} from './runner';
 import handleMessage from './message-handler';
+import createBicycleMiddleware from './server';
+import createServerRenderer from './server-rendering';
 
 export {
   // (s: {objects: [], scalars: []}) => Schema
@@ -15,4 +17,8 @@ export {
   runMutation,
   // (schema: Object, sessionStore: SessionStore, message: Message, context: Object) => Promise<Result>
   handleMessage,
+  // (schema: Schema, sessionStore: SessionStore, getContext: (req) => Object) => Middleware
+  createBicycleMiddleware,
+  // (schema: Schema, sessionStore: SessionStore, fn: (client: Object, ...args) => Result) => (context: Object, ...args) => Result
+  createServerRenderer,
 };

@@ -1,3 +1,4 @@
+import Promise from 'promise';
 import resolveField from './resolve-field';
 import {ERROR} from '../constants';
 

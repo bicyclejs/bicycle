@@ -2,7 +2,7 @@ import fs from 'fs';
 import express from 'express';
 import browserify from 'browserify-middleware';
 import babelify from 'babelify';
-import {createMiddleware} from '../src/server';
+import {createBicycleMiddleware, createServerRenderer} from '../src';
 import MemoryStore from '../src/sessions/memory';
 import schema from './schema';
 
@@ -22,6 +22,18 @@ app.get('/style.css', (req, res, next) => {
 app.get('/client.js', browserify(__dirname + '/client/index.js', {transform: [babelify]}));
 
 const sessionStore = new MemoryStore();
-app.use('/bicycle', createMiddleware(schema, sessionStore, req => ({user: req.user})));
+app.use('/bicycle', createBicycleMiddleware(schema, sessionStore, req => ({user: req.user})));
+
+// TODO: use this capability to actually do server side rendering
+const serverRenderer = createServerRenderer(
+  schema,
+  sessionStore,
+  (client, ...args) => {
+    return client.queryCache({todos: {id: true, title: true, completed: true}}).result;
+  }
+);
+serverRenderer({user: 'my user'}).done(result => {
+  console.log('server renderer result', result);
+});
 
 app.listen(3000);

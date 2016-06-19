@@ -1,3 +1,4 @@
+import Promise from 'promise';
 import typeString from '../utils/type-name-from-definition';
 import typeNameFromValue from '../utils/type-name-from-value';
 import runQuery from './run-query';

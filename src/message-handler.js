@@ -1,10 +1,8 @@
-import {randomBytes} from 'crypto';
 import Promise from 'promise';
 import mergeQueries from './utils/merge-queries';
 import diffCache from './utils/diff-cache';
+import getSessionID from './utils/get-session-id';
 import {runQuery, runMutation} from './runner';
-
-const randomBytesAsync = Promise.denodeify(randomBytes);
 
 export default function handleMessage(
   schema: Object,
@@ -28,9 +26,7 @@ export default function handleMessage(
 
 export function getQuery(sessionID: ?string, sessionStore: Object, queryUpdate: ?Object) {
   if (!sessionID) {
-    // TODO: support letting the sessionStore choose the sessionID
-    return randomBytesAsync(10).then(sessionID => {
-      sessionID = sessionID.toString('hex');
+    return getSessionID(sessionStore).then(sessionID => {
       return Promise.all([
         sessionStore.setQuery(sessionID, queryUpdate),
         sessionStore.setCache(sessionID, {}),

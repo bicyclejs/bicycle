@@ -114,7 +114,7 @@ class RequestBatcher {
                 mutation.resolve(response.mutationResults[i].value);
               } else {
                 // ideally we would prepaturely roll back this optimistic mutation
-                mutation.reject(response.mutationResults[i].value);
+                mutation.reject(new Error(response.mutationResults[i].value));
               }
             });
             if (response.expiredSession) {

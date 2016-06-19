@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 import handleMessage from './message-handler';
 
 const jsonBody = bodyParser.json();
-export function createMiddleware(
+export default function createBicycleMiddleware(
   schema: Object,
   sessionStore: {
     getCache: Function,

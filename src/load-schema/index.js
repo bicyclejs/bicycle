@@ -52,6 +52,7 @@ export default function loadSchema(input: Object): Object {
 }
 
 export function loadSchemaFromFiles(dirname: string): Object {
+  dirname = dirname.replace(/(\\|\/)$/, '');
   const schema = {objects: [], scalars: []};
   readdirSync(dirname + '/objects').forEach(filename => {
     let t = require(dirname + '/objects/' + filename);

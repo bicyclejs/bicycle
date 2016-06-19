@@ -96,9 +96,9 @@ class Client {
   }
   query(query: Object): Promise<Object> {
     return new Promise((resolve, reject) => {
-      let unsubscribe = null;
+      let subscription = null;
       let done = false;
-      unsubscribe = this.subscribe(query, (result, loaded, errors) => {
+      subscription = this.subscribe(query, (result, loaded, errors) => {
         if (errors.length) {
           const err = new Error('Error fetching data for query:\n' + errors.join('\n'));
           err.code = 'BICYCLE_QUERY_ERROR';
@@ -106,14 +106,14 @@ class Client {
           err.errors = errors;
           err.result = result;
           done = true;
-          if (unsubscribe) unsubscribe();
+          if (subscription) subscription.unsubscribe();
         } else if (loaded) {
           resolve(result);
           done = true;
-          if (unsubscribe) unsubscribe();
+          if (subscription) subscription.unsubscribe();
         }
       });
-      if (done) unsubscribe();
+      if (done) subscription.unsubscribe();
     });
   }
   definieOptimisticUpdaters(updates: Object) {
