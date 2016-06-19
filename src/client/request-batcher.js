@@ -32,6 +32,9 @@ class RequestBatcher {
     this._mutationsProcessed = 0;
 
     this._status = IDLE;
+
+    this._optimisticValueID = 0;
+    this._optimisticValues = {};
   }
 
   updateQuery(query: Object) {
@@ -39,15 +42,42 @@ class RequestBatcher {
     this._request();
   }
 
-  runMutation(mutation: Object): Promise<void> {
+  runMutation(mutation: Object): Promise<any> {
+    console.log('mutation');
+    console.dir(mutation);
     return new Promise((resolve, reject) => {
       this._pendingMutations.push({
-        mutation,
+        mutation: this._resolveOptimistic(mutation),
         resolve,
         reject,
       });
       this._request();
     });
+  }
+
+  getOptimistic(name, result) {
+    const id = '__bicycle_optimistic_value_' + (this._optimisticValueID++) + '__';
+    this._optimisticValues[id] = result.then(v => {
+      setTimeout(() => delete this._optimisticValues[id], 1000);
+      return v[name];
+    });
+    return id;
+  }
+  _resolveOptimistic(mutation: Object): Promise<Object> {
+    const optimisticValues = Object.keys(mutation.args).map(key => {
+      if (/^__bicycle_optimistic_value_/.test(mutation.args[key]) && (mutation.args[key] in this._optimisticValues)) {
+        return this._optimisticValues[mutation.args[key]].then(
+          value => mutation.args[key] = value,
+        );
+      } else {
+        return null;
+      }
+    }).filter(Boolean);
+    if (!optimisticValues.length) {
+      return Promise.resolve(mutation);
+    } else {
+      return Promise.all(optimisticValues).then(() => mutation);
+    }
   }
 
   // make request, using any in-flight requests
@@ -100,12 +130,14 @@ class RequestBatcher {
     return new Promise((resolve, reject) => {
       const attempt = () => {
         const localQuery = this._localQuery;
-        const message = {
-          sessionID: this._sessionID,
-          queryUpdate: diffQueries(this._serverQuery, localQuery),
-          mutations: this._pendingMutations.map(m => m.mutation),
-        };
-        this._networkLayer.send(message).done(
+        return Promise.all(this._pendingMutations.map(m => m.mutation)).then(mutations => {
+          const message = {
+            sessionID: this._sessionID,
+            queryUpdate: diffQueries(this._serverQuery, localQuery),
+            mutations,
+          };
+          return this._networkLayer.send(message);
+        }).done(
           response => {
             const mutations = this._pendingMutations.splice(0, response.mutationResults.length);
             this._mutationsProcessed += response.mutationResults.length;

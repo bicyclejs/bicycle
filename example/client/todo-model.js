@@ -1,5 +1,4 @@
 import BicycleClient from '../../src/client'; // in a real app, the path should be 'bicycle/client'
-import {uuid} from './utils.js';
 
 export default function TodoModel() {
   this.errors = [];
@@ -31,12 +30,17 @@ TodoModel.prototype.inform = function () {
 };
 
 TodoModel.prototype.addTodo = function (title) {
-  this._client.update('Todo.addTodo', {id: uuid(), title, completed: false}, (mutation, cache) => {
+  this._client.update('Todo.addTodo', {title, completed: false}, (mutation, cache, optimistic) => {
     if (cache.root.todos) {
+      const id = optimistic('id');
       return {
-        ['Todo:' + mutation.args.id]: mutation.args,
+        ['Todo:' + id]: {
+          id,
+          title: mutation.args.title,
+          completed: mutation.args.completed,
+        },
         root: {
-          todos: ['Todo:' + mutation.args.id].concat(cache.root.todos),
+          todos: ['Todo:' + id].concat(cache.root.todos),
         },
       };
     }

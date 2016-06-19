@@ -45,9 +45,9 @@ schema.objects = [
     mutations: {
       addTodo: {
         type: {id: 'id'},
-        args: {id: 'id', title: 'string', completed: 'boolean'},
-        resolve({id, title, completed}, {user}) {
-          return addTodo({id, title, completed}).then(id => ({id}));
+        args: {title: 'string', completed: 'boolean'},
+        resolve({title, completed}, {user}) {
+          return addTodo({title, completed}).then(id => ({id}));
         },
       },
       toggleAll: {

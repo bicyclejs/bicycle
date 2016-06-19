@@ -11,6 +11,7 @@ let todos = [
 ];
 
 export function addTodo(todo) {
+  todo = {id: uuid(), title: todo.title, completed: todo.completed};
   todos.unshift(todo);
   return new Promise((resolve) => { setTimeout(resolve, LATENCY); }).then(() => todo.id);
 }

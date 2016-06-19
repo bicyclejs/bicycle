@@ -90,6 +90,9 @@ class Client {
     this._queriesCount.splice(i, 1);
     this._updateQuery();
   }
+  _getOptimistic(name, result) {
+    return this._request.getOptimistic(name, result);
+  }
 
   queryCache(query: Object): {result: Object, loaded: boolean, errors: Array<string>} {
     return runQueryAgainstCache(this._optimisticCache, this._optimisticCache['root'], query);
@@ -130,8 +133,17 @@ class Client {
       const split = method.split('.');
       optimisticUpdate = this._optimisticUpdaters[split[0]] && this._optimisticUpdaters[split[0]][split[1]];
     }
-    this._pendingMutations.push(optimisticUpdate ? (cache) => optimisticUpdate(mutation, cache) : noop);
     const result = this._request.runMutation(mutation);
+    const optimisticIDs = {};
+    this._pendingMutations.push(
+      optimisticUpdate
+      ? (cache) => optimisticUpdate(
+        mutation,
+        cache,
+        name => optimisticIDs[name] || (optimisticIDs[name] = this._getOptimistic(name, result)),
+      )
+      : noop
+    );
     this._syncUpdate();
     return result;
   }
