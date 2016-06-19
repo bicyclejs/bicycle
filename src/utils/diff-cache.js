@@ -1,6 +1,6 @@
 import {DELETE_FIELD} from 'bicycle/constants';
 
-export function diffCache(before, after) {
+export default function diffCache(before, after) {
   const result = {};
   let changed = false;
   Object.keys(after).forEach(key => {

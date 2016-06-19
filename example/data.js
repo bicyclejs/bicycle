@@ -1,12 +1,13 @@
 // this file is to simulate a database
 
 import Promise from 'promise';
+import {uuid} from './client/utils.js';
 
-const LATENCY = 10000;
+const LATENCY = 1000;
 
 let todos = [
-  {id: 'blah', title: 'Build Bicycle', completed: false},
-  {id: 'blob', title: 'Create an example', completed: false},
+  {id: uuid(), title: 'Build Bicycle', completed: false},
+  {id: uuid(), title: 'Create an example', completed: false},
 ];
 
 export function addTodo(todo) {

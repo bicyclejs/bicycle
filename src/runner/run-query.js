@@ -8,7 +8,7 @@ export default function run(
   query: Object,
   context: any,
   result: Object,
-): string | {_error: string} {
+): Promise<string | {_type: 'ERROR', value: string}> {
   // TODO: verify "query" is actually an Object
   return Promise.resolve(null).then(() => type.id(value)).then(id => {
     if (!result[id]) result[id] = {};

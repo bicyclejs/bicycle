@@ -69,6 +69,34 @@ const TodoApp = React.createClass({
   },
 
   render() {
+    let content = null;
+    try {
+      content = this._renderContent();
+    } catch (ex) {
+      content = <div>Could not render todo items: {ex.message}</div>;
+    }
+
+    return (
+      <div>
+        <header className="header">
+          <h1>todos</h1>
+          {this.props.model.errors.map((error, i) => {
+            return <div key={i} style={{background: 'red', color: 'white', padding: 50, fontSize: 20}}>{error}</div>;
+          })}
+          <input
+            className="new-todo"
+            placeholder="What needs to be done?"
+            value={this.state.newTodo}
+            onKeyDown={this.handleNewTodoKeyDown}
+            onChange={this.handleChange}
+            autoFocus={true}
+          />
+        </header>
+        {content}
+      </div>
+    );
+  },
+  _renderContent() {
     let nowShowing;
     switch (location.hash) {
       case '#/completed':
@@ -142,20 +170,8 @@ const TodoApp = React.createClass({
         </section>
       );
     }
-
     return (
       <div>
-        <header className="header">
-          <h1>todos</h1>
-          <input
-            className="new-todo"
-            placeholder="What needs to be done?"
-            value={this.state.newTodo}
-            onKeyDown={this.handleNewTodoKeyDown}
-            onChange={this.handleChange}
-            autoFocus={true}
-          />
-        </header>
         {main}
         {footer}
       </div>

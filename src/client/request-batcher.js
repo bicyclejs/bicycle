@@ -1,3 +1,4 @@
+import Promise from 'promise';
 import diffQueries from 'bicycle/utils/diff-queries';
 
 const IDLE = 'IDLE';
@@ -5,12 +6,14 @@ const REQUEST_QUEUED = 'REQUEST_QUEUED';
 const REQUEST_IN_FLIGHT = 'REQUEST_IN_FLIGHT';
 
 function assert(fact) {
-  if (!fact) throw new Error('Assertion violated');
+  if (!fact) {
+    throw new Error('Assertion violated');
+  }
 }
 
 class RequestBatcher {
   constructor(
-    networkLayer: {batch: Function},
+    networkLayer: {send: Function},
     sessionID: ?string,
     query: {},
     handlers: {
@@ -73,7 +76,7 @@ class RequestBatcher {
             case IDLE:
               throw new Error('status should never be idle when a request is in flight');
             case REQUEST_QUEUED:
-              this._state = IDLE;
+              this._status = IDLE;
               this._queueRequest(0);
               break;
             case REQUEST_IN_FLIGHT:
@@ -82,7 +85,7 @@ class RequestBatcher {
           }
         },
         err => {
-          this._state = IDLE;
+          this._status = IDLE;
           this._queueRequest(timeout + (1000 * (errCount + Math.random())), errCount + 1);
           this._handlers._handleError(err);
         }
@@ -100,9 +103,9 @@ class RequestBatcher {
         const message = {
           sessionID: this._sessionID,
           queryUpdate: diffQueries(this._serverQuery, localQuery),
-          mutations: this._pendingMutations,
+          mutations: this._pendingMutations.map(m => m.mutation),
         };
-        this._networkLayer.batch(this._sessionID, message).done(
+        this._networkLayer.send(message).done(
           response => {
             const mutations = this._pendingMutations.splice(0, response.mutationResults.length);
             this._mutationsProcessed += response.mutationResults.length;

@@ -84,7 +84,7 @@ function normalizeObject(Type) {
     if (field.args !== undefined) {
       const args = {};
       Object.keys(field.args).forEach(argName => {
-        args[argName].type = getType(field.args[argName]);
+        args[argName] = getType(field.args[argName]);
       });
       field = {
         ...field,

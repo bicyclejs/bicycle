@@ -3,6 +3,7 @@ import suggestMatch from 'bicycle/utils/suggest-match';
 import parseArgs from './args-parser';
 import validateArgs from './args-validator';
 import validateReturnType from './validate-return-type';
+import {ERROR} from '../constants';
 
 const EMPTY_OBJECT = freeze({});
 
@@ -23,12 +24,16 @@ export default function resolveField(
   return Promise.resolve(null).then(() => {
     if (!type.fields[fname]) {
       const suggestion = suggestMatch(Object.keys(type.fields), fname);
-      throw new Error(
-        `Field "${fname}" does not exist on type "${type.name}"${suggestion}`
-      );
+      return {
+        _type: ERROR,
+        value: `Field "${fname}" does not exist on type "${type.name}"${suggestion}`,
+      };
     } else if (type.fields[fname].resolve) {
       if (typeof type.fields[fname].resolve !== 'function') {
-        throw new Error(`Expected ${type.name}.${fname}.resolve to be a function.`);
+        return {
+          _type: ERROR,
+          value: `Expected ${type.name}.${fname}.resolve to be a function.`,
+        };
       }
       const argsObj = freeze(
         type.fields[fname].args
@@ -44,6 +49,7 @@ export default function resolveField(
       return value[fname];
     }
   }).then(value => {
+    if (value._type === ERROR) return value;
     return validateReturnType(schema, type.fields[fname].type, value, subQuery, context, result);
   });
 }

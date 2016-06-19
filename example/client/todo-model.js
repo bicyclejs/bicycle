@@ -2,13 +2,21 @@ import BicycleClient from '../../src/client'; // in a real app, the path should 
 import {uuid} from './utils.js';
 
 export default function TodoModel() {
+  this.errors = [];
   this.todos = [];
   this.onChanges = [];
 
   this._client = new BicycleClient();
-  this._subscription = this._client.subscribe({todos: {id: true, title: true, completed: true}}, (result, loaded) => {
+  this._subscription = this._client.subscribe({
+    todos: {id: true, title: true, completed: true},
+    // intentional typo
+    todoos: true,
+  }, (result, loaded, errors) => {
     if (loaded) { // ignore partial results
-      this.todos = result.todos;
+      if (Array.isArray(result.todos)) {
+        this.todos = result.todos;
+      }
+      this.errors = errors;
       this.inform();
     }
   });

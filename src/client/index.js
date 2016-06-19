@@ -11,7 +11,7 @@ import RequestBatcher from './request-batcher';
 function noop() {}
 class Client {
   constructor(
-    networkLayer: {batch: Function} = new DefaultNetworkLayer(),
+    networkLayer: {send: Function} = new DefaultNetworkLayer(),
     serverPreparation: {sessionID?: string, query?: Object, cache?: Object} = {},
     options = {}
   ) {
@@ -55,8 +55,8 @@ class Client {
   }
   _syncUpdate() {
     clearTimeout(this._updateTimeout);
-    this._optimisticCache = this._pendingMutations.reduce((cache, update) => {
-      return mergeCache(cache, update.optimisticUpdate(cache));
+    this._optimisticCache = this._pendingMutations.reduce((cache, optimisticUpdate) => {
+      return mergeCache(cache, optimisticUpdate(cache));
     }, this._cache);
     this._updateHandlers.forEach(handler => {
       handler();
@@ -108,17 +108,16 @@ class Client {
       const split = method.split('.');
       optimisticUpdate = this._optimisticUpdaters[split[0]] && this._optimisticUpdaters[split[0]][split[1]];
     }
-    this._pendingMutations.push(optimisticUpdate || noop);
+    this._pendingMutations.push(optimisticUpdate ? (cache) => optimisticUpdate(mutation, cache) : noop);
     const result = this._request.runMutation(mutation);
     this._syncUpdate();
     return result;
   }
   subscribe(query: Object, fn: Function) {
-    let lastValue = this.queryCache(query);
-    fn(lastValue.result, !lastValue.notLoaded);
+    let lastValue = null;
     const onUpdate = () => {
       const nextValue = this.queryCache(query);
-      if (notEqual(lastValue, nextValue)) {
+      if (lastValue === null || notEqual(lastValue, nextValue)) {
         lastValue = nextValue;
         fn(nextValue.result, nextValue.loaded, nextValue.errors);
       }
@@ -127,7 +126,6 @@ class Client {
     onUpdate();
     this._addQuery(query);
     return {
-      loaded: this.addQuery(query),
       unsubscribe: () => {
         this._offUpdate(onUpdate);
         if (this._options.cacheTimeout) {
