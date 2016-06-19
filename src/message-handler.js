@@ -1,45 +1,81 @@
+import {randomBytes} from 'crypto';
 import Promise from 'promise';
-import {mergeQueries, UPDATE_QUERY, MUTATE, INIT_SESSION} from './utils';
+import mergeQueries from './utils/merge-queries';
+import diffCache from './utils/diff-cache';
+import {runQuery, runMutation} from './runner';
 
-export default function (
-  batch: Array<Object>,
-  sessionID: string,
-  sessionStore: {setQuery: Function, getQuery: Function, setCache: Function},
-  runMutation: Function,
-): Promise<{query: Object, newSession: boolean, expiredSession: boolean}> {
-  const initSession = !!(batch.filter(request => request.action === INIT_SESSION).length);
-  const updateQuery = batch.filter(request => request.action === UPDATE_QUERY);
-  const mutations = batch.filter(request => request.action === MUTATE).reverse();
-  const queryPromise = (
-    initSession
-    ? Promise.all([
-      sessionStore.setQuery(sessionID, updateQuery[updateQuery.length - 1].args),
-      sessionStore.setCache(sessionID, {}),
-    ]).then(
-      () => ({query: updateQuery[updateQuery.length - 1].args, newSession: true, expiredSession: false})
-    )
-    : sessionStore.getQuery(sessionID).then(query => {
+const randomBytesAsync = Promise.denodeify(randomBytes);
+
+export default function handleMessage(
+  schema: Object,
+  sessionStore: {setQuery: Function, getQuery: Function, setCache: Function, getCache: Function},
+  message: {sessionID: ?string, queryUpdate: ?Object, mutations: Array<{method: string, args: Object}>},
+  context: Object,
+): Promise<{sessionID: ?string, expiredSession: boolean, mutationResults: Array<Object>, data: ?Object}> {
+  return Promise.all([
+    getQuery(message.sessionID, sessionStore, message.queryUpdate),
+    runMutations(schema, message.mutations, context),
+  ]).then(([{sessionID, query, isExpired}, mutationResults]) => {
+    if (isExpired) {
+      return {expiredSession: true, mutationResults};
+    } else {
+      return runAndDiffQuery(schema, sessionID, sessionStore, query, context).then(
+        data => ({sessionID, expiredSession: false, mutationResults, data})
+      );
+    }
+  });
+}
+
+export function getQuery(sessionID: ?string, sessionStore: Object, queryUpdate: ?Object) {
+  if (!sessionID) {
+    // TODO: support letting the sessionStore choose the sessionID
+    return randomBytesAsync(10).then(sessionID => {
+      sessionID = sessionID.toString('hex');
+      return Promise.all([
+        sessionStore.setQuery(sessionID, queryUpdate),
+        sessionStore.setCache(sessionID, {}),
+      ]).then(() => ({sessionID, query: queryUpdate, isExpired: false}));
+    });
+  } else {
+    return sessionStore.getQuery(sessionID).then(query => {
       if (query === null) {
         console.warn('session expired');
-        return {
-          query: {},
-          newSession: false,
-          expiredSession: true,
-        };
+        return {isExpired: true};
       }
-      if (updateQuery.length) {
-        query = updateQuery.reduce((query, update) => mergeQueries(query, update.args), query);
-        return sessionStore.setQuery(sessionID, query).then(() => ({query, newSession: false, expiredSession: false}));
+      if (queryUpdate) {
+        query = mergeQueries(query, queryUpdate);
+        return sessionStore.setQuery(sessionID, query).then(() => ({sessionID, query, isExpired: false}));
       }
-      return ({query, newSession: false, expiredSession: false});
-    })
-  );
-  const mutationsPromise = new Promise((resolve, reject) => {
-    function nextMutation() {
-      if (!mutations.length) return resolve();
-      Promise.resolve(null).then(() => runMutation(mutations.pop().args)).done(nextMutation, reject);
+      return {sessionID, query, isExpired: false};
+    });
+  }
+}
+
+export function runMutations(schema: Object, mutations: Array<{method: string, args: Object}>, context: Object) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    function nextMutation(i) {
+      if (i >= mutations.length) resolve(results);
+      runMutation(schema, mutations[i], context).done(result => {
+        results.push(result);
+        nextMutation(i + 1);
+      }, reject);
     }
-    nextMutation();
+    nextMutation(0);
   });
-  return mutationsPromise.then(() => queryPromise);
+}
+
+export function runAndDiffQuery(schema: Object, sessionID: string, sessionStore: Object, query: Object, context: Object) {
+  return Promise.all([
+    runQuery(schema, query, context),
+    sessionStore.getCache(sessionID),
+  ]).then(([data, cache]) => {
+    const {result, changed} = diffCache(cache, data);
+    if (changed) {
+      return sessionStore.setCache(sessionID, data).then(
+        () => result,
+      );
+    }
+    return result;
+  });
 }

@@ -13,3 +13,11 @@ npm-debug.log
 node_modules
 /lib
 /dev
+
+# generated modules (do not edit anything after this line manually)
+
+/client.js
+/index.js
+/load-schema.js
+/network-layer.js
+/sessions

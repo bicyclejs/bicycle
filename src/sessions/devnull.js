@@ -1,19 +1,24 @@
+// @public
+
 import Promise from 'promise';
+import freeze from 'bicycle/utils/freeze';
+
+const NULL_PROMISE = Promise.resolve(null);
+const EMPTY_OBJECT_PROMISE = Promise.resolve(freeze({}));
+
+class DevNullSession {
+  getCache(sessionId: string): Promise<Object> {
+    return EMPTY_OBJECT_PROMISE;
+  }
+  setCache(sessionId: string, data: Object): Promise {
+    return NULL_PROMISE;
+  }
+  getQuery(sessionId: string): Promise<?Object> {
+    return NULL_PROMISE;
+  }
+  setQuery(sessionId: string, query: Object): Promise {
+    return NULL_PROMISE;
+  }
+}
 
 export default DevNullSession;
-function DevNullSession() {
-  this._cache = {};
-  this._queries = {};
-}
-DevNullSession.prototype.getCache = function (sessionId: string): Promise<Object> {
-  return Promise.resolve({});
-};
-DevNullSession.prototype.setCache = function (sessionId: string, data: Object): Promise {
-  return Promise.resolve(null);
-};
-DevNullSession.prototype.getQuery = function (sessionId: string): Promise<?Object> {
-  return Promise.resolve(null);
-};
-DevNullSession.prototype.setQuery = function (sessionId: string, query: Object): Promise {
-  return Promise.resolve(null);
-};
