@@ -5,10 +5,20 @@ import {readdirSync} from 'fs';
 import freeze from 'bicycle/utils/freeze';
 import typeName from 'bicycle/utils/type-name-from-value';
 import BUILT_IN_SCALARS from 'bicycle/scalars';
+import suggestMatch from 'bicycle/utils/suggest-match';
 import normalizeObject from './normalize-object';
 import normalizeScalar from './normalize-scalar';
 
+const VALID_KEYS = ['scalars', 'objects'];
 export default function loadSchema(input: Object): Object {
+  Object.keys(input).forEach(key => {
+    if (VALID_KEYS.indexOf(key) === -1) {
+      const suggestion = suggestMatch(VALID_KEYS, key);
+      throw new Error(
+        `Invalid key "${key}" in schema${suggestion}`
+      );
+    }
+  });
   const types = {};
 
   BUILT_IN_SCALARS.forEach(Scalar => {

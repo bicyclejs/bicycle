@@ -12,7 +12,7 @@ let todos = [
 
 export function addTodo(todo) {
   todos.unshift(todo);
-  return new Promise((resolve) => { setTimeout(resolve, LATENCY); });
+  return new Promise((resolve) => { setTimeout(resolve, LATENCY); }).then(() => todo.id);
 }
 
 export function toggleAll(checked) {

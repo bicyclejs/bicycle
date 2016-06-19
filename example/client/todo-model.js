@@ -41,7 +41,9 @@ TodoModel.prototype.addTodo = function (title) {
       };
     }
     return {};
-  }).done();
+  }).done(result => {
+    console.dir(result);
+  });
 };
 
 TodoModel.prototype.toggleAll = function (checked) {

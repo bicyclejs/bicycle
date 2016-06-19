@@ -1,8 +1,10 @@
 import assert from 'assert';
 import freeze from 'bicycle/utils/freeze';
 import typeName from 'bicycle/utils/type-name-from-value';
+import suggestMatch from 'bicycle/utils/suggest-match';
 import getType from './get-type';
 
+const VALID_KEYS = ['name', 'id', 'description', 'fields', 'mutations'];
 function normalizeObject(Type) {
   assert(
     Type && typeof Type === 'object' && !Array.isArray(Type),
@@ -16,6 +18,14 @@ function normalizeObject(Type) {
     /^[A-Za-z]+$/.test(Type.name),
     `Expected ObjectType.name to match [A-Za-z]+ but got '${Type.name}'`,
   );
+  Object.keys(Type).forEach(key => {
+    if (VALID_KEYS.indexOf(key) === -1) {
+      const suggestion = suggestMatch(VALID_KEYS, key);
+      throw new Error(
+        `Invalid key "${key}" in Object "${Type.name}"${suggestion}`
+      );
+    }
+  });
   assert(
     Type.id === undefined || typeof Type.id === 'function',
     `Expected ${Type.name}.id to be a function but got ${typeName(Type.id)}`
@@ -73,6 +83,15 @@ function normalizeObject(Type) {
       typeof field === 'object',
       `Expected ${Type.name}.${name} to be an object or a string but got ${typeName(field)}`
     );
+    const VALID_KEYS = ['type', 'description', 'args', 'resolve'];
+    Object.keys(field).forEach(key => {
+      if (VALID_KEYS.indexOf(key) === -1) {
+        const suggestion = suggestMatch(VALID_KEYS, key);
+        throw new Error(
+          `Invalid key "${key}" in ${Type.name}.${name}${suggestion}`
+        );
+      }
+    });
     assert(
       typeof field.type === 'string',
       `Expected ${Type.name}.${name}.type to be a string but got ${typeName(field.type)}`
@@ -107,6 +126,38 @@ function normalizeObject(Type) {
         return;
       }
       let mutation = Type.mutations[name];
+      assert(
+        /^[A-Za-z]+$/.test(name),
+        `Expected ${Type.name}'s mutation names to match [A-Za-z0-9]+ but got '${name}'`,
+      );
+      assert(
+        typeof mutation === 'object',
+        `Expected ${Type.name}.${name} to be an object or a string but got ${typeName(mutation)}`
+      );
+      const VALID_KEYS = ['type', 'description', 'args', 'resolve'];
+      Object.keys(mutation).forEach(key => {
+        if (VALID_KEYS.indexOf(key) === -1) {
+          const suggestion = suggestMatch(VALID_KEYS, key);
+          throw new Error(
+            `Invalid key "${key}" in ${Type.name}.${name}${suggestion}`
+          );
+        }
+      });
+      let type = null;
+      if (mutation.type) {
+        type = {};
+        Object.keys(mutation.type).forEach(resultName => {
+          if (typeof mutation.type[resultName] === 'string') {
+            type[resultName] = {type: mutation.type[resultName]};
+          } else {
+            type[resultName] = mutation.type[resultName];
+          }
+          type[resultName].type = getType(
+            type[resultName].type,
+            Type.name + '.' + name + '.' + resultName
+          );
+        });
+      }
       const args = {...mutation.args};
       Object.keys(args).forEach(argName => {
         if (typeof args[argName] === 'string') {
@@ -119,6 +170,7 @@ function normalizeObject(Type) {
       });
       mutation = {
         ...mutation,
+        type,
         args,
       };
       mutations[name] = mutation;

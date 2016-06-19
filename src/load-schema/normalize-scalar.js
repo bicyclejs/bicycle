@@ -1,7 +1,9 @@
 import assert from 'assert';
 import freeze from 'bicycle/utils/freeze';
 import typeName from 'bicycle/utils/type-name-from-value';
+import suggestMatch from 'bicycle/utils/suggest-match';
 
+const VALID_KEYS = ['name', 'description', 'serialize', 'parse', 'validate'];
 function normalizeScalar(Scalar: Object): Object {
   assert(
     Scalar && typeof Scalar === 'object' && !Array.isArray(Scalar),
@@ -15,6 +17,14 @@ function normalizeScalar(Scalar: Object): Object {
     /^[A-Za-z]+$/.test(Scalar.name),
     `Expected Scalar.name to match [A-Za-z]+ but got '${Scalar.name}'`,
   );
+  Object.keys(Scalar).forEach(key => {
+    if (VALID_KEYS.indexOf(key) === -1) {
+      const suggestion = suggestMatch(VALID_KEYS, key);
+      throw new Error(
+        `Invalid key "${key}" in Scalar "${Scalar.name}"${suggestion}`
+      );
+    }
+  });
   assert(
     typeof Scalar.description === 'string' || typeof Scalar.description === 'undefined',
     `Expected ${Scalar.name}.description to be a string but got ${typeName(Scalar.description)}`,

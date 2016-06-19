@@ -94,6 +94,28 @@ class Client {
   queryCache(query: Object): {result: Object, loaded: boolean, errors: Array<string>} {
     return runQueryAgainstCache(this._optimisticCache, this._optimisticCache['root'], query);
   }
+  query(query: Object): Promise<Object> {
+    return new Promise((resolve, reject) => {
+      let unsubscribe = null;
+      let done = false;
+      unsubscribe = this.subscribe(query, (result, loaded, errors) => {
+        if (errors.length) {
+          const err = new Error('Error fetching data for query:\n' + errors.join('\n'));
+          err.code = 'BICYCLE_QUERY_ERROR';
+          err.query = query;
+          err.errors = errors;
+          err.result = result;
+          done = true;
+          if (unsubscribe) unsubscribe();
+        } else if (loaded) {
+          resolve(result);
+          done = true;
+          if (unsubscribe) unsubscribe();
+        }
+      });
+      if (done) unsubscribe();
+    });
+  }
   definieOptimisticUpdaters(updates: Object) {
     Object.keys(updates).forEach(t => {
       if (!this._optimisticUpdaters[t]) this._optimisticUpdaters[t] = {};

@@ -12,14 +12,18 @@ export function runQuery(schema: Object, query: Object, context: Object): Promis
 }
 
 export function runMutation(schema: Object, mutation: {method: string, args: Object}, context: any): Promise {
+  let method;
   return Promise.resolve(null).then(() => {
     const [type, name] = mutation.method.split('.');
     const args = mutation.args;
     const Type = schema[type];
     if (!Type) throw new TypeError('Unrecognised type for mutation: ' + type);
     if (!Type.mutations) throw new TypeError('The type ' + type + ' does not define any mutations.');
-    const method = Type.mutations[name];
-    if (!method) throw new TypeError('The type ' + type + ' does not define a mutation ' + name);
+    method = Type.mutations[name];
+    if (!method) {
+      const suggestion = suggestMatch(Object.keys(Type.mutations), name);
+      throw new TypeError('The type ' + type + ' does not define a mutation ' + name + suggestion);
+    }
 
     if (name === 'set') {
       if (typeof args.id !== 'number' && typeof args.id !== 'string') {
@@ -57,10 +61,15 @@ export function runMutation(schema: Object, mutation: {method: string, args: Obj
       );
       return method.resolve(typedArgs, context, {type, name});
     }
-  }).then(() => {
+  }).then(value => {
     // TODO: support return types here
-    return {success: true, value: null};
-  }, err => {
+    console.dir(method);
+    if (method.type) {
+      return {success: true, value: validateArgs(schema, method.type, value)};
+    } else {
+      return {success: true, value: null};
+    }
+  }).then(null, err => {
     return {success: false, value: err.message + ' while running ' + mutation.method};
   });
 }
