@@ -5,13 +5,16 @@ import mergeQueries from 'bicycle/utils/merge-queries';
 import runQueryAgainstCache from 'bicycle/utils/run-query-against-cache';
 import notEqual from 'bicycle/utils/not-equal';
 import mergeCache from 'bicycle/utils/merge-cache';
-import DefaultNetworkLayer from 'bicycle/network-layer';
+import NetworkLayer from 'bicycle/network-layer';
 import RequestBatcher from './request-batcher';
+import Mutation from './mutation';
+
+export {NetworkLayer};
 
 function noop() {}
 class Client {
   constructor(
-    networkLayer: {send: Function} = new DefaultNetworkLayer(),
+    networkLayer: {send: Function} = new NetworkLayer(),
     serverPreparation: {sessionID?: string, query?: Object, cache?: Object} = {},
     options = {}
   ) {
@@ -21,7 +24,7 @@ class Client {
     this._queriesCount = [];
 
     this._cache = serverPreparation.cache || {root: {}};
-    this._optimisticCache = {root: {}};
+    this._optimisticCache = this._cache;
     this._updateHandlers = [];
 
     this._optimisticUpdaters = {};
@@ -34,8 +37,6 @@ class Client {
       serverPreparation.query || {},
       this,
     );
-
-    this._syncUpdate();
   }
   _onUpdate(fn: () => mixed) {
     this._updateHandlers.push(fn);
@@ -47,16 +48,13 @@ class Client {
   _handleError(err: Error) {
     setTimeout(() => { throw err; }, 0);
   }
-  // called by RequestBatcher
-  _handleUpdate(data: Object, isNew: boolean, mutationsProcessed: number) {
-    this._pendingMutations.splice(0, mutationsProcessed);
-    this._cache = isNew ? data : mergeCache(this._cache, data);
-    this._syncUpdate();
-  }
-  _syncUpdate() {
-    clearTimeout(this._updateTimeout);
-    this._optimisticCache = this._pendingMutations.reduce((cache, optimisticUpdate) => {
-      return mergeCache(cache, optimisticUpdate(cache));
+  // called by RequestBatcher when there is new data for the cache or the list of pending mutations changes
+  _handleUpdate(data: ?Object, isNew: boolean) {
+    if (data) {
+      this._cache = isNew ? data : mergeCache(this._cache, data);
+    }
+    this._optimisticCache = this._request.getPendingMutations().reduce((cache, mutation) => {
+      return mergeCache(cache, mutation.applyOptimistic(cache));
     }, this._cache);
     this._updateHandlers.forEach(handler => {
       handler();
@@ -89,9 +87,6 @@ class Client {
     this._queries.splice(i, 1);
     this._queriesCount.splice(i, 1);
     this._updateQuery();
-  }
-  _getOptimistic(name, result) {
-    return this._request.getOptimistic(name, result);
   }
 
   queryCache(query: Object): {result: Object, loaded: boolean, errors: Array<string>} {
@@ -128,24 +123,15 @@ class Client {
     });
   }
   update(method: string, args: Object, optimisticUpdate?: Function): Promise {
-    const mutation = {method, args};
     if (!optimisticUpdate) {
       const split = method.split('.');
       optimisticUpdate = this._optimisticUpdaters[split[0]] && this._optimisticUpdaters[split[0]][split[1]];
     }
-    const result = this._request.runMutation(mutation);
-    const optimisticIDs = {};
-    this._pendingMutations.push(
-      optimisticUpdate
-      ? (cache) => optimisticUpdate(
-        mutation,
-        cache,
-        name => optimisticIDs[name] || (optimisticIDs[name] = this._getOptimistic(name, result)),
-      )
-      : noop
-    );
-    this._syncUpdate();
-    return result.then(null, err => {
+    return this._request.runMutation(new Mutation(
+      method,
+      args,
+      optimisticUpdate,
+    )).then(null, err => {
       console.error(err.message);
       throw err;
     });

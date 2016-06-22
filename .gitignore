@@ -18,6 +18,4 @@ node_modules
 
 /client.js
 /index.js
-/load-schema.js
-/network-layer.js
 /sessions

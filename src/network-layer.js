@@ -1,5 +1,3 @@
-// @public
-
 import request from 'then-request';
 
 class NetworkLayer {

@@ -16,7 +16,7 @@ export default function resolveField(
   type: {name: string, fields: Object},
   value: any,
   name: string,
-  subQuery,
+  subQuery: true | Object,
   context: any,
   result: Object,
 ): any {
@@ -44,13 +44,20 @@ export default function resolveField(
       return Promise.resolve(type.fields[fname].resolve(value, argsObj, context, freeze({
         type: type.name,
         name,
-        subQuery,
+        subQuery: subQuery === true ? null : subQuery,
       })));
     } else if (type.fields[fname]) {
       return value[fname];
     }
   }).then(value => {
     if (value._type === ERROR) return value;
-    return validateReturnType(schema, type.fields[fname].type, value, subQuery, context, result);
+    return validateReturnType(
+      schema,
+      type.fields[fname].type,
+      value,
+      subQuery === true ? null : subQuery,
+      context,
+      result,
+    );
   });
 }

@@ -63,13 +63,13 @@ export function runMutation(schema: Object, mutation: {method: string, args: Obj
     }
   }).then(value => {
     // TODO: support return types here
-    console.dir(method);
     if (method.type) {
       return {success: true, value: validateArgs(schema, method.type, value)};
     } else {
       return {success: true, value: null};
     }
   }).then(null, err => {
+    console.error(err.stack);
     return {success: false, value: err.message + ' while running ' + mutation.method};
   });
 }

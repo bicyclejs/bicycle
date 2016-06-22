@@ -15,7 +15,7 @@ function checkReturnTypeInner(
   schema: Object,
   type: {kind: string},
   value: any,
-  subQuery?: Object,
+  subQuery: ?Object,
   context: any,
   result: Object,
 ) {
@@ -42,6 +42,12 @@ function checkReturnTypeInner(
           if (typeof value !== 'object' || Array.isArray(value)) {
             throw error;
           }
+          if (!(subQuery != null && typeof subQuery === 'object')) {
+            throw new TypeError(
+              'You must provide an object to indicate which fields of the node "' + namedType.name +
+              '" you want to query'
+            );
+          }
           return runQuery(schema, namedType, value, subQuery, context, result);
         case 'ScalarType':
           try {
@@ -49,11 +55,9 @@ function checkReturnTypeInner(
           } catch (ex) {
             throw error;
           }
-          break;
         default:
           throw new TypeError('Unrecognised named type kind ' + namedType.kind);
       }
-      break;
     default:
       throw new TypeError('Unrecognised field type kind ' + type.kind);
   }
@@ -64,7 +68,7 @@ export default function validateReturnType(
   schema: Object,
   type: {kind: string},
   value: any,
-  subQuery?: Object,
+  subQuery: ?Object,
   context: any,
   result: Object,
 ): any {

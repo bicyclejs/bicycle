@@ -1,0 +1,25 @@
+{
+  "presets": ["forbeslindesay"],
+  "plugins": [
+    "transform-flow-comments",
+    [
+      "module-alias",
+      [
+        {
+          "src": "./src",
+          "expose": "bicycle"
+        }
+      ]
+    ]
+  ],
+  "env": {
+    "development": {
+      "plugins": [
+        "typecheck"
+      ]
+    },
+    "production": {
+      "plugins": []
+    }
+  }
+}

@@ -2,9 +2,10 @@ import fs from 'fs';
 import express from 'express';
 import browserify from 'browserify-middleware';
 import babelify from 'babelify';
-import {createBicycleMiddleware, createServerRenderer} from '../src';
+import {createBicycleMiddleware, createServerRenderer, loadSchemaFromFiles} from '../src';
 import MemoryStore from '../src/sessions/memory';
-import schema from './schema';
+
+const schema = loadSchemaFromFiles(__dirname + '/schema');
 
 const app = express();
 
@@ -33,7 +34,8 @@ const serverRenderer = createServerRenderer(
   }
 );
 serverRenderer({user: 'my user'}).done(result => {
-  console.log('server renderer result', result);
+  console.log('server renderer result');
+  console.dir(result, {depth: 10, colors: true});
 });
 
 app.listen(3000);

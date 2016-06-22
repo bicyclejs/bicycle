@@ -9,7 +9,7 @@ export default function TodoModel() {
   this._subscription = this._client.subscribe({
     todos: {id: true, title: true, completed: true},
     // intentional typo
-    todoos: true,
+    // todoos: true,
   }, (result, loaded, errors) => {
     if (loaded) { // ignore partial results
       if (Array.isArray(result.todos)) {
@@ -45,8 +45,6 @@ TodoModel.prototype.addTodo = function (title) {
       };
     }
     return {};
-  }).done(result => {
-    console.dir(result);
   });
 };
 

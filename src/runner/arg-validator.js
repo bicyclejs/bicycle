@@ -42,7 +42,6 @@ function checkArgTypeInner(schema: Object, type: {kind: string}, value: any, arg
         default:
           throw new TypeError(`Unrecognised named type kind in arg "${argName}": ${namedType.kind}`);
       }
-      break;
     default:
       throw new TypeError(`Unrecognised arg type kind in arg "${argName}": ${type.kind}`);
   }

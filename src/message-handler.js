@@ -51,7 +51,7 @@ export function runMutations(schema: Object, mutations: Array<{method: string, a
   return new Promise((resolve, reject) => {
     const results = [];
     function nextMutation(i) {
-      if (i >= mutations.length) resolve(results);
+      if (i >= mutations.length) return resolve(results);
       runMutation(schema, mutations[i], context).done(result => {
         results.push(result);
         nextMutation(i + 1);

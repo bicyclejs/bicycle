@@ -4,7 +4,8 @@
   "description": "A data synchronisation library for JavaScript",
   "keywords": [],
   "dependencies": {
-    "body-parser": "^1.14.2",
+    "babel-runtime": "^6.9.2",
+    "body-parser": "^1.15.2",
     "character-parser": "^2.1.1",
     "deep-freeze": "0.0.1",
     "leven": "^2.0.0",
@@ -13,28 +14,19 @@
   },
   "devDependencies": {
     "babel-cli": "^6.3.17",
-    "babel-eslint": "^4.1.6",
-    "babel-plugin-module-alias": "^1.2.0",
-    "babel-plugin-syntax-trailing-function-commas": "^6.3.13",
-    "babel-plugin-transform-class-properties": "^6.3.13",
-    "babel-plugin-transform-export-extensions": "^6.3.13",
+    "babel-plugin-module-alias": "^1.4.0",
     "babel-plugin-transform-flow-comments": "^6.3.23",
-    "babel-plugin-transform-flow-strip-types": "^6.3.15",
-    "babel-plugin-transform-object-rest-spread": "^6.3.13",
-    "babel-plugin-transform-react-display-name": "^6.3.13",
-    "babel-plugin-transform-react-jsx": "^6.3.13",
-    "babel-plugin-transform-strict-mode": "^6.3.13",
     "babel-plugin-typecheck": "^3.5.1",
-    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-forbeslindesay": "^2.0.1",
     "babel-register": "^6.3.13",
     "babelify": "^7.2.0",
     "browserify-middleware": "^7.0.0",
-    "eslint": "^1.10.3",
-    "eslint-plugin-react": "^3.13.0",
+    "eslint": "^2.13.0",
+    "eslint-config-forbeslindesay": "^2.0.1",
     "express": "^4.13.3",
     "lsr": "^1.0.0",
-    "react": "^0.14.3",
-    "react-dom": "^0.14.3",
+    "react": "^15.1.0",
+    "react-dom": "^15.1.0",
     "testit": "^2.0.5",
     "todomvc-app-css": "^2.0.3",
     "todomvc-common": "^1.0.2"
@@ -53,33 +45,5 @@
     "url": "https://github.com/bicyclejs/bicycle.git"
   },
   "author": "ForbesLindesay",
-  "license": "MIT",
-  "developmentVersions": {
-    "bicycle/lib/": "bicycle/dev/"
-  },
-  "babel": {
-    "plugins": [
-      "syntax-trailing-function-commas",
-      "transform-class-properties",
-      "transform-export-extensions",
-      "transform-object-rest-spread",
-      "transform-react-display-name",
-      "transform-react-display-name",
-      "transform-react-jsx",
-      "transform-strict-mode",
-      "transform-flow-comments",
-      [
-        "module-alias",
-        [
-          {
-            "src": "./src",
-            "expose": "bicycle"
-          }
-        ]
-      ]
-    ],
-    "presets": [
-      "es2015"
-    ]
-  }
+  "license": "MIT"
 }

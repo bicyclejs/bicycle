@@ -1,5 +1,3 @@
-// @public
-
 import assert from 'assert';
 import {readdirSync} from 'fs';
 import freeze from 'bicycle/utils/freeze';
