@@ -17,22 +17,25 @@ test('run-query-against-cache.js', () => {
         result: {items: [{a: 10, b: 20}]},
         loaded: true,
         errors: [],
+        errorDetails: [],
       },
     );
   });
   test('returns partial result if still loading', () => {
-    const err = {_type: 'ERROR', value: 'A sample error'};
-    const cache = freeze({foo: {a: 10, b: err}, root: {items: ['foo']}});
+    const errA = {_type: 'ERROR', value: 'A sample error'};
+    const errB = {_type: 'ERROR', value: 'A sample error'};
+    const cache = freeze({foo: {a: 10, b: errA, c: errB}, root: {items: ['foo']}});
     assert.deepEqual(
       runQueryAgainstCache(
         cache,
         cache.root,
-        {items: {a: true, b: true}},
+        {items: {a: true, b: true, c: true}},
       ),
       {
-        result: {items: [{a: 10, b: err}]},
+        result: {items: [{a: 10, b: errA, c: errB}]},
         loaded: true,
-        errors: [err.value],
+        errors: [errA.value],
+        errorDetails: [errA, errB],
       },
     );
   });

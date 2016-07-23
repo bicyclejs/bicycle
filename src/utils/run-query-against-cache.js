@@ -3,14 +3,16 @@ import {ERROR} from '../constants';
 
 const EMPTY_ARRAY = freeze([]);
 let spareArray = [];
+let spareDetailsArray = [];
 
 export default function runQueryAgainstCache(
   cache: Object,
   node: Object,
   query: Object,
-): {result: Object, loaded: boolean, errors: Array<string>} {
+): {result: Object, loaded: boolean, errors: Array<string>, errorDetails: Array<Object>} {
   let loaded = true;
   let errors = spareArray;
+  let errorDetails = spareDetailsArray;
   function recurse(node, query) {
     const result = {};
     Object.keys(query).forEach(key => {
@@ -21,7 +23,10 @@ export default function runQueryAgainstCache(
         loaded = false;
         result[resultKey] = undefined;
       } else if (node[cacheKey] && typeof node[cacheKey] === 'object' && node[cacheKey]._type === ERROR) {
-        errors.push(node[cacheKey].value);
+        if (errors.indexOf(node[cacheKey].value) === -1) {
+          errors.push(node[cacheKey].value);
+        }
+        errorDetails.push(node[cacheKey]);
         result[resultKey] = node[cacheKey];
       } else if (query[key] === true) {
         result[resultKey] = node[cacheKey];
@@ -49,11 +54,14 @@ export default function runQueryAgainstCache(
   const result = recurse(node, query);
   if (errors.length === 0) {
     errors = EMPTY_ARRAY;
+    errorDetails = EMPTY_ARRAY;
   } else {
     spareArray = [];
+    spareDetailsArray = [];
     errors = freeze(errors);
+    errorDetails = freeze(errorDetails);
   }
   // TODO: work around for https://github.com/codemix/babel-plugin-typecheck/issues/155
-  const res = {result, loaded, errors};
+  const res = {result, loaded, errors, errorDetails};
   return res;
 }

@@ -90,7 +90,7 @@ class Client {
     this._updateQuery();
   }
 
-  queryCache(query: Object): {result: Object, loaded: boolean, errors: Array<string>} {
+  queryCache(query: Object): {result: Object, loaded: boolean, errors: Array<string>, errorDetails: Array<Object>} {
     return runQueryAgainstCache(this._optimisticCache, this._optimisticCache['root'], query);
   }
   query(query: Object): Promise<Object> {
@@ -143,7 +143,7 @@ class Client {
       const nextValue = this.queryCache(query);
       if (lastValue === null || notEqual(lastValue, nextValue)) {
         lastValue = nextValue;
-        fn(nextValue.result, nextValue.loaded, nextValue.errors);
+        fn(nextValue.result, nextValue.loaded, nextValue.errors, nextValue.errorDetails);
       }
     };
     this._onUpdate(onUpdate);
