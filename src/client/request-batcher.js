@@ -20,7 +20,8 @@ class RequestBatcher {
     sessionID: ?string,
     query: {},
     handlers: {
-      _handleError: (err: Error) => mixed,
+      _handleNetworkError: (err: Error) => mixed,
+      _handleMutationError: (err: Error) => mixed,
       _handleUpdate: (data: ?Object, isNew: boolean) => mixed,
     },
   ) {
@@ -90,7 +91,7 @@ class RequestBatcher {
         err => {
           this._status = IDLE;
           this._queueRequest(timeout + (1000 * (errCount + Math.random())), errCount + 1);
-          this._handlers._handleError(err);
+          this._handlers._handleNetworkError(err);
         }
       ),
       timeout,
@@ -129,7 +130,12 @@ class RequestBatcher {
               } else if (mutationResults[i].s) {
                 mutation.resolve(mutationResults[i].v);
               } else {
-                mutation.reject(new Error(mutationResults[i].v));
+                const err = new Error(mutationResults[i].v.message);
+                err.data = mutationResults[i].v.data;
+                err.code = mutationResults[i].v.code;
+                err.mutation = mutation.mutation;
+                this._handlers._handleMutationError(err);
+                mutation.reject(err);
               }
             });
             if (!sessionID) {

@@ -27,6 +27,9 @@ class Client {
     this._optimisticCache = this._cache;
     this._updateHandlers = [];
 
+    this._networkErrorHandlers = [];
+    this._mutationErrorHandlers = [];
+
     this._optimisticUpdaters = {};
 
     this._pendingMutations = [];
@@ -44,9 +47,20 @@ class Client {
   _offUpdate(fn: () => mixed) {
     this._updateHandlers.splice(this._updateHandlers.indexOf(fn), 1);
   }
-  // called by RequestBatcher
-  _handleError(err: Error) {
+  // called by RequestBatcher, these errors are always retried and are usually temporary
+  _handleNetworkError(err: Error) {
+    err.code = 'NETWORK_ERROR';
     setTimeout(() => { throw err; }, 0);
+    this._networkErrorHandlers.forEach(handler => {
+      handler(err);
+    });
+  }
+  // called by RequestBatcher, these errors are not retried
+  _handleMutationError(err: Error) {
+    setTimeout(() => { throw err; }, 0);
+    this._mutationErrorHandlers.forEach(handler => {
+      handler(err);
+    });
   }
   // called by RequestBatcher when there is new data for the cache or the list of pending mutations changes
   _handleUpdate(data: ?Object, isNew: boolean) {
@@ -159,6 +173,12 @@ class Client {
         }
       },
     };
+  }
+  subscribeToNetworkErrors(fn: Function) {
+    this._networkErrorHandlers.push(fn);
+  }
+  subscribeToMutationErrors(fn: Function) {
+    this._mutationErrorHandlers.push(fn);
   }
 }
 
