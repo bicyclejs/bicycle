@@ -176,9 +176,19 @@ class Client {
   }
   subscribeToNetworkErrors(fn: Function) {
     this._networkErrorHandlers.push(fn);
+    return {
+      unsubscribe: () => {
+        this._networkErrorHandlers.splice(this._networkErrorHandlers.indexOf(fn), 1);
+      },
+    };
   }
   subscribeToMutationErrors(fn: Function) {
     this._mutationErrorHandlers.push(fn);
+    return {
+      unsubscribe: () => {
+        this._mutationErrorHandlers.splice(this._mutationErrorHandlers.indexOf(fn), 1);
+      },
+    };
   }
 }
 
