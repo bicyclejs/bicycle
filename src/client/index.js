@@ -146,10 +146,7 @@ class Client {
       method,
       args,
       optimisticUpdate,
-    )).then(null, err => {
-      console.error(err.message);
-      throw err;
-    });
+    ));
   }
   subscribe(query: Object, fn: Function) {
     let lastValue = null;
