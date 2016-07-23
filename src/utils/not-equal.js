@@ -1,4 +1,7 @@
+// @public
+
 export default function notEqual(oldValue, newValue) {
+  if (oldValue === newValue) return false;
   return Object.keys(oldValue).some(key => {
     if (oldValue[key] === newValue[key]) return false;
     if (oldValue[key] && newValue[key]) {

@@ -19,3 +19,4 @@ node_modules
 /client.js
 /server.js
 /sessions
+/utils
