@@ -1,19 +1,21 @@
-export default function mergeQueries(a, b) {
+export default function mergeQueries(firstQuery: Object, ...queries): Object {
   const result = {};
-  Object.keys(a).forEach(key => {
+  Object.keys(firstQuery).forEach(key => {
     if (key[0] === '_') return;
-    result[key] = a[key];
+    result[key] = firstQuery[key];
   });
-  Object.keys(b).forEach(key => {
-    if (key[0] === '_') return;
-    const resultKey = key.replace(/ as [a-zA-Z0-9]+$/, '');
-    if (b[key] === false) {
-      if (resultKey in result) delete result[resultKey];
-    } else if (b[key] === true) {
-      result[resultKey] = b[key];
-    } else {
-      result[resultKey] = mergeQueries(result[resultKey] || {}, b[key]);
-    }
-  });
+  for (const query of queries) {
+    Object.keys(query).forEach(key => {
+      if (key[0] === '_') return;
+      const resultKey = key.replace(/ as [a-zA-Z0-9]+$/, '');
+      if (query[key] === false) {
+        if (resultKey in result) delete result[resultKey];
+      } else if (query[key] === true) {
+        result[resultKey] = query[key];
+      } else {
+        result[resultKey] = mergeQueries(result[resultKey] || {}, query[key]);
+      }
+    });
+  }
   return result;
 }

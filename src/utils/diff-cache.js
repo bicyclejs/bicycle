@@ -1,8 +1,7 @@
-import {DELETE_FIELD} from 'bicycle/constants';
+import {DELETE_FIELD, ERROR} from 'bicycle/constants';
 
-export default function diffCache(before, after) {
-  const result = {};
-  let changed = false;
+export default function diffCache(before: Object, after: Object): ?Object {
+  let result;
   Object.keys(after).forEach(key => {
     if (before[key] === after[key]) return;
     if (
@@ -10,22 +9,31 @@ export default function diffCache(before, after) {
       before[key].length === after[key].length &&
       before[key].every((val, i) => val === after[key][i])
     ) return;
-    if (before[key] && after[key] && typeof after[key] === 'object' && !Array.isArray(after[key])) {
-      const {result: d, changed: c} = diffCache(before[key], after[key]);
-      if (c) {
-        changed = true;
+    if (
+      before[key] &&
+      after[key] &&
+      typeof before[key] === 'object' &&
+      typeof after[key] === 'object' &&
+      !Array.isArray(before[key]) &&
+      !Array.isArray(after[key]) &&
+      before[key]._type !== ERROR &&
+      after[key]._type !== ERROR
+    ) {
+      const d = diffCache(before[key], after[key]);
+      if (d) {
+        if (!result) result = {};
         result[key] = d;
       }
-    } else {
-      changed = true;
-      result[key] = after[key];
+      return;
     }
+    if (!result) result = {};
+    result[key] = after[key];
   });
   Object.keys(before).forEach(key => {
-    if (!(key in after)) {
-      changed = true;
+    if (after[key] === undefined) {
+      if (!result) result = {};
       result[key] = {_type: DELETE_FIELD};
     }
   });
-  return {result, changed};
+  return result;
 }

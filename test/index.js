@@ -9,3 +9,8 @@ test('runner', () => {
 test('utils', () => {
   require('./utils');
 });
+
+// N.B. run integration tests only after unit tests have passed
+test('integration tests', () => {
+  require('./integration');
+});

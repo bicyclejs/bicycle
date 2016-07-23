@@ -43,9 +43,11 @@ export default function parseArgs(args: string): {[key: string]: any} {
         }
         break;
       case 'terminated':
-        throw new Error(
+        const err = new Error(
           `Closing bracket was reached before end of arguments, full string was "${fullArgsString}"`
         );
+        err.exposeProd = true;
+        throw err;
     }
   }
   return result;
@@ -54,6 +56,8 @@ function parseValue(value: string, argName: string): any {
   try {
     return (value === 'undefined' || !value) ? null : JSON.parse(value);
   } catch (ex) {
-    throw new Error(`Could not parse arg "${argName} with value ${inspect(value)}`);
+    const err = new Error(`Could not parse arg "${argName} with value ${inspect(value)}`);
+    err.exposeProd = true;
+    throw err;
   }
 }

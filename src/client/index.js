@@ -15,7 +15,7 @@ function noop() {}
 class Client {
   constructor(
     networkLayer: {send: Function} = new NetworkLayer(),
-    serverPreparation: {sessionID?: string, query?: Object, cache?: Object} = {},
+    serverPreparation: {s?: string, q?: Object, c?: Object} = {},
     options = {}
   ) {
     this._options = options;
@@ -23,7 +23,7 @@ class Client {
     this._queries = [];
     this._queriesCount = [];
 
-    this._cache = serverPreparation.cache || {root: {}};
+    this._cache = serverPreparation.c || {root: {}};
     this._optimisticCache = this._cache;
     this._updateHandlers = [];
 
@@ -33,8 +33,8 @@ class Client {
 
     this._request = new RequestBatcher(
       networkLayer,
-      serverPreparation.sessionID,
-      serverPreparation.query || {},
+      serverPreparation.s,
+      serverPreparation.q || {},
       this,
     );
   }
@@ -61,7 +61,8 @@ class Client {
     });
   }
   _getQuery(): Object {
-    return this._queries.reduce(mergeQueries, {});
+    if (this._queries.length === 0) return {};
+    return mergeQueries(...this._queries);
   }
   _updateQuery() {
     this._request.updateQuery(this._getQuery());

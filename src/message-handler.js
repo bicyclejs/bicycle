@@ -3,22 +3,26 @@ import mergeQueries from './utils/merge-queries';
 import diffCache from './utils/diff-cache';
 import getSessionID from './utils/get-session-id';
 import {runQuery, runMutation} from './runner';
+import {response as createResponse} from './messages';
 
 export default function handleMessage(
   schema: Object,
   sessionStore: {setQuery: Function, getQuery: Function, setCache: Function, getCache: Function},
-  message: {sessionID: ?string, queryUpdate: ?Object, mutations: Array<{method: string, args: Object}>},
+  message: {s: ?string, q: ?Object, m: Array<{m: string, a: Object}>},
   context: Object,
-): Promise<{sessionID: ?string, expiredSession: boolean, mutationResults: Array<Object>, data: ?Object}> {
+): Promise<{sid: ?string, expiredSession: boolean, mutationResults: Array<Object>, data: ?Object}> {
+  const sessionID = message.s;
+  const queryUpdate = message.q;
+  const mutations = message.m.map(m => ({method: m.m, args: m.a}));
   return Promise.all([
-    getQuery(message.sessionID, sessionStore, message.queryUpdate),
-    runMutations(schema, message.mutations, context),
+    getQuery(sessionID, sessionStore, queryUpdate),
+    runMutations(schema, mutations, context),
   ]).then(([{sessionID, query, isExpired}, mutationResults]) => {
     if (isExpired) {
-      return {expiredSession: true, mutationResults};
+      return createResponse(undefined, mutationResults, undefined);
     } else {
       return runAndDiffQuery(schema, sessionID, sessionStore, query, context).then(
-        data => ({sessionID, expiredSession: false, mutationResults, data})
+        data => createResponse(sessionID, mutationResults, data)
       );
     }
   });
@@ -61,13 +65,19 @@ export function runMutations(schema: Object, mutations: Array<{method: string, a
   });
 }
 
-export function runAndDiffQuery(schema: Object, sessionID: string, sessionStore: Object, query: Object, context: Object) {
+export function runAndDiffQuery(
+  schema: Object,
+  sessionID: string,
+  sessionStore: Object,
+  query: Object,
+  context: Object
+): Promise<Object> {
   return Promise.all([
     runQuery(schema, query, context),
     sessionStore.getCache(sessionID),
   ]).then(([data, cache]) => {
-    const {result, changed} = diffCache(cache, data);
-    if (changed) {
+    const result = diffCache(cache, data);
+    if (result) {
       return sessionStore.setCache(sessionID, data).then(
         () => result,
       );

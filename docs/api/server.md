@@ -7,7 +7,7 @@ This module is used to take your raw schema and load it into the schema format u
 You can call the `loadSchema` function directly to load a schema that you already have in an object.
 
 ```js
-import {loadSchema} from 'bicycle';
+import {loadSchema} from 'bicycle/server';
 
 const schema = loadSchema({
   objects: [
@@ -83,7 +83,7 @@ Alternatively, if your schema is already split into `'objects'` and `'scalars'` 
 represented as a module in one of those folders, you can use `loadSchemaFromFiles`:
 
 ```js
-import {loadSchemaFromFiles} from 'bicycle/load-schema';
+import {loadSchemaFromFiles} from 'bicycle/server';
 
 const schema = loadSchemaFromFiles(__dirname);
 ```
@@ -95,7 +95,7 @@ messages sent as a JSON body in an http POST.  Conveniently, this is what the de
 does too.
 
 ```js
-import {createBicycleMiddleware} from 'bicycle';
+import {createBicycleMiddleware} from 'bicycle/server';
 import MemoryStore from 'bicycle/sessions/memory';
 
 const sessionStore = new MemoryStore();
@@ -117,7 +117,7 @@ If you want your application to render on the server side (e.g. for users withou
 `createServerRenderer`
 
 ```js
-import {createServerRenderer} from 'bicycle';
+import {createServerRenderer} from 'bicycle/server';
 
 const serverRenderer = createServerRenderer(
   schema,
@@ -143,18 +143,46 @@ serverRenderer({user: 'my user'}, ...args).done(({serverPreparation, result}) =>
 
 ## `runQuery`
 
-`(schema: Schema, query: Object, context: Object) => Promise<Object>`
+If you need to run a query on the server side, you can directly call `runQuery`.  You will need to pass it a schema, and
+a context.
 
-> Docs TODO
+```js
+import {runQuery} from 'bicycle/server';
+
+runQuery(schema, {todos: {id: true, title: true, completed: true}}, context).done(result => {
+  console.log(result.todos);
+});
+```
 
 ## `runMutation`
 
-`(schema: Schema, mutation: {name: string, args: Object}, context: Object) => Promise<{success: boolean, value: any}`>
+If you need to run a mutation on the server side, you can directly call `runMutation`.  You will need to pass it a
+schema and context.
 
-> Docs TODO
+```js
+import {runMutation} from 'bicycle/server';
+
+runMutation(schema, 'Todo.toggle', {id, checked: true}, context).done(() => {
+  console.log('Todo complete');
+});
+```
 
 ## `handleMessage`
 
-`(schema: Object, sessionStore: SessionStore, message: Message, context: Object) => Promise<Result>`
+If you've replaced the network layer with a custom network layer (only for really advanced use cases) you can use
+`handleMessage` instead of `createBicycleMiddleware`.
 
-> Docs TODO
+```js
+import {handleMessage} from 'bicycle/server';
+
+class MockNetworkLayer {
+  constructor(schema, sessionStore, context) {
+    this._schema = schema;
+    this._sessionStore = sessionStore;
+    this._context = context;
+  }
+  send(message) {
+    return handleMessage(this._schema, this._sessionStore, message, this._context);
+  }
+}
+```

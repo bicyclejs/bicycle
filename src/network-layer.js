@@ -5,7 +5,7 @@ class NetworkLayer {
     this._url = url || '/bicycle';
     this._options = options || {};
   }
-  send(message: {sessionID: ?string, queryUpdate: ?Object, mutations: Array<{method: string, args: Object}>}) {
+  send(message: {s: ?string, q: ?Object, m: Array<{m: string, a: Object}>}) {
     return request('POST', this._url, {...this._options, json: message}).getBody('utf8').then(JSON.parse);
   }
 }

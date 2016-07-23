@@ -22,25 +22,33 @@ export function runMutation(schema: Object, mutation: {method: string, args: Obj
     method = Type.mutations[name];
     if (!method) {
       const suggestion = suggestMatch(Object.keys(Type.mutations), name);
-      throw new TypeError('The type ' + type + ' does not define a mutation ' + name + suggestion);
+      const err = new TypeError('The type ' + type + ' does not define a mutation ' + name + suggestion);
+      err.exposeProd = true;
+      throw err;
     }
 
     if (name === 'set') {
       if (typeof args.id !== 'number' && typeof args.id !== 'string') {
-        throw new TypeError(
+        const err = new TypeError(
           `Expected arg "id" to be of type "number" or "string" but got ${typeNameFromValue(args.id)}`
         );
+        err.exposeProd = true;
+        throw err;
       }
       if (typeof args.field !== 'string') {
-        throw new TypeError(
+        const err = new TypeError(
           `Expected arg "field" to be of type "string" but got ${typeNameFromValue(args.field)}`
         );
+        err.exposeProd = true;
+        throw err;
       }
       if (!(args.field in Type.fields)) {
         const suggestion = suggestMatch(Object.keys(Type.fields), args.field);
-        throw new Error(
+        const err = new Error(
           `Field "${args.field}" does not exist on type "${Type.name}"${suggestion}`
         );
+        err.exposeProd = true;
+        throw err;
       }
       const typedArgs = {
         id: args.id,
@@ -62,14 +70,29 @@ export function runMutation(schema: Object, mutation: {method: string, args: Obj
       return method.resolve(typedArgs, context, {type, name});
     }
   }).then(value => {
-    // TODO: support return types here
     if (method.type) {
-      return {success: true, value: validateArgs(schema, method.type, value)};
+      return {s: true, v: validateArgs(schema, method.type, value)};
     } else {
-      return {success: true, value: null};
+      return true;
     }
   }).then(null, err => {
     console.error(err.stack);
-    return {success: false, value: err.message + ' while running ' + mutation.method};
+    const result = (
+      process.env.NODE_ENV === 'production' && !err.exposeProd
+      ? {
+        message: (
+          'An unexpected error was encountered when running ' + mutation.method +
+          ' (if you are the developer of this app, you can set "NODE_ENV" to "development" to expose the full error)'
+        ),
+        data: {},
+        code: 'PRODUCTION_ERROR',
+      }
+      : {
+        message: err.message + ' while running ' + mutation.method,
+        data: err.data || {},
+        code: err.code,
+      }
+    );
+    return {s: false, v: result};
   });
 }

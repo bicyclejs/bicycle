@@ -55,8 +55,10 @@ export default function validateArg(schema: Object, type: {kind: string}, value:
     const expected = typeString(type);
     const valString = inspect(value, {depth: 10});
     const actual = valString.length < 30 ? valString : 'a "' + typeNameFromValue(value) + '"';
-    throw new TypeError(
+    const err = new TypeError(
       `Expected arg "${argName}" to be of type "${expected}" but got ${actual}`
     );
+    err.exposeProd = true;
+    throw err;
   }
 }

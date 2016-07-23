@@ -1,29 +1,27 @@
-export default function diffQueries(oldQuery: Object, newQuery: Object) {
-  const result = {};
-  let updated = false;
+export default function diffQueries(oldQuery: Object, newQuery: Object): ?Object {
+  let result;
   Object.keys(oldQuery).forEach(key => {
     if (key[0] === '_') return;
     if (oldQuery[key] && !newQuery[key]) {
+      if (!result) result = {};
       result[key] = false;
-      updated = true;
     }
   });
   Object.keys(newQuery).forEach(key => {
     if (key[0] === '_') return;
     if (!oldQuery[key]) {
+      if (!result) result = {};
       result[key] = newQuery[key];
-      updated = true;
     } else if (typeof oldQuery[key] !== typeof newQuery[key]) {
+      if (!result) result = {};
       result[key] = newQuery[key];
-      updated = true;
     } else if (oldQuery[key] !== newQuery[key]) {
       const d = diffQueries(oldQuery[key], newQuery[key]);
       if (d !== undefined) {
+        if (!result) result = {};
         result[key] = d;
-        updated = true;
       }
     }
   });
-  if (!updated) return undefined;
   return result;
 }

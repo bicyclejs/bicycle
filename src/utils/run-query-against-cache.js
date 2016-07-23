@@ -53,7 +53,7 @@ export default function runQueryAgainstCache(
     spareArray = [];
     errors = freeze(errors);
   }
-  // TODO: workk around for https://github.com/codemix/babel-plugin-typecheck/issues/155
+  // TODO: work around for https://github.com/codemix/babel-plugin-typecheck/issues/155
   const res = {result, loaded, errors};
   return res;
 }

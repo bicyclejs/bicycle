@@ -5,9 +5,11 @@ export default function validateArgs(schema: Object, type: Object, inputObject: 
   Object.keys(inputObject).forEach(key => {
     if (!(key in type)) {
       const suggestion = suggestMatch(Object.keys(type), key);
-      throw new Error(
+      const err = new TypeError(
         `Unexpected argument "${key}"${suggestion}`
       );
+      err.exposeProd = true;
+      throw err;
     }
   });
 

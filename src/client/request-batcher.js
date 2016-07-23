@@ -1,6 +1,7 @@
 import Promise from 'promise';
 import diffQueries from 'bicycle/utils/diff-queries';
 import Mutation from './mutation';
+import {request as createRequest} from '../messages';
 
 const PENDING_OPTIMISTIC_ID = {};
 const IDLE = 'IDLE';
@@ -112,21 +113,26 @@ class RequestBatcher {
             mutations.push(this._pendingMutations[i]);
           }
         }
-        const message = {
-          sessionID: this._sessionID,
-          queryUpdate: diffQueries(this._serverQuery, localQuery),
-          mutations: mutations.map(m => m.mutation),
-        };
+        const message = createRequest(
+          this._sessionID,
+          diffQueries(this._serverQuery, localQuery),
+          mutations.map(m => m.mutation),
+        );
         return this._networkLayer.send(message).done(
           response => {
+            const sessionID = response.s;
+            const cacheUpdate = response.d;
+            const mutationResults = response.m;
             mutations.forEach((mutation, i) => {
-              if (response.mutationResults[i].success) {
-                mutation.resolve(response.mutationResults[i].value);
+              if (mutationResults[i] === true) {
+                mutation.resolve();
+              } else if (mutationResults[i].s) {
+                mutation.resolve(mutationResults[i].v);
               } else {
-                mutation.reject(new Error(response.mutationResults[i].value));
+                mutation.reject(new Error(mutationResults[i].v));
               }
             });
-            if (response.expiredSession) {
+            if (!sessionID) {
               console.warn('session expired, starting new session');
               this._sessionID = null;
               this._serverQuery = {};
@@ -143,7 +149,7 @@ class RequestBatcher {
               attempt();
             } else {
               const isNew = !this._sessionID;
-              this._sessionID = response.sessionID;
+              this._sessionID = sessionID;
               this._serverQuery = localQuery;
               this._pendingMutations = this._pendingMutations.filter(
                 mutation => {
@@ -151,7 +157,7 @@ class RequestBatcher {
                   return mutation.isPending();
                 }
               );
-              this._handlers._handleUpdate(response.data, isNew);
+              this._handlers._handleUpdate(cacheUpdate, isNew);
               resolve();
             }
           },

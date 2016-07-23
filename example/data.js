@@ -1,4 +1,4 @@
-// this file is to simulate a database
+// this file is to simulate a database, its content probably isn't very interesting.
 
 import Promise from 'promise';
 import {uuid} from './client/utils.js';

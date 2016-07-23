@@ -1,5 +1,3 @@
-import {addTodo, toggleAll, toggle, destroy, setTitle, clearCompleted} from '../../data';
-
 export default {
   name: 'Todo',
   fields: {
@@ -11,37 +9,37 @@ export default {
     addTodo: {
       type: {id: 'id'},
       args: {title: 'string', completed: 'boolean'},
-      resolve({title, completed}, {user}) {
-        return addTodo({title, completed}).then(id => ({id}));
+      resolve({title, completed}, {db}) {
+        return db.addTodo({title, completed}).then(id => ({id}));
       },
     },
     toggleAll: {
       args: {checked: 'boolean'},
-      resolve({checked}) {
-        return toggleAll(checked);
+      resolve({checked}, {db}) {
+        return db.toggleAll(checked);
       },
     },
     toggle: {
       args: {id: 'id', checked: 'boolean'},
-      resolve({id, checked}, {user}) {
-        return toggle(id, checked);
+      resolve({id, checked}, {db}) {
+        return db.toggle(id, checked);
       },
     },
     destroy: {
       args: {id: 'id'},
-      resolve({id}, {user}) {
-        return destroy(id);
+      resolve({id}, {db}) {
+        return db.destroy(id);
       },
     },
     save: {
       args: {id: 'id', title: 'string'},
-      resolve({id, title}, {user}) {
-        return setTitle(id, title);
+      resolve({id, title}, {db}) {
+        return db.setTitle(id, title);
       },
     },
     clearCompleted: {
-      resolve(args, {user}) {
-        return clearCompleted();
+      resolve(args, {db}) {
+        return db.clearCompleted();
       },
     },
   },

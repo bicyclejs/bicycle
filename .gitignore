@@ -17,5 +17,5 @@ node_modules
 # generated modules (do not edit anything after this line manually)
 
 /client.js
-/index.js
+/server.js
 /sessions

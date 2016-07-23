@@ -5,8 +5,8 @@ const randomBytesAsync = Promise.denodeify(randomBytes);
 
 export default function getSessionID(sessionStore) {
   return (
-    sessionStore.getSessionID
+    sessionStore && sessionStore.getSessionID
     ? Promise.resolve(null).then(() => sessionStore.getSessionID())
-    : randomBytesAsync(10).then(sessionID => sessionID.toString('hex'))
+    : randomBytesAsync(12).then(sessionID => sessionID.toString('base64'))
   );
 }

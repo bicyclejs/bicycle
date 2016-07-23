@@ -2,7 +2,7 @@ import fs from 'fs';
 import express from 'express';
 import browserify from 'browserify-middleware';
 import babelify from 'babelify';
-import {createBicycleMiddleware, createServerRenderer, loadSchemaFromFiles} from '../src';
+import {createBicycleMiddleware, createServerRenderer, loadSchemaFromFiles} from '../src/server';
 import MemoryStore from '../src/sessions/memory';
 
 const schema = loadSchemaFromFiles(__dirname + '/schema');

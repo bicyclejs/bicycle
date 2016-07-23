@@ -4,6 +4,7 @@ import mergeQueries from './utils/merge-queries';
 import runQueryAgainstCache from './utils/run-query-against-cache';
 import getSessionID from './utils/get-session-id';
 import {runQuery} from './runner';
+import {serverPreparation as createServerPreparation} from './messages';
 
 
 class FakeClient {
@@ -13,11 +14,11 @@ class FakeClient {
     this._cache = {root: {}};
   }
   _serverPreparation() {
-    return {
-      sessionID: this._sessionID,
-      query: this._query,
-      cache: this._cache,
-    };
+    return createServerPreparation(
+      this._sessionID,
+      this._query,
+      this._cache,
+    );
   }
   queryCache(query: Object): {result: Object, loaded: boolean, errors: Array<string>} {
     this._query = mergeQueries(this._query, query);
@@ -35,15 +36,15 @@ export default function prepare(schema: Object, sessionStore: {setCache: Functio
             const oldServerPreparation = client._serverPreparation();
             const result = fn(client, ...args);
             const newServerPreparation = client._serverPreparation();
-            if (!notEqual(oldServerPreparation.query, newServerPreparation.query)) {
+            if (!notEqual(oldServerPreparation.q, newServerPreparation.q)) {
               return resolve({serverPreparation: newServerPreparation, result});
             }
             runQuery(
               schema,
-              newServerPreparation.query,
+              newServerPreparation.q,
               context
             ).done(data => {
-              if (notEqual(newServerPreparation.cache, data)) {
+              if (notEqual(newServerPreparation.c, data)) {
                 client._cache = data;
                 return next();
               } else {
@@ -58,8 +59,8 @@ export default function prepare(schema: Object, sessionStore: {setCache: Functio
       });
     }).then(result => {
       return Promise.all([
-        sessionStore.setCache(result.serverPreparation.sessionID, result.serverPreparation.cache),
-        sessionStore.setQuery(result.serverPreparation.sessionID, result.serverPreparation.query),
+        sessionStore.setCache(result.serverPreparation.s, result.serverPreparation.c),
+        sessionStore.setQuery(result.serverPreparation.s, result.serverPreparation.q),
       ]).then(() => result);
     });
   };
