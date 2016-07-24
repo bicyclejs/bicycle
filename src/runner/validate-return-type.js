@@ -80,7 +80,7 @@ export default function validateReturnType(
     const actual = typeNameFromValue(value);
     // N.B. never reveal the actual **value** of the result in here
     throw new TypeError(
-      `Expected result to be of type "${expected}" but got a value of type "${actual}""`
+      `Expected result to be of type "${expected}" but got a value of type "${actual}"`
     );
   }
 }
