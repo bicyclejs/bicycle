@@ -73,7 +73,7 @@ function normalizeObject(Type) {
     let field = Type.fields[name];
     if (field === undefined) return;
     assert(
-      /^[A-Za-z]+$/.test(name),
+      /^[A-Za-z0-9]+$/.test(name),
       `Expected ${Type.name}'s field names to match [A-Za-z0-9]+ but got '${name}'`,
     );
     if (typeof field === 'string') {
