@@ -4,11 +4,11 @@ import resolveField from './resolve-field';
 import {ERROR} from '../constants';
 
 function getErrorObject(err, context) {
-  const result = (
+  return (
     process.env.NODE_ENV === 'production' && !err.exposeProd
     ? {
       _type: ERROR,
-      message: (
+      value: (
         'An unexpected error was encountered ' + context +
         ' (if you are the developer of this app, you can set "NODE_ENV" to "development" to expose the full error)'
       ),
@@ -17,7 +17,7 @@ function getErrorObject(err, context) {
     }
     : {
       _type: ERROR,
-      message: err.message + ' ' + context,
+      value: err.message + ' ' + context,
       data: err.data || {},
       code: err.code,
     }
