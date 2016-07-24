@@ -16,13 +16,13 @@ function checkArgTypeInner(schema: Object, type: {kind: string}, value: any, arg
       }
       return result;
     case 'List':
-      if (value === null) return null;
+      if (value == null) return null;
       if (!Array.isArray(value)) {
         throw error;
       }
       return value.map((v, i) => checkArgTypeInner(schema, type.type, v, argName));
     case 'NamedTypeReference':
-      if (value === null) {
+      if (value == null) {
         return null;
       }
       const namedType = schema[type.value];
