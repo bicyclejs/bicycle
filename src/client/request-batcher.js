@@ -30,10 +30,10 @@ class RequestBatcher {
     this._networkLayer = networkLayer;
     this._handlers = handlers;
 
-    this._sessionID = sessionID;
+    this._sessionID = sessionID || undefined;
     this._pendingMutations = [];
     this._localQuery = query;
-    this._serverQuery = sessionID ? query : null;
+    this._serverQuery = sessionID ? query : undefined;
 
     this._status = IDLE;
   }
@@ -143,8 +143,8 @@ class RequestBatcher {
             });
             if (!sessionID) {
               console.warn('session expired, starting new session');
-              this._sessionID = null;
-              this._serverQuery = null;
+              this._sessionID = undefined;
+              this._serverQuery = undefined;
               this._status = REQUEST_IN_FLIGHT;
               // if we haven't managed to run the query, we cannot remove mutations that have been successfully applied
               // on the server side because their optimistic effects may still apply.
