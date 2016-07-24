@@ -29,6 +29,8 @@ class Client {
 
     this._networkErrorHandlers = [];
     this._mutationErrorHandlers = [];
+    this._queueRequestHandlers = [];
+    this._successfulResponseHandlers = [];
 
     this._optimisticUpdaters = {};
 
@@ -60,6 +62,16 @@ class Client {
     setTimeout(() => { throw err; }, 0);
     this._mutationErrorHandlers.forEach(handler => {
       handler(err);
+    });
+  }
+  _handleQueueRequest() {
+    this._queueRequestHandlers.forEach(handler => {
+      handler();
+    });
+  }
+  _handleSuccessfulResponse(pendingMutations: number) {
+    this._successfulResponseHandlers.forEach(handler => {
+      handler(pendingMutations);
     });
   }
   // called by RequestBatcher when there is new data for the cache or the list of pending mutations changes
@@ -184,6 +196,22 @@ class Client {
     return {
       unsubscribe: () => {
         this._mutationErrorHandlers.splice(this._mutationErrorHandlers.indexOf(fn), 1);
+      },
+    };
+  }
+  subscribeToQueueRequest(fn: Function) {
+    this._queueRequestHandlers.push(fn);
+    return {
+      unsubscribe: () => {
+        this._queueRequestHandlers.splice(this._queueRequestHandlers.indexOf(fn), 1);
+      },
+    };
+  }
+  subscribeToSuccessfulResponse(fn: Function) {
+    this._successfulResponseHandlers.push(fn);
+    return {
+      unsubscribe: () => {
+        this._successfulResponseHandlers.splice(this._successfulResponseHandlers.indexOf(fn), 1);
       },
     };
   }

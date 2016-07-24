@@ -23,6 +23,8 @@ class RequestBatcher {
       _handleNetworkError: (err: Error) => mixed,
       _handleMutationError: (err: Error) => mixed,
       _handleUpdate: (data: ?Object, isNew: boolean) => mixed,
+      _handleQueueRequest: () => mixed,
+      _handleSuccessfulResponse: (pendingMutations: number) => mixed,
     },
   ) {
     this._networkLayer = networkLayer;
@@ -67,6 +69,7 @@ class RequestBatcher {
 
   // queue a new request
   _queueRequest(timeout, errCount = 0) {
+    this._handlers._handleQueueRequest();
     assert(this._status === IDLE);
     this._status = REQUEST_QUEUED;
     // Set up the request but don't fire it execute it for 30ms
@@ -163,6 +166,7 @@ class RequestBatcher {
                   return mutation.isPending();
                 }
               );
+              this._handlers._handleSuccessfulResponse(this._pendingMutations.length);
               this._handlers._handleUpdate(cacheUpdate, isNew);
               resolve();
             }
