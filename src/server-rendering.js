@@ -24,6 +24,12 @@ class FakeClient {
     this._query = mergeQueries(this._query, query);
     return runQueryAgainstCache(this._cache, this._cache['root'], query);
   }
+  update() {
+    throw new Error('Bicycle server renderer does not implement update');
+  }
+  subscribe() {
+    throw new Error('Bicycle server renderer does not implement subscribe');
+  }
 }
 
 export default function prepare(schema: Object, sessionStore: {setCache: Function, setQuery: Function}, fn: Function) {
