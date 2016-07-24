@@ -50,7 +50,7 @@ export default function resolveField(
       return value[fname];
     }
   }).then(value => {
-    if (value._type === ERROR) return value;
+    if (value && value._type === ERROR) return value;
     return validateReturnType(
       schema,
       type.fields[fname].type,
