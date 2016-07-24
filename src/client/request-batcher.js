@@ -18,7 +18,7 @@ class RequestBatcher {
   constructor(
     networkLayer: {send: Function},
     sessionID: ?string,
-    query: {},
+    query: Object,
     handlers: {
       _handleNetworkError: (err: Error) => mixed,
       _handleMutationError: (err: Error) => mixed,
@@ -33,7 +33,7 @@ class RequestBatcher {
     this._sessionID = sessionID;
     this._pendingMutations = [];
     this._localQuery = query;
-    this._serverQuery = sessionID ? query : {};
+    this._serverQuery = sessionID ? query : null;
 
     this._status = IDLE;
   }
@@ -119,7 +119,7 @@ class RequestBatcher {
         }
         const message = createRequest(
           this._sessionID,
-          diffQueries(this._serverQuery, localQuery),
+          this._serverQuery ? diffQueries(this._serverQuery, localQuery) : localQuery,
           mutations.map(m => m.mutation),
         );
         return this._networkLayer.send(message).done(
@@ -144,7 +144,7 @@ class RequestBatcher {
             if (!sessionID) {
               console.warn('session expired, starting new session');
               this._sessionID = null;
-              this._serverQuery = {};
+              this._serverQuery = null;
               this._status = REQUEST_IN_FLIGHT;
               // if we haven't managed to run the query, we cannot remove mutations that have been successfully applied
               // on the server side because their optimistic effects may still apply.
