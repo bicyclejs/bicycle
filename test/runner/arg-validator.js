@@ -6,10 +6,29 @@ import freeze from 'bicycle/utils/freeze';
 
 test('arg-validator.js', () => {
   test('NotNull', () => {
+    const schema = freeze({
+      MyType: {
+        kind: 'ScalarType',
+        name: 'MyType',
+        parse(v) {
+          return v;
+        },
+        serialize(v) {
+          return v;
+        },
+      },
+    });
+    const type = freeze({kind: 'NotNull', type: {kind: 'NamedTypeReference', value: 'MyType'}});
+    validateArg(
+      schema,
+      type,
+      'whatever',
+      'my-arg'
+    );
     try {
       validateArg(
-        freeze({}),
-        freeze({kind: 'NotNull', type: {kind: 'NamedTypeReference', value: 'MyType'}}),
+        schema,
+        type,
         null,
         'my-arg'
       );

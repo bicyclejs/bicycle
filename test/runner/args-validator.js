@@ -41,29 +41,32 @@ test('args-validator.js', () => {
         kind: 'ScalarType',
         name: 'Something',
         parse(value) {
-          console.dir(value);
           return value * -1;
         },
         serialize(value) {
-          console.dir(value);
           return value * -1;
         },
       },
     });
     assert.deepEqual(
       validateArgs(
-        freeze({
-          Something: {
-            kind: 'ScalarType',
-            parse(value) {
-              return value * -1;
-            },
-          },
-        }),
+        schema,
         freeze({foo: {kind: 'NotNull', type: {kind: 'NamedTypeReference', value: 'Something'}}}),
         freeze({foo: 1})
       ),
       {foo: -1}
+    );
+    assert.throws(
+      () => {
+        validateArgs(
+          schema,
+          freeze({foo: {kind: 'NotNull', type: {kind: 'NamedTypeReference', value: 'Something'}}}),
+          freeze({foo: undefined})
+        );
+      },
+      err => (
+        err instanceof TypeError && err.message === 'Expected arg "foo" to be of type "Something" but got undefined'
+      ),
     );
   });
 });

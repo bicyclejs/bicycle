@@ -13,6 +13,7 @@ npm-debug.log
 node_modules
 /lib
 /dev
+.DS_Store
 
 # generated modules (do not edit anything after this line manually)
 
