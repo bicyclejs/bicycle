@@ -1,0 +1,241 @@
+exports[`test it can load a schema from a file 1`] = `
+Object {
+  "Root": Object {
+    "description": undefined,
+    "fields": Object {
+      "todoById": Object {
+        "args": Object {
+          "id": Object {
+            "kind": "arg",
+            "type": Object {
+              "kind": "NotNull",
+              "type": Object {
+                "kind": "NamedTypeReference",
+                "value": "string"
+              }
+            }
+          }
+        },
+        "resolve": [Function resolve],
+        "type": Object {
+          "kind": "NotNull",
+          "type": Object {
+            "kind": "NamedTypeReference",
+            "value": "Todo"
+          }
+        }
+      },
+      "todos": Object {
+        "resolve": [Function resolve],
+        "type": Object {
+          "kind": "NotNull",
+          "type": Object {
+            "kind": "List",
+            "type": Object {
+              "kind": "NotNull",
+              "type": Object {
+                "kind": "NamedTypeReference",
+                "value": "Todo"
+              }
+            }
+          }
+        }
+      }
+    },
+    "id": [Function idGetter],
+    "kind": "NodeType",
+    "mutations": Object {},
+    "name": "Root"
+  },
+  "Todo": Object {
+    "description": undefined,
+    "fields": Object {
+      "completed": Object {
+        "type": Object {
+          "kind": "NotNull",
+          "type": Object {
+            "kind": "NamedTypeReference",
+            "value": "boolean"
+          }
+        }
+      },
+      "id": Object {
+        "type": Object {
+          "kind": "NotNull",
+          "type": Object {
+            "kind": "NamedTypeReference",
+            "value": "id"
+          }
+        }
+      },
+      "title": Object {
+        "type": Object {
+          "kind": "NotNull",
+          "type": Object {
+            "kind": "NamedTypeReference",
+            "value": "string"
+          }
+        }
+      }
+    },
+    "id": [Function idGetter],
+    "kind": "NodeType",
+    "mutations": Object {
+      "addTodo": Object {
+        "args": Object {
+          "completed": Object {
+            "kind": "arg",
+            "type": Object {
+              "kind": "NotNull",
+              "type": Object {
+                "kind": "NamedTypeReference",
+                "value": "boolean"
+              }
+            }
+          },
+          "title": Object {
+            "kind": "arg",
+            "type": Object {
+              "kind": "NotNull",
+              "type": Object {
+                "kind": "NamedTypeReference",
+                "value": "string"
+              }
+            }
+          }
+        },
+        "resolve": [Function resolve],
+        "type": Object {
+          "id": Object {
+            "type": Object {
+              "kind": "NotNull",
+              "type": Object {
+                "kind": "NamedTypeReference",
+                "value": "id"
+              }
+            }
+          }
+        }
+      },
+      "clearCompleted": Object {
+        "args": Object {},
+        "resolve": [Function resolve],
+        "type": null
+      },
+      "destroy": Object {
+        "args": Object {
+          "id": Object {
+            "kind": "arg",
+            "type": Object {
+              "kind": "NotNull",
+              "type": Object {
+                "kind": "NamedTypeReference",
+                "value": "id"
+              }
+            }
+          }
+        },
+        "resolve": [Function resolve],
+        "type": null
+      },
+      "save": Object {
+        "args": Object {
+          "id": Object {
+            "kind": "arg",
+            "type": Object {
+              "kind": "NotNull",
+              "type": Object {
+                "kind": "NamedTypeReference",
+                "value": "id"
+              }
+            }
+          },
+          "title": Object {
+            "kind": "arg",
+            "type": Object {
+              "kind": "NotNull",
+              "type": Object {
+                "kind": "NamedTypeReference",
+                "value": "string"
+              }
+            }
+          }
+        },
+        "resolve": [Function resolve],
+        "type": null
+      },
+      "toggle": Object {
+        "args": Object {
+          "checked": Object {
+            "kind": "arg",
+            "type": Object {
+              "kind": "NotNull",
+              "type": Object {
+                "kind": "NamedTypeReference",
+                "value": "boolean"
+              }
+            }
+          },
+          "id": Object {
+            "kind": "arg",
+            "type": Object {
+              "kind": "NotNull",
+              "type": Object {
+                "kind": "NamedTypeReference",
+                "value": "id"
+              }
+            }
+          }
+        },
+        "resolve": [Function resolve],
+        "type": null
+      },
+      "toggleAll": Object {
+        "args": Object {
+          "checked": Object {
+            "kind": "arg",
+            "type": Object {
+              "kind": "NotNull",
+              "type": Object {
+                "kind": "NamedTypeReference",
+                "value": "boolean"
+              }
+            }
+          }
+        },
+        "resolve": [Function resolve],
+        "type": null
+      }
+    },
+    "name": "Todo"
+  },
+  "boolean": Object {
+    "description": "Either \`true\` or \`false\`",
+    "kind": "ScalarType",
+    "name": "boolean",
+    "parse": [Function parse],
+    "serialize": [Function serialize]
+  },
+  "id": Object {
+    "description": undefined,
+    "kind": "ScalarType",
+    "name": "id",
+    "parse": [Function parse],
+    "serialize": [Function serialize]
+  },
+  "number": Object {
+    "description": "Any floating point number",
+    "kind": "ScalarType",
+    "name": "number",
+    "parse": [Function parse],
+    "serialize": [Function serialize]
+  },
+  "string": Object {
+    "description": "A string of arbitrary text",
+    "kind": "ScalarType",
+    "name": "string",
+    "parse": [Function parse],
+    "serialize": [Function serialize]
+  }
+}
+`;

@@ -1,12 +1,11 @@
-import assert from 'assert';
-import test from 'testit';
+// TODO: don't run this until all the other tests have passed
 
 import express from 'express';
 import BicycleClient, {NetworkLayer} from 'bicycle/client';
 import {loadSchemaFromFiles, createBicycleMiddleware} from 'bicycle/server';
 import MemoryStore from 'bicycle/sessions/memory';
 
-const schema = loadSchemaFromFiles(__dirname + '/schema');
+const schema = loadSchemaFromFiles(__dirname + '/../test-schema');
 test('a successful query', () => {
   const app = express();
   // sessions expire after just 1 second for testing
@@ -31,16 +30,17 @@ test('a successful query', () => {
       {todos: {id: true, title: true, completed: true}},
       (result, loaded, errors, errorDetails) => {
         try {
-          assert.strictEqual(typeof result, 'object');
-          assert.strictEqual(typeof loaded, 'boolean');
-          assert(Array.isArray(errors));
-          assert(Array.isArray(errorDetails));
+          expect(typeof result).toBe('object');
+          expect(typeof loaded).toBe('boolean');
+          expect(Array.isArray(errors)).toBe(true);
+          expect(Array.isArray(errorDetails)).toBe(true);
           if (errors.length) {
             throw new Error(errors[0]);
           }
           if (loaded) {
-            assert.deepEqual(
+            expect(
               result,
+            ).toEqual(
               {todos: [todo]}
             );
             server.close();
@@ -77,13 +77,14 @@ test('a failing query', () => {
       {todos: {id: true, title: true, completed: true}},
       (result, loaded, errors, errorDetails) => {
         try {
-          assert.strictEqual(typeof result, 'object');
-          assert.strictEqual(typeof loaded, 'boolean');
-          assert(Array.isArray(errors));
-          assert(Array.isArray(errorDetails));
+          expect(typeof result).toBe('object');
+          expect(typeof loaded).toBe('boolean');
+          expect(Array.isArray(errors)).toBe(true);
+          expect(Array.isArray(errorDetails)).toBe(true);
           if (loaded) {
-            assert.deepEqual(
+            expect(
               result,
+            ).toEqual(
               {
                 todos: {
                   _type: 'ERROR',
@@ -92,12 +93,14 @@ test('a failing query', () => {
                 },
               },
             );
-            assert.deepEqual(
+            expect(
               errors,
+            ).toEqual(
               ['Whatever while getting Root(root).todos'],
             );
-            assert.deepEqual(
+            expect(
               errorDetails,
+            ).toEqual(
               [
                 {
                   _type: 'ERROR',

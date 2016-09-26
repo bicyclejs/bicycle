@@ -18,6 +18,16 @@ export default function parseArgs(args: string): {[key: string]: any} {
           cpState = cp.defaultState();
           currentKey = currentKey.trim();
           args = args.substr(1);
+          if (!currentKey) {
+            const err = new Error(
+              `Argument name cannot be empty string, full string was "${fullArgsString}"`
+            );
+            err.exposeProd = true;
+            throw err;
+          }
+        } else if (args[0] === ')' && !currentKey.trim()) {
+          state = 'terminated';
+          args = args.substr(1);
         } else {
           currentKey += args[0];
           args = args.substr(1);
@@ -29,9 +39,7 @@ export default function parseArgs(args: string): {[key: string]: any} {
           cpState = cp.parseChar(args[0], cpState);
           args = args.substr(1);
         } else if (args[0] === ')') {
-          if (currentKey.trim()) {
-            result[currentKey] = parseValue(currentValue.trim(), currentKey);
-          }
+          result[currentKey] = parseValue(currentValue.trim(), currentKey);
           state = 'terminated';
           args = args.substr(1);
         } else {
@@ -50,13 +58,20 @@ export default function parseArgs(args: string): {[key: string]: any} {
         throw err;
     }
   }
+  if (state !== 'terminated') {
+    const err = new Error(`End of args string reached with no closing bracket, full string was "${fullArgsString}"`);
+    err.exposeProd = true;
+    throw err;
+  }
   return result;
 }
 function parseValue(value: string, argName: string): any {
   try {
     return (value === 'undefined' || !value) ? null : JSON.parse(value);
   } catch (ex) {
-    const err = new Error(`Could not parse arg "${argName} with value ${inspect(value)}`);
+    const err = new Error(
+      `Could not parse arg "${argName} with value ${inspect(value)}, make sure the argument values are always valid JSON strings.`
+    );
     err.exposeProd = true;
     throw err;
   }

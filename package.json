@@ -24,10 +24,10 @@
     "eslint": "^2.13.0",
     "eslint-config-forbeslindesay": "^2.0.1",
     "express": "^4.13.3",
+    "jest": "^15.1.1",
     "lsr": "^1.0.0",
     "react": "^15.1.0",
     "react-dom": "^15.1.0",
-    "testit": "^2.1.0",
     "todomvc-app-css": "^2.0.3",
     "todomvc-common": "^1.0.2"
   },
@@ -37,7 +37,8 @@
     "build:prod": "NODE_ENV=production babel src --out-dir lib",
     "build:dev": "babel src --out-dir dev",
     "lint": "eslint src",
-    "test": "babel-node test/index.js && npm run lint",
+    "test": "jest --coverage && npm run lint",
+    "watch": "jest --coverage --watch",
     "example": "babel-node example/server.js"
   },
   "repository": {

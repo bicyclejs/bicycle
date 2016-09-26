@@ -17,7 +17,7 @@ export default function validateArgs(schema: Object, type: Object, inputObject: 
   Object.keys(type).map(key => {
     typedResult[key] = validateArg(
       schema,
-      type[key],
+      type[key].type,
       inputObject[key],
       key,
     );

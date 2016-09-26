@@ -103,7 +103,7 @@ function normalizeObject(Type) {
     if (field.args !== undefined) {
       const args = {};
       Object.keys(field.args).forEach(argName => {
-        args[argName] = getType(field.args[argName]);
+        args[argName] = {kind: 'arg', type: getType(field.args[argName])};
       });
       field = {
         ...field,
@@ -163,6 +163,7 @@ function normalizeObject(Type) {
         if (typeof args[argName] === 'string') {
           args[argName] = {type: args[argName]};
         }
+        args[argName].kind = 'arg';
         args[argName].type = getType(
           args[argName].type,
           Type.name + '.' + name + '.' + argName

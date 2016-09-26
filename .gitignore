@@ -14,6 +14,7 @@ node_modules
 /lib
 /dev
 .DS_Store
+/coverage
 
 # generated modules (do not edit anything after this line manually)
 
