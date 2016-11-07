@@ -141,7 +141,7 @@ class Client {
       if (done) subscription.unsubscribe();
     });
   }
-  definieOptimisticUpdaters(updates: Object) {
+  defineOptimisticUpdaters(updates: Object) {
     Object.keys(updates).forEach(t => {
       if (!this._optimisticUpdaters[t]) this._optimisticUpdaters[t] = {};
       Object.keys(updates[t]).forEach(k => {
