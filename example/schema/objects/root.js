@@ -16,5 +16,13 @@ export default {
         return getTodos();
       },
     },
+    obj: {
+      type: 'JsonObject',
+      resolve(root) {
+        return {
+          some: {complex: 'object'},
+        };
+      }
+    }
   },
 };

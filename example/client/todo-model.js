@@ -8,10 +8,12 @@ export default function TodoModel() {
   this._client = new BicycleClient();
   this._subscription = this._client.subscribe({
     todos: {id: true, title: true, completed: true},
+    obj: true,
     // intentional typo
     // todoos: true,
   }, (result, loaded, errors) => {
     if (loaded) { // ignore partial results
+      console.dir(result);
       if (Array.isArray(result.todos)) {
         this.todos = result.todos;
       }
