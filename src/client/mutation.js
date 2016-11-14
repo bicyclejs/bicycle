@@ -56,8 +56,8 @@ class Mutation {
   isBlocked(): boolean {
     return this._blocked;
   }
-  applyOptimistic(cache: Object): Object {
-    if (!this._optimisticUpdate) return cache;
+  applyOptimistic(cache: Object): ?Object {
+    if (!this._optimisticUpdate) return null;
     return this._optimisticUpdate.call(null, this.mutation, cache, this._getOptimisticValue);
   }
   getResult(): Promise<any> {

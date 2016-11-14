@@ -80,7 +80,11 @@ class Client {
       this._cache = isNew ? data : mergeCache(this._cache, data);
     }
     this._optimisticCache = this._request.getPendingMutations().reduce((cache, mutation) => {
-      return mergeCache(cache, mutation.applyOptimistic(cache));
+      const update = mutation.applyOptimistic(cache);
+      if (!update) {
+        return cache;
+      }
+      return mergeCache(cache, update);
     }, this._cache);
     this._updateHandlers.forEach(handler => {
       handler();
