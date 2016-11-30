@@ -103,14 +103,17 @@ function normalizeObject(Type) {
     if (field.args !== undefined) {
       const args = {};
       Object.keys(field.args).forEach(argName => {
-        args[argName] = {kind: 'arg', type: getType(field.args[argName])};
+        args[argName] = {
+          kind: 'arg',
+          type: getType(field.args[argName], Type.name + '.' + name + '.' + argName),
+        };
       });
       field = {
         ...field,
         args,
       };
     }
-    fields[name] = {...field, type: getType(field.type)};
+    fields[name] = {...field, type: getType(field.type, Type.name + '.' + name)};
   });
   if (Type.mutations) {
     Object.keys(Type.mutations).forEach(name => {
