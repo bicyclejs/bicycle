@@ -79,8 +79,10 @@ export default function validateReturnType(
     const expected = typeString(type);
     const actual = typeNameFromValue(value);
     // N.B. never reveal the actual **value** of the result in here
-    throw new TypeError(
+    const err = new TypeError(
       `Expected result to be of type "${expected}" but got a value of type "${actual}"`
     );
+    err.exposeProd = true;
+    throw err;
   }
 }
