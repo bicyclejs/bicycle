@@ -1,6 +1,6 @@
 let nextID = 0;
 
-export default class OptimisticValue {
+class OptimisticValue {
   constructor() {
     this._pending = true;
     this._rejected = false;
