@@ -37,8 +37,8 @@
     "build:prod": "NODE_ENV=production babel src --out-dir lib",
     "build:dev": "babel src --out-dir dev",
     "lint": "eslint src",
-    "test": "jest --coverage && npm run lint",
-    "watch": "jest --coverage --watch",
+    "test": "jest ./src/** --coverage && npm run lint",
+    "watch": "jest ./src/** --coverage --watch",
     "example": "babel-node example/server.js"
   },
   "repository": {
