@@ -10,13 +10,14 @@ export default function handleMessage(
   sessionStore: {setQuery: Function, getQuery: Function, setCache: Function, getCache: Function},
   message: {s: ?string, q: ?Object, m: Array<{m: string, a: Object}>},
   context: Object,
+  mutationContext?: Object,
 ): Promise<{sid: ?string, expiredSession: boolean, mutationResults: Array<Object>, data: ?Object}> {
   const sessionID = message.s;
   const queryUpdate = message.q;
   const mutations = message.m.map(m => ({method: m.m, args: m.a}));
   return Promise.all([
     getQuery(sessionID, sessionStore, queryUpdate),
-    runMutations(schema, mutations, context),
+    runMutations(schema, mutations, mutationContext || context),
   ]).then(([{sessionID, query, isExpired}, mutationResults]) => {
     if (isExpired) {
       return createResponse(undefined, mutationResults, undefined);
