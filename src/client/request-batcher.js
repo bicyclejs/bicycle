@@ -127,6 +127,20 @@ class RequestBatcher {
             const sessionID = response.s;
             const cacheUpdate = response.d;
             const mutationResults = response.m;
+            mutations.forEach((mutation, i) => {
+              if (mutationResults[i] === true) {
+                mutation.resolve();
+              } else if (mutationResults[i].s) {
+                mutation.resolve(mutationResults[i].v);
+              } else {
+                const err = new Error(mutationResults[i].v.message);
+                err.data = mutationResults[i].v.data;
+                err.code = mutationResults[i].v.code;
+                err.mutation = mutation.mutation;
+                this._handlers._handleMutationError(err);
+                mutation.reject(err);
+              }
+            });
             if (!sessionID) {
               console.warn('session expired, starting new session');
               this._sessionID = undefined;
@@ -156,20 +170,6 @@ class RequestBatcher {
               this._handlers._handleUpdate(cacheUpdate, isNew);
               resolve();
             }
-            mutations.forEach((mutation, i) => {
-              if (mutationResults[i] === true) {
-                mutation.resolve();
-              } else if (mutationResults[i].s) {
-                mutation.resolve(mutationResults[i].v);
-              } else {
-                const err = new Error(mutationResults[i].v.message);
-                err.data = mutationResults[i].v.data;
-                err.code = mutationResults[i].v.code;
-                err.mutation = mutation.mutation;
-                this._handlers._handleMutationError(err);
-                mutation.reject(err);
-              }
-            });
           },
           reject,
         );
