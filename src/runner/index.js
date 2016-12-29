@@ -11,7 +11,7 @@ export function runQuery(schema: Object, query: Object, context: Object): Promis
   return runQueryInternal(schema, schema.Root, context, query, context, result).then(() => result);
 }
 
-export function runMutation(schema: Object, mutation: {method: string, args: Object}, context: any): Promise {
+export function runMutation(schema: Object, mutation: {method: string, args: Object}, context: Object): Promise {
   let method;
   return Promise.resolve(null).then(() => {
     const [type, name] = mutation.method.split('.');

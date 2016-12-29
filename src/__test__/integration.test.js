@@ -2,7 +2,7 @@
 
 import express from 'express';
 import BicycleClient, {NetworkLayer} from 'bicycle/client';
-import {loadSchemaFromFiles, createBicycleMiddleware} from 'bicycle/server';
+import {loadSchemaFromFiles, createBicycleMiddleware, runQuery} from 'bicycle/server';
 import MemoryStore from 'bicycle/sessions/memory';
 
 const schema = loadSchemaFromFiles(__dirname + '/../test-schema');
@@ -51,6 +51,24 @@ test('a successful query', () => {
           reject(ex);
         }
       },
+    );
+  });
+});
+test('a successful server query', () => {
+  const todo = {id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', title: 'Hello World', completed: false};
+  const context = {
+    db: {
+      getTodos() {
+        // ^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$
+        return [todo];
+      },
+    },
+  };
+  return runQuery(schema, {todos: {id: true, title: true, completed: true}}, context).then(result => {
+    expect(
+      result,
+    ).toEqual(
+      {todos: [todo]}
     );
   });
 });

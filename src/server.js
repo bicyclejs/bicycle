@@ -7,8 +7,8 @@ import handleMessage from './message-handler';
 import createBicycleMiddleware from './middleware';
 import createServerRenderer from './server-rendering';
 
-function runQuery(schema, query) {
-  return runQueryToGetCache(schema, query).then(cache => {
+function runQuery(schema: Object, query: Object, context: Object) {
+  return runQueryToGetCache(schema, query, context).then(cache => {
     const {loaded, result, errors} = runQueryAgainstCache(cache, cache.root, query);
     if (errors.length) {
       throw new Error(errors[0]);
@@ -19,7 +19,7 @@ function runQuery(schema, query) {
     return result;
   });
 }
-function runMutation(schema, method, args, context) {
+function runMutation(schema: Object, method: string, args: Object, context: Object) {
   return tryRunMutation(schema, {method, args}, context).then(
     ({s, v}) => {
       if (s) {
