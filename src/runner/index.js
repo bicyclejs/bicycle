@@ -3,6 +3,7 @@ import validateArg from './arg-validator';
 import validateArgs from './args-validator';
 import suggestMatch from '../utils/suggest-match';
 import typeNameFromValue from '../utils/type-name-from-value';
+import {reportError} from '../error-reporting';
 
 import runQueryInternal from './run-query';
 
@@ -76,7 +77,6 @@ export function runMutation(schema: Object, mutation: {method: string, args: Obj
       return true;
     }
   }).then(null, err => {
-    console.error(err.stack);
     const result = (
       process.env.NODE_ENV === 'production' && !err.exposeProd
       ? {
@@ -93,6 +93,8 @@ export function runMutation(schema: Object, mutation: {method: string, args: Obj
         code: err.code,
       }
     );
+    err.message += ' while running ' + mutation.method;
+    reportError(err);
     return {s: false, v: result};
   });
 }

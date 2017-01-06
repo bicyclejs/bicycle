@@ -2,8 +2,25 @@
 
 import express from 'express';
 import BicycleClient, {NetworkLayer} from 'bicycle/client';
-import {loadSchemaFromFiles, createBicycleMiddleware, runQuery} from 'bicycle/server';
+import {
+  loadSchemaFromFiles,
+  createBicycleMiddleware,
+  runQuery,
+  onBicycleError,
+  silenceDefaultBicycleErrorReporting,
+} from 'bicycle/server';
 import MemoryStore from 'bicycle/sessions/memory';
+
+let allowErrors = false;
+const serverErrors = [];
+onBicycleError(err => {
+  if (allowErrors) {
+    serverErrors.push(err);
+  } else {
+    throw err;
+  }
+});
+silenceDefaultBicycleErrorReporting();
 
 const schema = loadSchemaFromFiles(__dirname + '/../test-schema');
 test('a successful query', () => {
@@ -74,6 +91,7 @@ test('a successful server query', () => {
 });
 
 test('a failing query', () => {
+  allowErrors = true;
   const app = express();
   // sessions expire after just 1 second for testing
   const sessionStore = new MemoryStore(1000);
@@ -100,6 +118,9 @@ test('a failing query', () => {
           expect(Array.isArray(errors)).toBe(true);
           expect(Array.isArray(errorDetails)).toBe(true);
           if (loaded) {
+            allowErrors = false;
+            expect(serverErrors.length).toBe(1);
+            expect(serverErrors[0].message).toBe('Whatever while getting Root(root).todos');
             expect(
               result,
             ).toEqual(

@@ -6,6 +6,10 @@ import {runQuery as runQueryToGetCache, runMutation as tryRunMutation} from './r
 import handleMessage from './message-handler';
 import createBicycleMiddleware from './middleware';
 import createServerRenderer from './server-rendering';
+import {
+  onError as onBicycleError,
+  silenceDefaultErrorReporting as silenceDefaultBicycleErrorReporting,
+} from './error-reporting';
 
 function runQuery(schema: Object, query: Object, context: Object) {
   return runQueryToGetCache(schema, query, context).then(cache => {
@@ -48,4 +52,7 @@ export {
   createBicycleMiddleware,
   // (schema: Schema, sessionStore: SessionStore, fn: (client: Object, ...args) => Result) => (context: Object, ...args) => Result
   createServerRenderer,
+
+  onBicycleError,
+  silenceDefaultBicycleErrorReporting,
 };

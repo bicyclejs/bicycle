@@ -2,9 +2,10 @@ import Promise from 'promise';
 import typeNameFromValue from 'bicycle/utils/type-name-from-value';
 import resolveField from './resolve-field';
 import {ERROR} from '../constants';
+import {reportError} from '../error-reporting';
 
 function getErrorObject(err, context) {
-  return (
+  const result = (
     process.env.NODE_ENV === 'production' && !err.exposeProd
     ? {
       _type: ERROR,
@@ -22,6 +23,9 @@ function getErrorObject(err, context) {
       code: err.code,
     }
   );
+  err.message += ' ' + context;
+  reportError(err);
+  return result;
 }
 export default function run(
   schema: Object,
@@ -48,7 +52,6 @@ export default function run(
           };
         }
         return resolveField(schema, type, value, key, subQuery, context, result).then(null, err => {
-          console.error(err.stack);
           return getErrorObject(err, 'while getting ' + type.name + '(' + id + ').' + key);
         }).then(value => {
           result[id][key] = value;
@@ -56,7 +59,6 @@ export default function run(
       }),
     ).then(() => id);
   }, err => {
-    console.error(err.stack);
     return getErrorObject(err, 'while getting ID of ' + type.name);
   });
 }

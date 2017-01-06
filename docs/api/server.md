@@ -186,3 +186,16 @@ class MockNetworkLayer {
   }
 }
 ```
+
+## `onBicycleError` / `silenceDefaultBicycleErrorReporting`
+
+```js
+import {onBicycleError, silenceDefaultErrorReporting} from 'bicycle/server';
+
+onBicycleError(err => {
+  // log the error somewhere
+});
+
+// call this if you want to disable the default `console.error(err.stack)` reporter
+silenceDefaultBicycleErrorReporting();
+```
