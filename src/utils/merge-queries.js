@@ -1,9 +1,5 @@
-export default function mergeQueries(firstQuery: Object, ...queries): Object {
+export default function mergeQueries(...queries): Object {
   const result = {};
-  Object.keys(firstQuery).forEach(key => {
-    if (key[0] === '_') return;
-    result[key] = firstQuery[key];
-  });
   for (const query of queries) {
     Object.keys(query).forEach(key => {
       if (key[0] === '_') return;
