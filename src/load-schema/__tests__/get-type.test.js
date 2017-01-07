@@ -2,7 +2,7 @@ import getType from 'bicycle/load-schema/get-type';
 
 test('NamedTypeReference', () => {
   expect(
-    getType('String?'),
+    getType('String?', 'context', ['String']),
   ).toEqual(
     {
       kind: 'NamedTypeReference',
@@ -10,7 +10,7 @@ test('NamedTypeReference', () => {
     },
   );
   expect(
-    getType('String'),
+    getType('String', 'context', ['String']),
   ).toEqual(
     {
       kind: 'NotNull',
@@ -23,7 +23,7 @@ test('NamedTypeReference', () => {
 });
 test('List', () => {
   expect(
-    getType('String?[]?'),
+    getType('String?[]?', 'context', ['String']),
   ).toEqual(
     {
       kind: 'List',
@@ -34,7 +34,7 @@ test('List', () => {
     },
   );
   expect(
-    getType('String[]'),
+    getType('String[]', 'context', ['String']),
   ).toEqual(
     {
       kind: 'NotNull',
@@ -56,5 +56,17 @@ test('Throw on unexpected characters', () => {
     () => getType('my_fake_type'),
   ).toThrowError(
     /Expected type name to match \[A-Za-z0-9\]\+ but got 'my_fake_type'/,
+  );
+});
+test('A missing name', () => {
+  expect(
+    () => getType('MyType', 'context', []),
+  ).toThrowError(
+    /context refers to MyType, but there is no type by that name/,
+  );
+  expect(
+    () => getType('MyTipe', 'context', ['MyType']),
+  ).toThrowError(
+    /context refers to MyTipe, but there is no type by that name maybe you meant to use "MyType"/,
   );
 });

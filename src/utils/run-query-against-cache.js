@@ -1,9 +1,11 @@
+// @flow
+
 import freeze from './freeze';
 import {ERROR} from '../constants';
 
-const EMPTY_ARRAY = freeze([]);
-let spareArray = [];
-let spareDetailsArray = [];
+const EMPTY_ARRAY: Array<any> = freeze([]);
+let spareArray: Array<string> = [];
+let spareDetailsArray: Array<Object> = [];
 
 export default function runQueryAgainstCache(
   cache: Object,
@@ -61,7 +63,6 @@ export default function runQueryAgainstCache(
     errors = freeze(errors);
     errorDetails = freeze(errorDetails);
   }
-  // TODO: work around for https://github.com/codemix/babel-plugin-typecheck/issues/155
-  const res = {result, loaded, errors, errorDetails};
-  return res;
+
+  return {result, loaded, errors, errorDetails};
 }

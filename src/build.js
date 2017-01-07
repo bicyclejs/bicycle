@@ -1,3 +1,5 @@
+// @flow
+
 import {readFileSync, writeFileSync, mkdirSync} from 'fs';
 import {sync as lsr} from 'lsr';
 

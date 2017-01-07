@@ -14,9 +14,10 @@
   ],
   "env": {
     "development": {
-      "plugins": [
-        "typecheck"
-      ]
+      "plugins": [["flow-runtime", {
+        "assert": true,
+        "decorate": true
+      }]]
     },
     "production": {
       "plugins": []

@@ -1,17 +1,15 @@
+// @flow
+
+import type {Context, Schema, SessionStore} from './flow-types';
 import Promise from 'promise';
 import bodyParser from 'body-parser';
 import handleMessage from './message-handler';
 
 const jsonBody = bodyParser.json();
 export default function createBicycleMiddleware(
-  schema: Object,
-  sessionStore: {
-    getCache: Function,
-    setCache: Function,
-    getQuery: Function,
-    setQuery: Function,
-  },
-  getContext: Function
+  schema: Schema,
+  sessionStore: SessionStore,
+  getContext: (req: Object, options: {stage: 'query' | 'mutation'}) => Context,
 ): Function {
   function processRequest(req, res, next) {
     Promise.resolve(null).then(

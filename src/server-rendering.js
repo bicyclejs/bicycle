@@ -1,3 +1,7 @@
+// @flow
+
+import type {Schema, ServerPreparation, SessionID, SessionStore, Query, Context} from './flow-types';
+
 import Promise from 'promise';
 import notEqual from './utils/not-equal';
 import mergeQueries from './utils/merge-queries';
@@ -6,21 +10,23 @@ import getSessionID from './utils/get-session-id';
 import {runQuery} from './runner';
 import {serverPreparation as createServerPreparation} from './messages';
 
-
 class FakeClient {
-  constructor(sessionID) {
+  _sessionID: SessionID;
+  _query: Query;
+  _cache: Object;
+  constructor(sessionID: SessionID) {
     this._sessionID = sessionID;
     this._query = {};
     this._cache = {root: {}};
   }
-  _serverPreparation() {
+  _serverPreparation(): ServerPreparation {
     return createServerPreparation(
       this._sessionID,
       this._query,
       this._cache,
     );
   }
-  queryCache(query: Object): {result: Object, loaded: boolean, errors: Array<string>} {
+  queryCache(query: Query): {result: Object, loaded: boolean, errors: Array<string>} {
     this._query = mergeQueries(this._query, query);
     return runQueryAgainstCache(this._cache, this._cache['root'], query);
   }
@@ -32,8 +38,12 @@ class FakeClient {
   }
 }
 
-export default function prepare(schema: Object, sessionStore: {setCache: Function, setQuery: Function}, fn: Function) {
-  return (context, ...args) => {
+export default function prepare<TResult>(
+  schema: Schema,
+  sessionStore: SessionStore,
+  fn: (client: FakeClient, ...args: any) => TResult,
+): (context: Context, ...args: any) => Promise<{serverPreparation: ServerPreparation, result: TResult}> {
+  return (context: Context, ...args: any) => {
     return getSessionID(sessionStore).then(sessionID => {
       const client = new FakeClient(sessionID);
       return new Promise((resolve, reject) => {

@@ -1,5 +1,7 @@
 // @public
+// @flow
 
+import type {Schema, Query, Context} from './flow-types';
 import runQueryAgainstCache from './utils/run-query-against-cache';
 import loadSchema, {loadSchemaFromFiles} from './load-schema';
 import {runQuery as runQueryToGetCache, runMutation as tryRunMutation} from './runner';
@@ -11,7 +13,7 @@ import {
   silenceDefaultErrorReporting as silenceDefaultBicycleErrorReporting,
 } from './error-reporting';
 
-function runQuery(schema: Object, query: Object, context: Object) {
+function runQuery(schema: Schema, query: Query, context: Context) {
   return runQueryToGetCache(schema, query, context).then(cache => {
     const {loaded, result, errors} = runQueryAgainstCache(cache, cache.root, query);
     if (errors.length) {
@@ -23,14 +25,20 @@ function runQuery(schema: Object, query: Object, context: Object) {
     return result;
   });
 }
-function runMutation(schema: Object, method: string, args: Object, context: Object) {
+function runMutation(schema: Schema, method: string, args: Object, context: Context) {
   return tryRunMutation(schema, {method, args}, context).then(
-    ({s, v}) => {
+    (result) => {
+      if (result === true) {
+        return;
+      }
+      const {s, v} = result;
       if (s) {
         return v;
       } else {
         const err = new Error(v.message);
+        // $FlowFixMe: errors are not extensible
         err.data = v.data;
+        // $FlowFixMe: errors are not extensible
         err.code = v.code;
         throw err;
       }
@@ -42,7 +50,7 @@ export {
   loadSchema,
   // (dirname: string) => Schema
   loadSchemaFromFiles,
-  // (schema: Schema, query: Object, context: Object) => Promise<Object>
+  // (schema: Schema, query: Query, context: Context) => Promise<Object>
   runQuery,
   // (schema: Schema, method: string, args: Object, context: Object) => Promise<Result>
   runMutation,

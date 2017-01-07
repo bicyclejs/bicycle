@@ -1,10 +1,14 @@
+// @flow
+
+import type {Schema, TypeDefinition} from '../flow-types';
 import {inspect} from 'util';
 import typeString from '../utils/type-name-from-definition';
 import typeNameFromValue from '../utils/type-name-from-value';
+import createError from '../utils/create-error';
 
 const error = new TypeError('Unexpected type');
 
-function checkArgTypeInner(schema: Object, type: {kind: string}, value: any, argName: string): any {
+function checkArgTypeInner(schema: Schema, type: TypeDefinition, value: any, argName: string): any {
   switch (type.kind) {
     case 'NotNull':
       if (value === null) {
@@ -16,11 +20,12 @@ function checkArgTypeInner(schema: Object, type: {kind: string}, value: any, arg
       }
       return result;
     case 'List':
+      const subType = type.type;
       if (value == null) return null;
       if (!Array.isArray(value)) {
         throw error;
       }
-      return value.map((v, i) => checkArgTypeInner(schema, type.type, v, argName));
+      return value.map((v, i) => checkArgTypeInner(schema, subType, v, argName));
     case 'NamedTypeReference':
       if (value == null) {
         return null;
@@ -47,7 +52,7 @@ function checkArgTypeInner(schema: Object, type: {kind: string}, value: any, arg
   }
 }
 
-export default function validateArg(schema: Object, type: {kind: string}, value: any, argName: string): any {
+export default function validateArg(schema: Schema, type: TypeDefinition, value: any, argName: string): any {
   try {
     return checkArgTypeInner(schema, type, value, argName);
   } catch (ex) {
@@ -55,10 +60,9 @@ export default function validateArg(schema: Object, type: {kind: string}, value:
     const expected = typeString(type);
     const valString = inspect(value, {depth: 10});
     const actual = valString.length < 30 ? valString : 'a "' + typeNameFromValue(value) + '"';
-    const err = new TypeError(
-      `Expected arg "${argName}" to be of type "${expected}" but got ${actual}`
+    throw createError(
+      `Expected arg "${argName}" to be of type "${expected}" but got ${actual}`,
+      {exposeProd: true, code: 'INVALID_ARGUMENT_TYPE', data: {argName, value, expected}},
     );
-    err.exposeProd = true;
-    throw err;
   }
 }

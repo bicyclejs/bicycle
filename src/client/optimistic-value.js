@@ -1,40 +1,46 @@
+// @flow
+
 let nextID = 0;
 
 class OptimisticValue {
+  _pending: boolean;
+  _rejected: boolean;
+  _value: string;
+  _err: ?Error
   constructor() {
     this._pending = true;
     this._rejected = false;
     this._value = '__bicycle_optimistic_value_' + (nextID++) + '__';
     this._err = null;
   }
-  resolve(value) {
+  resolve(value: string) {
     this._pending = false;
     this._value = value;
   }
-  reject(err) {
+  reject(err: Error) {
     this._pending = false;
     this._rejected = true;
     this._err = err;
   }
-  isPending() {
+  isPending(): boolean {
     return this._pending;
   }
-  isRejected() {
+  isRejected(): boolean {
     return this._rejected;
   }
-  getError() {
+  getError(): ?Error {
     return this._err;
   }
-  toString() {
+  toString(): string {
     return this._value + '';
   }
-  inspect() {
+  inspect(): string {
     return this._value;
   }
-  toJSON() {
+  toJSON(): string {
     return this._value;
   }
-  valueOf() {
+  valueOf(): string {
     return this._value;
   }
 }

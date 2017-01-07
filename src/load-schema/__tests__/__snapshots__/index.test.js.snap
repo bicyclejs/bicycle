@@ -16,6 +16,7 @@ Object {
             }
           }
         },
+        "description": undefined,
         "resolve": [Function resolve],
         "type": Object {
           "kind": "NotNull",
@@ -26,6 +27,8 @@ Object {
         }
       },
       "todos": Object {
+        "args": undefined,
+        "description": undefined,
         "resolve": [Function resolve],
         "type": Object {
           "kind": "NotNull",
@@ -51,6 +54,9 @@ Object {
     "description": undefined,
     "fields": Object {
       "completed": Object {
+        "args": undefined,
+        "description": undefined,
+        "resolve": undefined,
         "type": Object {
           "kind": "NotNull",
           "type": Object {
@@ -60,6 +66,9 @@ Object {
         }
       },
       "id": Object {
+        "args": undefined,
+        "description": undefined,
+        "resolve": undefined,
         "type": Object {
           "kind": "NotNull",
           "type": Object {
@@ -69,6 +78,9 @@ Object {
         }
       },
       "title": Object {
+        "args": undefined,
+        "description": undefined,
+        "resolve": undefined,
         "type": Object {
           "kind": "NotNull",
           "type": Object {
@@ -104,23 +116,29 @@ Object {
             }
           }
         },
+        "description": undefined,
         "resolve": [Function resolve],
         "type": Object {
-          "id": Object {
-            "type": Object {
-              "kind": "NotNull",
-              "type": Object {
-                "kind": "NamedTypeReference",
-                "value": "id"
+          "kind": "NotNull",
+          "type": Object {
+            "kind": "ObjectScalar",
+            "properties": Object {
+              "id": Object {
+                "kind": "NotNull",
+                "type": Object {
+                  "kind": "NamedTypeReference",
+                  "value": "id"
+                }
               }
             }
           }
         }
       },
       "clearCompleted": Object {
-        "args": Object {},
+        "args": undefined,
+        "description": undefined,
         "resolve": [Function resolve],
-        "type": null
+        "type": undefined
       },
       "destroy": Object {
         "args": Object {
@@ -135,8 +153,9 @@ Object {
             }
           }
         },
+        "description": undefined,
         "resolve": [Function resolve],
-        "type": null
+        "type": undefined
       },
       "save": Object {
         "args": Object {
@@ -161,9 +180,11 @@ Object {
             }
           }
         },
+        "description": undefined,
         "resolve": [Function resolve],
-        "type": null
+        "type": undefined
       },
+      "set": undefined,
       "toggle": Object {
         "args": Object {
           "checked": Object {
@@ -187,8 +208,9 @@ Object {
             }
           }
         },
+        "description": undefined,
         "resolve": [Function resolve],
-        "type": null
+        "type": undefined
       },
       "toggleAll": Object {
         "args": Object {
@@ -203,8 +225,9 @@ Object {
             }
           }
         },
+        "description": undefined,
         "resolve": [Function resolve],
-        "type": null
+        "type": undefined
       }
     },
     "name": "Todo"

@@ -1,4 +1,6 @@
-import {DELETE_FIELD, ERROR} from 'bicycle/constants';
+// @flow
+
+import {DELETE_FIELD, ERROR} from '../constants';
 
 export default function diffCache(before: Object, after: Object): ?Object {
   let result;

@@ -1,4 +1,6 @@
-export default function diffQueries(oldQuery: Object, newQuery: Object): ?Object {
+// @flow
+
+export default function diffQueries(oldQuery: Object, newQuery: Object): Object | void {
   let result;
   Object.keys(oldQuery).forEach(key => {
     if (key[0] === '_') return;

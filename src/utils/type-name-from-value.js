@@ -1,4 +1,6 @@
-export default function typeName(obj: any): string {
+// @flow
+
+export default function typeName(obj: mixed): string {
   if (obj === null) return 'null';
   if (Array.isArray(obj)) {
     if (process.env.NODE_ENV === 'production') {

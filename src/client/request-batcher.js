@@ -1,5 +1,9 @@
+// @flow
+
+import type {NetworkLayerInterface, Query, SessionID} from '../flow-types';
 import Promise from 'promise';
-import diffQueries from 'bicycle/utils/diff-queries';
+import diffQueries from '../utils/diff-queries';
+import createError from '../utils/create-error';
 import Mutation from './mutation';
 import {request as createRequest} from '../messages';
 
@@ -8,24 +12,33 @@ const IDLE = 'IDLE';
 const REQUEST_QUEUED = 'REQUEST_QUEUED';
 const REQUEST_IN_FLIGHT = 'REQUEST_IN_FLIGHT';
 
-function assert(fact) {
+function assert(fact: boolean): void {
   if (!fact) {
     throw new Error('Assertion violated');
   }
 }
 
+declare interface Handlers {
+  _handleNetworkError(err: Error): mixed;
+  _handleMutationError(err: Error): mixed;
+  _handleUpdate(data: ?Object, isNew: boolean): mixed;
+  _handleQueueRequest(): mixed;
+  _handleSuccessfulResponse(pendingMutations: number): mixed;
+}
 class RequestBatcher {
+  _networkLayer: NetworkLayerInterface;
+  _handlers: Handlers;
+  _sessionID: SessionID | void;
+  _pendingMutations: Array<Mutation>;
+  _localQuery: Object;
+  _serverQuery: Object | void;
+  _status: 'IDLE' | 'REQUEST_QUEUED' | 'REQUEST_IN_FLIGHT';
+
   constructor(
-    networkLayer: {send: Function},
+    networkLayer: NetworkLayerInterface,
     sessionID: ?string,
     query: Object,
-    handlers: {
-      _handleNetworkError: (err: Error) => mixed,
-      _handleMutationError: (err: Error) => mixed,
-      _handleUpdate: (data: ?Object, isNew: boolean) => mixed,
-      _handleQueueRequest: () => mixed,
-      _handleSuccessfulResponse: (pendingMutations: number) => mixed,
-    },
+    handlers: Handlers,
   ) {
     this._networkLayer = networkLayer;
     this._handlers = handlers;
@@ -38,7 +51,7 @@ class RequestBatcher {
     this._status = IDLE;
   }
 
-  updateQuery(query: Object) {
+  updateQuery(query: Query) {
     this._localQuery = query;
     this._request();
   }
@@ -49,7 +62,7 @@ class RequestBatcher {
     this._handlers._handleUpdate(null, false);
     return mutation.getResult();
   }
-  getPendingMutations(): Array<{applyOptimistic: (cache: Object) => Object}> {
+  getPendingMutations(): Array<Mutation> {
     return this._pendingMutations;
   }
 
@@ -68,7 +81,7 @@ class RequestBatcher {
   }
 
   // queue a new request
-  _queueRequest(timeout, errCount = 0) {
+  _queueRequest(timeout: number, errCount: number = 0) {
     this._handlers._handleQueueRequest();
     assert(this._status === IDLE);
     this._status = REQUEST_QUEUED;
@@ -122,25 +135,28 @@ class RequestBatcher {
           this._serverQuery ? diffQueries(this._serverQuery, localQuery) : localQuery,
           mutations.map(m => m.mutation),
         );
-        return this._networkLayer.send(message).done(
+        return Promise.resolve(this._networkLayer.send(message)).done(
           response => {
             const sessionID = response.s;
             const cacheUpdate = response.d;
             const mutationResults = response.m;
-            mutations.forEach((mutation, i) => {
-              if (mutationResults[i] === true) {
-                mutation.resolve();
-              } else if (mutationResults[i].s) {
-                mutation.resolve(mutationResults[i].v);
-              } else {
-                const err = new Error(mutationResults[i].v.message);
-                err.data = mutationResults[i].v.data;
-                err.code = mutationResults[i].v.code;
-                err.mutation = mutation.mutation;
-                this._handlers._handleMutationError(err);
-                mutation.reject(err);
-              }
-            });
+            if (mutationResults) {
+              mutations.forEach((mutation, i) => {
+                if (mutationResults[i] === true) {
+                  mutation.resolve();
+                } else if (mutationResults[i].s) {
+                  mutation.resolve(mutationResults[i].v);
+                } else {
+                  const err = createError(mutationResults[i].v.message, {
+                    data: mutationResults[i].v.data,
+                    code: mutationResults[i].v.code,
+                    mutation: mutation.mutation,
+                  });
+                  this._handlers._handleMutationError(err);
+                  mutation.reject(err);
+                }
+              });
+            }
             if (!sessionID) {
               console.warn('session expired, starting new session');
               this._sessionID = undefined;

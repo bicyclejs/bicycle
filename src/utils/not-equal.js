@@ -1,6 +1,7 @@
 // @public
+// @flow
 
-export default function notEqual(oldValue, newValue) {
+export default function notEqual(oldValue: Object, newValue: Object): boolean {
   if (oldValue === newValue) return false;
   return Object.keys(oldValue).some(key => {
     if (oldValue[key] === newValue[key]) return false;

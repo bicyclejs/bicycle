@@ -1,6 +1,9 @@
+// @flow
+
+import type {Context, ObjectType, Query, Schema} from '../flow-types';
 import Promise from 'promise';
-import freeze from 'bicycle/utils/freeze';
-import suggestMatch from 'bicycle/utils/suggest-match';
+import freeze from '../utils/freeze';
+import suggestMatch from '../utils/suggest-match';
 import parseArgs from './args-parser';
 import validateArgs from './args-validator';
 import validateReturnType from './validate-return-type';
@@ -12,12 +15,12 @@ const EMPTY_OBJECT = freeze({});
  * Resolve a single field on a node to a value to be returned to the client
  */
 export default function resolveField(
-  schema: Object,
-  type: {name: string, fields: Object},
+  schema: Schema,
+  type: ObjectType,
   value: any,
   name: string,
-  subQuery: true | Object,
-  context: any,
+  subQuery: true | Query,
+  context: Context,
   result: Object,
 ): any {
   const fname = name.split('(')[0];
@@ -36,12 +39,13 @@ export default function resolveField(
           value: `Expected ${type.name}.${fname}.resolve to be a function.`,
         };
       }
+      const resolveField = type.fields[fname].resolve;
       const argsObj = freeze(
         type.fields[fname].args
         ? validateArgs(schema, type.fields[fname].args, parseArgs(args))
         : EMPTY_OBJECT
       );
-      return Promise.resolve(type.fields[fname].resolve(value, argsObj, context, freeze({
+      return Promise.resolve(resolveField(value, argsObj, context, freeze({
         type: type.name,
         name,
         subQuery: subQuery === true ? null : subQuery,

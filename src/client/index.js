@@ -1,29 +1,50 @@
 // @public
+// @flow
 
+import type {NetworkLayerInterface, Query, ServerPreparation} from '../flow-types';
 import Promise from 'promise';
-import mergeQueries from 'bicycle/utils/merge-queries';
-import runQueryAgainstCache from 'bicycle/utils/run-query-against-cache';
-import notEqual from 'bicycle/utils/not-equal';
-import mergeCache from 'bicycle/utils/merge-cache';
-import NetworkLayer from 'bicycle/network-layer';
+import createError from '../utils/create-error';
+import mergeQueries from '../utils/merge-queries';
+import runQueryAgainstCache from '../utils/run-query-against-cache';
+import notEqual from '../utils/not-equal';
+import mergeCache from '../utils/merge-cache';
+import NetworkLayer from '../network-layer';
 import RequestBatcher from './request-batcher';
 import Mutation from './mutation';
 
 export {NetworkLayer};
 
+type ClientOptions = {
+  cacheTimeout?: number,
+};
 function noop() {}
 class Client {
+  _options: ClientOptions;
+  _queries: Array<Query>;
+  _queriesCount: Array<number>;
+  _cache: Object;
+  _optimisticCache: Object;
+  _updateHandlers: Array<() => mixed>;
+  _networkErrorHandlers: Array<(err: Error) => mixed>;
+  _mutationErrorHandlers: Array<(err: Error) => mixed>;
+  _queueRequestHandlers: Array<() => mixed>;
+  _successfulResponseHandlers: Array<(pendingMutations: number) => mixed>;
+
+  _optimisticUpdaters: Object;
+  _pendingMutations: Array<Mutation>;
+  _request: RequestBatcher;
+
   constructor(
-    networkLayer: {send: Function} = new NetworkLayer(),
-    serverPreparation: {s?: string, q?: Object, c?: Object} = {},
-    options = {}
+    networkLayer: NetworkLayerInterface = new NetworkLayer(),
+    serverPreparation?: ServerPreparation,
+    options: ClientOptions = {}
   ) {
     this._options = options;
 
     this._queries = [];
     this._queriesCount = [];
 
-    this._cache = serverPreparation.c || {root: {}};
+    this._cache = (serverPreparation && serverPreparation.c) || {root: {}};
     this._optimisticCache = this._cache;
     this._updateHandlers = [];
 
@@ -38,8 +59,8 @@ class Client {
 
     this._request = new RequestBatcher(
       networkLayer,
-      serverPreparation.s,
-      serverPreparation.q || {},
+      (serverPreparation && serverPreparation.s),
+      (serverPreparation && serverPreparation.q) || {},
       this,
     );
   }
@@ -51,6 +72,7 @@ class Client {
   }
   // called by RequestBatcher, these errors are always retried and are usually temporary
   _handleNetworkError(err: Error) {
+    // $FlowFixMe: flow doesn't let you extend errors
     err.code = 'NETWORK_ERROR';
     setTimeout(() => { throw err; }, 0);
     this._networkErrorHandlers.forEach(handler => {
@@ -90,14 +112,14 @@ class Client {
       handler();
     });
   }
-  _getQuery(): Object {
+  _getQuery(): Query {
     if (this._queries.length === 0) return {};
     return mergeQueries(...this._queries);
   }
   _updateQuery() {
     this._request.updateQuery(this._getQuery());
   }
-  _addQuery(query: Object): Promise {
+  _addQuery(query: Query) {
     const i = this._queries.indexOf(query);
     if (i !== -1) {
       this._queriesCount[i]++;
@@ -107,7 +129,7 @@ class Client {
     this._queriesCount.push(1);
     this._updateQuery();
   }
-  _removeQuery(query: Object): Promise {
+  _removeQuery(query: Query) {
     const i = this._queries.indexOf(query);
     if (i === -1) {
       console.warn('You attempted to remove a query that does not exist.');
@@ -120,20 +142,22 @@ class Client {
     this._updateQuery();
   }
 
-  queryCache(query: Object): {result: Object, loaded: boolean, errors: Array<string>, errorDetails: Array<Object>} {
+  queryCache(query: Query): {result: Object, loaded: boolean, errors: Array<string>, errorDetails: Array<Object>} {
     return runQueryAgainstCache(this._optimisticCache, this._optimisticCache['root'], query);
   }
-  query(query: Object): Promise<Object> {
+  query(query: Query): Promise<Object> {
     return new Promise((resolve, reject) => {
       let subscription = null;
       let done = false;
       subscription = this.subscribe(query, (result, loaded, errors) => {
         if (errors.length) {
-          const err = new Error('Error fetching data for query:\n' + errors.join('\n'));
-          err.code = 'BICYCLE_QUERY_ERROR';
-          err.query = query;
-          err.errors = errors;
-          err.result = result;
+          const err = createError('Error fetching data for query:\n' + errors.join('\n'), {
+            code: 'BICYCLE_QUERY_ERROR',
+            query,
+            errors,
+            result,
+          });
+          reject(err);
           done = true;
           if (subscription) subscription.unsubscribe();
         } else if (loaded) {
@@ -153,7 +177,7 @@ class Client {
       });
     });
   }
-  update(method: string, args: Object, optimisticUpdate?: Function): Promise {
+  update(method: string, args: Object, optimisticUpdate?: Function): Promise<any> {
     if (!optimisticUpdate) {
       const split = method.split('.');
       optimisticUpdate = this._optimisticUpdaters[split[0]] && this._optimisticUpdaters[split[0]][split[1]];
@@ -164,7 +188,7 @@ class Client {
       optimisticUpdate,
     ));
   }
-  subscribe(query: Object, fn: Function) {
+  subscribe(query: Query, fn: Function) {
     let lastValue = null;
     const onUpdate = () => {
       const nextValue = this.queryCache(query);

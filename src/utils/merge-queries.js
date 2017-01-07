@@ -1,4 +1,5 @@
-export default function mergeQueries(...queries): Object {
+// @flow
+export default function mergeQueries(...queries: Array<Object>): Object {
   const result = {};
   for (const query of queries) {
     Object.keys(query).forEach(key => {

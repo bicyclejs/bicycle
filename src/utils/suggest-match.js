@@ -1,3 +1,5 @@
+// @flow
+
 import leven from 'leven';
 
 /**
@@ -8,7 +10,7 @@ export default function suggestMatch(validKeys: Array<string>, key: string): str
   const closestMatch = validKeys.reduce((best, validKey) => {
     const distance = leven(key, validKey);
     return distance < best.distance ? {distance, validKey} : best;
-  }, {distance: Infinity});
+  }, {distance: Infinity, validKey: ''});
   return (
     closestMatch.distance < (key.length / 2)
     ? ` maybe you meant to use "${closestMatch.validKey}"`

@@ -17,6 +17,7 @@ onBicycleError(err => {
   if (allowErrors) {
     serverErrors.push(err);
   } else {
+    console.error(err.stack);
     throw err;
   }
 });
@@ -88,6 +89,92 @@ test('a successful server query', () => {
       {todos: [todo]}
     );
   });
+});
+test('a successful mutation with a result', () => {
+  // 1. run a query
+  // 2. check the inital value
+  // 3. run a mutations
+  // 4. check that the query result updates
+  // 5. check the mutation updated successfully
+
+  const app = express();
+  // sessions expire after just 1 second for testing
+  const sessionStore = new MemoryStore(1000);
+  const todo = {id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', title: 'Hello World', completed: false};
+  const todos = [];
+  app.use('/bicycle', createBicycleMiddleware(schema, sessionStore, req => {
+    return {
+      db: {
+        getTodos() {
+          // ^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$
+          return todos;
+        },
+        addTodo({title, completed}) {
+          expect(title).toBe(todo.title);
+          expect(completed).toBe(todo.completed);
+          todos.push(todo);
+          return Promise.resolve(todo.id);
+        },
+      },
+    };
+  }));
+  const server = app.listen(3001);
+  let resolveMutation, rejectMutation;
+  const muationPromise = new Promise((resolve, reject) => {
+    resolveMutation = resolve;
+    rejectMutation = reject;
+  });
+  return new Promise((resolve, reject) => {
+    const client = new BicycleClient(
+      new NetworkLayer('http://localhost:3001/bicycle'),
+    );
+    client.subscribeToNetworkErrors(reject);
+    client.subscribeToMutationErrors(reject);
+    let firstRun = true;
+    client.subscribe(
+      {todos: {id: true, title: true, completed: true}},
+      (result, loaded, errors, errorDetails) => {
+        try {
+          expect(typeof result).toBe('object');
+          expect(typeof loaded).toBe('boolean');
+          expect(Array.isArray(errors)).toBe(true);
+          expect(Array.isArray(errorDetails)).toBe(true);
+          if (errors.length) {
+            throw new Error(errors[0]);
+          }
+          if (loaded) {
+            if (firstRun) {
+              expect(
+                result,
+              ).toEqual(
+                {todos: []}
+              );
+              firstRun = false;
+              client.update('Todo.addTodo', {title: todo.title, completed: todo.completed}).then(result => {
+                expect(result).toEqual({id: todo.id});
+              }).done(() => {
+                resolveMutation();
+              }, err => {
+                reject(err);
+                rejectMutation(err);
+              });
+            } else {
+              expect(
+                result,
+              ).toEqual(
+                {todos: [todo]}
+              );
+              server.close();
+              resolve();
+            }
+          }
+        } catch (ex) {
+          server.close();
+          reject(ex);
+        }
+      },
+    );
+  }).then(() => muationPromise);
 });
 
 test('a failing query', () => {

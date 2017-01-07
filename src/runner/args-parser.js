@@ -1,5 +1,8 @@
+// @flow
+
 import cp from 'character-parser';
 import {inspect} from 'util';
+import createError from '../utils/create-error';
 
 // parse from string of the form (name: "value" ...) into a JSON object (to match the args format for updates)
 export default function parseArgs(args: string): {[key: string]: any} {
@@ -19,11 +22,10 @@ export default function parseArgs(args: string): {[key: string]: any} {
           currentKey = currentKey.trim();
           args = args.substr(1);
           if (!currentKey) {
-            const err = new Error(
-              `Argument name cannot be empty string, full string was "${fullArgsString}"`
+            throw createError(
+              `Argument name cannot be empty string, full string was "${fullArgsString}"`,
+              {exposeProd: true, code: 'ERROR_PARSING_ARGS', data: {fullArgsString}},
             );
-            err.exposeProd = true;
-            throw err;
           }
         } else if (args[0] === ')' && !currentKey.trim()) {
           state = 'terminated';
@@ -34,6 +36,7 @@ export default function parseArgs(args: string): {[key: string]: any} {
         }
         break;
       case 'value':
+        // $FlowFixMe: cpState is always assigned once state is `value`
         if (cpState.isNesting() || args[0] !== ')' && args[0] !== ',') {
           currentValue += args[0];
           cpState = cp.parseChar(args[0], cpState);
@@ -51,17 +54,17 @@ export default function parseArgs(args: string): {[key: string]: any} {
         }
         break;
       case 'terminated':
-        const err = new Error(
-          `Closing bracket was reached before end of arguments, full string was "${fullArgsString}"`
+        throw createError(
+          `Closing bracket was reached before end of arguments, full string was "${fullArgsString}"`,
+          {exposeProd: true, code: 'ERROR_PARSING_ARGS', data: {fullArgsString}},
         );
-        err.exposeProd = true;
-        throw err;
     }
   }
   if (state !== 'terminated') {
-    const err = new Error(`End of args string reached with no closing bracket, full string was "${fullArgsString}"`);
-    err.exposeProd = true;
-    throw err;
+    throw createError(
+      `End of args string reached with no closing bracket, full string was "${fullArgsString}"`,
+      {exposeProd: true, code: 'ERROR_PARSING_ARGS', data: {fullArgsString}},
+    );
   }
   return result;
 }
@@ -69,10 +72,9 @@ function parseValue(value: string, argName: string): any {
   try {
     return (value === 'undefined' || !value) ? null : JSON.parse(value);
   } catch (ex) {
-    const err = new Error(
-      `Could not parse arg "${argName} with value ${inspect(value)}, make sure the argument values are always valid JSON strings.`
+    throw createError(
+      `Could not parse arg "${argName} with value ${inspect(value)}, make sure the argument values are always valid JSON strings.`,
+      {exposeProd: true, code: 'ERROR_PARSING_ARG', data: {argName, value}},
     );
-    err.exposeProd = true;
-    throw err;
   }
 }

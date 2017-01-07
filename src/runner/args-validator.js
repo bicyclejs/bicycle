@@ -1,15 +1,22 @@
-import suggestMatch from 'bicycle/utils/suggest-match';
+// @flow
+
+import type {ArgType, Schema} from '../flow-types';
+import suggestMatch from '../utils/suggest-match';
+import createError from '../utils/create-error';
 import validateArg from './arg-validator';
 
-export default function validateArgs(schema: Object, type: Object, inputObject: Object) {
+export default function validateArgs(
+  schema: Schema,
+  type: {[key: string]: ArgType},
+  inputObject: Object,
+): Object {
   Object.keys(inputObject).forEach(key => {
     if (!(key in type)) {
       const suggestion = suggestMatch(Object.keys(type), key);
-      const err = new TypeError(
-        `Unexpected argument "${key}"${suggestion}`
+      throw createError(
+        `Unexpected argument "${key}"${suggestion}`,
+        {exposeProd: true, code: 'UNEXPECTED_ARG', data: {argName: key}},
       );
-      err.exposeProd = true;
-      throw err;
     }
   });
 

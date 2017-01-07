@@ -1,10 +1,14 @@
+// @flow
+
+import type {ErrorInterface, ErrorResult, ObjectType, Query, Schema, TypeDefinition} from '../flow-types';
+
 import Promise from 'promise';
-import typeNameFromValue from 'bicycle/utils/type-name-from-value';
+import typeNameFromValue from '../utils/type-name-from-value';
 import resolveField from './resolve-field';
 import {ERROR} from '../constants';
 import {reportError} from '../error-reporting';
 
-function getErrorObject(err, context) {
+function getErrorObject(err: ErrorInterface, context: string): ErrorResult {
   const result = (
     process.env.NODE_ENV === 'production' && !err.exposeProd
     ? {
@@ -28,13 +32,13 @@ function getErrorObject(err, context) {
   return result;
 }
 export default function run(
-  schema: Object,
-  type: Object,
+  schema: Schema,
+  type: ObjectType,
   value: any,
-  query: Object,
+  query: Query,
   context: any,
   result: Object,
-): Promise<string | {_type: 'ERROR', value: string}> {
+): Promise<string | ErrorResult> {
   return Promise.resolve(null).then(() => type.id(value)).then(id => {
     if (!result[id]) result[id] = {};
     return Promise.all(

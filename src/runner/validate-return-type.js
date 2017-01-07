@@ -1,21 +1,27 @@
+// @flow
+
+import type {Query, Schema, TypeDefinition} from '../flow-types';
 import Promise from 'promise';
 import typeString from '../utils/type-name-from-definition';
 import typeNameFromValue from '../utils/type-name-from-value';
+import createError from '../utils/create-error';
+import suggestMatch from '../utils/suggest-match';
 import runQuery from './run-query';
 
 const error = new TypeError('Unexpected type');
+const BICYCLE_MUTATION_CONTEXT = {};
 
-function throwIfNull(result) {
+function throwIfNull<T>(result: ?T): T {
   if (result === null || result === undefined) {
     throw error;
   }
   return result;
 }
 function checkReturnTypeInner(
-  schema: Object,
-  type: {kind: string},
+  schema: Schema,
+  type: TypeDefinition,
   value: any,
-  subQuery: ?Object,
+  subQuery: ?Query,
   context: any,
   result: Object,
 ) {
@@ -29,23 +35,51 @@ function checkReturnTypeInner(
       ).then(throwIfNull);
     case 'List':
       if (value === null || value === undefined) return null;
+      const subType = type.type;
       if (!Array.isArray(value)) {
         throw error;
       }
-      return Promise.all(value.map((v, i) => checkReturnTypeInner(schema, type.type, v, subQuery, context, result)));
+      return Promise.all(value.map((v, i) => checkReturnTypeInner(schema, subType, v, subQuery, context, result)));
+    case 'ObjectScalar':
+      const properties = type.properties;
+      if (typeof value !== 'object') {
+        throw error;
+      }
+      Object.keys(value).forEach(key => {
+        if (!(key in properties)) {
+          const suggestion = suggestMatch(Object.keys(properties), key);
+          throw new TypeError(`Unrecognised key ${key} in mutation result${suggestion}`);
+        }
+      });
+      const output = {};
+      return Promise.all(
+        Object.keys(properties).map(key => {
+          return Promise.resolve(
+            checkReturnTypeInner(schema, properties[key], value[key], subQuery, context, result),
+          ).then(v => {
+            output[key] = v;
+          });
+        }),
+      ).then(() => output);
     case 'NamedTypeReference':
       if (value === null || value === undefined) return null;
       const namedType = schema[type.value];
       if (!namedType) throw new Error('Unrecognized type ' + type.value);
       switch (namedType.kind) {
         case 'NodeType':
+          if (context === BICYCLE_MUTATION_CONTEXT) {
+            throw new TypeError(
+              'You cannot return a non-scalar (e.g. ' + namedType.name + ') object from a mutation.'
+            );
+          }
           if (typeof value !== 'object' || Array.isArray(value)) {
             throw error;
           }
           if (!(subQuery != null && typeof subQuery === 'object')) {
-            throw new TypeError(
+            throw createError(
               'You must provide an object to indicate which fields of the node "' + namedType.name +
-              '" you want to query'
+              '" you want to query',
+              {exposeProd: true, code: 'INVALID_QUERY', data: {typeName: namedType.name}},
             );
           }
           return runQuery(schema, namedType, value, subQuery, context, result);
@@ -65,10 +99,10 @@ function checkReturnTypeInner(
 
 
 export default function validateReturnType(
-  schema: Object,
-  type: {kind: string},
+  schema: Schema,
+  type: TypeDefinition,
   value: any,
-  subQuery: ?Object,
+  subQuery: ?Query,
   context: any,
   result: Object,
 ): any {
@@ -79,10 +113,16 @@ export default function validateReturnType(
     const expected = typeString(type);
     const actual = typeNameFromValue(value);
     // N.B. never reveal the actual **value** of the result in here
-    const err = new TypeError(
-      `Expected result to be of type "${expected}" but got a value of type "${actual}"`
+    throw createError(
+      `Expected result to be of type "${expected}" but got a value of type "${actual}"`,
+      {exposeProd: true, code: 'INVALID_RETURN_TYPE', data: {expected, actual}},
     );
-    err.exposeProd = true;
-    throw err;
   }
+}
+export function validateMutationReturnType(
+  schema: Schema,
+  type: TypeDefinition,
+  value: any,
+): any {
+  return validateReturnType(schema, type, value, undefined, BICYCLE_MUTATION_CONTEXT, {});
 }

@@ -1,6 +1,8 @@
-import {DELETE_FIELD, ERROR} from 'bicycle/constants';
+// @flow
 
-export default function mergeCache(cache, update) {
+import {DELETE_FIELD, ERROR} from '../constants';
+
+export default function mergeCache(cache: Object, update: Object): Object {
   const result = {...cache};
   Object.keys(update).forEach(key => {
     if (cache[key] && update[key] && typeof update[key] === 'object' && !Array.isArray(update[key])) {

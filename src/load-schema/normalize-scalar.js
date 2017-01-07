@@ -1,10 +1,13 @@
+// @flow
+
+import type {ScalarType} from '../flow-types';
 import assert from 'assert';
-import freeze from 'bicycle/utils/freeze';
-import typeName from 'bicycle/utils/type-name-from-value';
-import suggestMatch from 'bicycle/utils/suggest-match';
+import freeze from '../utils/freeze';
+import typeName from '../utils/type-name-from-value';
+import suggestMatch from '../utils/suggest-match';
 
 const VALID_KEYS = ['name', 'description', 'serialize', 'parse', 'validate'];
-function normalizeScalar(Scalar: Object): Object {
+function normalizeScalar(Scalar: Object): ScalarType {
   assert(
     Scalar && typeof Scalar === 'object' && !Array.isArray(Scalar),
     `Expected Scalar to be an Object but got ${Scalar === null ? 'null' : typeof Scalar}`,

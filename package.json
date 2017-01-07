@@ -8,12 +8,14 @@
     "body-parser": "^1.15.2",
     "character-parser": "^2.1.1",
     "deep-freeze": "0.0.1",
+    "flow-runtime": "0.0.3",
     "leven": "^2.0.0",
     "promise": "^7.0.4",
     "then-request": "^2.1.1"
   },
   "devDependencies": {
     "babel-cli": "^6.3.17",
+    "babel-plugin-flow-runtime": "0.0.3",
     "babel-plugin-module-alias": "^1.4.0",
     "babel-plugin-transform-flow-comments": "^6.3.23",
     "babel-plugin-typecheck": "^3.5.1",
@@ -24,6 +26,7 @@
     "eslint": "^2.13.0",
     "eslint-config-forbeslindesay": "^2.0.1",
     "express": "^4.13.3",
+    "flow-bin": "^0.37.4",
     "jest": "^15.1.1",
     "lsr": "^1.0.0",
     "react": "^15.1.0",
@@ -37,7 +40,7 @@
     "build:prod": "NODE_ENV=production babel src --out-dir lib",
     "build:dev": "babel src --out-dir dev",
     "lint": "eslint src",
-    "test": "jest ./src/** --coverage && npm run lint",
+    "test": "flow && jest ./src/** --coverage && npm run lint",
     "watch": "jest ./src/** --coverage --watch",
     "example": "babel-node example/server.js"
   },

@@ -1,12 +1,24 @@
-export function request(sessionID?: string, queryUpdate?: Object, mutations?: Array): Object {
+// @flow
+
+import type {ClientRequest, MutationResult, Query, ServerPreparation, ServerResponse, SessionID} from './flow-types';
+
+export function request(
+  sessionID?: string,
+  queryUpdate?: Query,
+  mutations?: Array<{method: string, args: Object}>,
+): ClientRequest {
   return {
     s: sessionID,
     q: queryUpdate,
-    m: mutations.map(({method, args}) => ({m: method, a: args})),
+    m: mutations ? mutations.map(({method, args}) => ({m: method, a: args})) : undefined,
   };
 }
 
-export function response(sessionID?: string, mutationResults?: Array, cacheUpdate?: Object): Object {
+export function response(
+  sessionID?: SessionID,
+  mutationResults?: Array<MutationResult>,
+  cacheUpdate?: Object,
+): ServerResponse {
   return {
     s: sessionID,
     d: cacheUpdate,
@@ -14,7 +26,7 @@ export function response(sessionID?: string, mutationResults?: Array, cacheUpdat
   };
 }
 
-export function serverPreparation(sessionID: string, query: Object, cache: Object): Object {
+export function serverPreparation(sessionID: SessionID, query: Query, cache: Object): ServerPreparation {
   return {
     s: sessionID,
     q: query,
