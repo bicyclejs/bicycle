@@ -50,13 +50,13 @@ export {
   loadSchema,
   // (dirname: string) => Schema
   loadSchemaFromFiles,
-  // (schema: Schema, query: Query, context: Context) => Promise<Object>
+  // (schema: Schema, query: Query, context: Context) => Promise<Result>
   runQuery,
-  // (schema: Schema, method: string, args: Object, context: Object) => Promise<Result>
+  // (schema: Schema, method: string, args: Object, context: Context) => Promise<Result>
   runMutation,
-  // (schema: Object, sessionStore: SessionStore, message: Message, context: Object) => Promise<Result>
+  // (schema: Schema, sessionStore: SessionStore, message: Message, context: Context) => Promise<Result>
   handleMessage,
-  // (schema: Schema, sessionStore: SessionStore, getContext: (req) => Object) => Middleware
+  // (schema: Schema, sessionStore: SessionStore, getContext: (req) => Context) => Middleware
   createBicycleMiddleware,
   // (schema: Schema, sessionStore: SessionStore, fn: (client: Object, ...args) => Result) => (context: Object, ...args) => Result
   createServerRenderer,

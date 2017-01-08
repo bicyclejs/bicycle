@@ -1,4 +1,5 @@
 // @flow
+/* global NetworkLayerInterface */
 
 import type PromisePolyfill from 'promise';
 
