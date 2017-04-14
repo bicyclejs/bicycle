@@ -34,7 +34,6 @@ function getTypeFromObject(objType: Object, context: string, typeNames: Array<st
   return freeze({kind: 'NotNull', type: {kind: 'ObjectScalar', properties}});
 }
 function getType(type: string | Object, context: string, typeNames: Array<string>): TypeDefinition {
-  // TODO: validate this stuff
   if (typeof type === 'string') {
     return getTypeFromString(type, context, typeNames);
   } else {
