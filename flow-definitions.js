@@ -31,9 +31,6 @@ declare class PromisePolyfill<+R> {
 declare module 'promise' {
   declare var exports: typeof PromisePolyfill;
 }
-declare module 'leven' {
-  declare var exports: (a: string, b: string) => number;
-}
 declare module 'deep-freeze' {
   declare var exports: <T>(o: T) => T;
 }
