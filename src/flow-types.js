@@ -1,5 +1,4 @@
 // @flow
-/* global NetworkLayerInterface */
 
 import type PromisePolyfill from 'promise';
 
@@ -64,9 +63,9 @@ export type ClientRequest = {
   m?: Array<{m: string, a: Object}>,
 };
 
-declare interface NetworkLayerInterface {
-  send(message: ClientRequest): PromisePolyfill<ServerResponse> | Promise<ServerResponse>;
-}
+type NetworkLayerInterface = {
+  +send: (message: ClientRequest) => PromisePolyfill<ServerResponse> | Promise<ServerResponse>,
+};
 export type {NetworkLayerInterface};
 
 export type TypeDefinition = (
