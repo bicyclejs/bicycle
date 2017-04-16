@@ -103,6 +103,9 @@ test('a successful server render', () => {
         // ^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$
         return [todo];
       },
+      getTodo() {
+        return todo;
+      },
     },
   };
 
@@ -117,22 +120,37 @@ test('a successful server render', () => {
     (client, a1, a2) => {
       expect(a1).toBe(A1);
       expect(a2).toBe(A2);
-      return JSON.stringify(client.queryCache({todos: {id: true, title: true, completed: true}}));
+      const resultA = client.queryCache({todos: {id: true}});
+      if (resultA.loaded) {
+        return client.queryCache({
+          [`todoById(id:${JSON.stringify(resultA.result.todos[0].id)})`]: {
+            id: true,
+            title: true,
+            completed: true,
+          },
+        });
+      }
+      return 'not loaded yet';
     }
   );
 
   return renderServerSide(context, A1, A2).then(({serverPreparation, result}) => {
     expect(typeof serverPreparation).toBe('object');
     expect(typeof serverPreparation.s).toBe('string');
-    expect(serverPreparation.q).toEqual({todos: {id: true, title: true, completed: true}});
+    expect(serverPreparation.q).toEqual({
+      "todoById(id:\"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa\")": {completed: true, id: true, title: true},
+      "todos": {id: true},
+    });
     expect(serverPreparation.c).toEqual({
-      root: {todos: ['Todo:' + todoID]},
+      root: {
+        ['todoById(id:"' + todoID + '")']: 'Todo:' + todoID,
+        'todos': ['Todo:' + todoID],
+      },
       ['Todo:' + todoID]: todo,
     });
-    expect(typeof result).toBe('string');
-    expect(JSON.parse(result)).toEqual({
+    expect(result).toEqual({
       result: {
-        todos: [todo],
+        todoById: todo,
       },
       loaded: true,
       errors: [],
