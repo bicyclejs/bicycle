@@ -4,6 +4,7 @@
 
 import express from 'express';
 import BicycleClient, {NetworkLayer} from '../client';
+import prepareServer from '../server-rendering';
 import {
   loadSchemaFromFiles,
   createBicycleMiddleware,
@@ -92,6 +93,54 @@ test('a successful server query', () => {
     );
   });
 });
+
+test('a successful server render', () => {
+  const todoID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  const todo = {id: todoID, title: 'Hello World', completed: false};
+  const context = {
+    db: {
+      getTodos() {
+        // ^[a-f0-9]{8}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{4}\-[a-f0-9]{12}$
+        return [todo];
+      },
+    },
+  };
+
+  // sessions expire after just 1 second for testing
+  const sessionStore = new MemoryStore(1000);
+
+  const A1 = {};
+  const A2 = {};
+  const renderServerSide = prepareServer(
+    schema,
+    sessionStore,
+    (client, a1, a2) => {
+      expect(a1).toBe(A1);
+      expect(a2).toBe(A2);
+      return JSON.stringify(client.queryCache({todos: {id: true, title: true, completed: true}}));
+    }
+  );
+
+  return renderServerSide(context, A1, A2).then(({serverPreparation, result}) => {
+    expect(typeof serverPreparation).toBe('object');
+    expect(typeof serverPreparation.s).toBe('string');
+    expect(serverPreparation.q).toEqual({todos: {id: true, title: true, completed: true}});
+    expect(serverPreparation.c).toEqual({
+      root: {todos: ['Todo:' + todoID]},
+      ['Todo:' + todoID]: todo,
+    });
+    expect(typeof result).toBe('string');
+    expect(JSON.parse(result)).toEqual({
+      result: {
+        todos: [todo],
+      },
+      loaded: true,
+      errors: [],
+      errorDetails: [],
+    });
+  });
+});
+
 test('a successful mutation with a result', () => {
   // 1. run a query
   // 2. check the inital value

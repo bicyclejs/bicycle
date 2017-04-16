@@ -45,7 +45,7 @@ export default function prepare<TResult>(
   schema: Schema,
   sessionStore: SessionStore,
   fn: (client: FakeClient, ...args: any) => TResult,
-): (context: Context, ...args: any) => Promise<{serverPreparation: ServerPreparation, result: TResult}> {
+): Function /* (context: Context, ...args: any) => Promise<{serverPreparation: ServerPreparation, result: TResult}> */ {
   return (context: Context, ...args: any) => {
     return getSessionID(sessionStore).then(sessionID => {
       const client = new FakeClient(sessionID);
