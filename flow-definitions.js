@@ -31,9 +31,6 @@ declare class PromisePolyfill<+R> {
 declare module 'promise' {
   declare var exports: typeof PromisePolyfill;
 }
-declare module 'deep-freeze' {
-  declare var exports: <T>(o: T) => T;
-}
 declare module 'character-parser' {
   declare type TokenType = (
     '//' |
