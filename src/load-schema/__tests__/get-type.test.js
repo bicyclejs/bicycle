@@ -1,4 +1,6 @@
-import getType from 'bicycle/load-schema/get-type';
+// @flow
+
+import getType from '../../load-schema/get-type';
 
 test('NamedTypeReference', () => {
   expect(
@@ -53,7 +55,7 @@ test('List', () => {
 });
 test('Throw on unexpected characters', () => {
   expect(
-    () => getType('my_fake_type'),
+    () => getType('my_fake_type', 'context', []),
   ).toThrowError(
     /Expected type name to match \[A-Za-z0-9\]\+ but got 'my_fake_type'/,
   );

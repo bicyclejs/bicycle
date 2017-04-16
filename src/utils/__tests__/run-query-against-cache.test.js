@@ -1,6 +1,8 @@
-import freeze from 'bicycle/utils/freeze';
-import runQueryAgainstCache from 'bicycle/utils/run-query-against-cache';
-import {ERROR} from 'bicycle/constants';
+// @flow
+
+import freeze from '../freeze';
+import runQueryAgainstCache from '../run-query-against-cache';
+import {ERROR} from '../../constants';
 
 test('returns the result of running the query', () => {
   const cache = freeze({foo: {a: 10, b: 20}, root: {items: ['foo']}});

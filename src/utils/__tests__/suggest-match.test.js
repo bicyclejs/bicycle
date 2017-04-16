@@ -1,5 +1,7 @@
-import freeze from 'bicycle/utils/freeze';
-import suggestMatch from 'bicycle/utils/suggest-match';
+// @flow
+
+import freeze from '../freeze';
+import suggestMatch from '../suggest-match';
 
 test('returns empty string when there is no close match', () => {
   expect(suggestMatch(freeze(['foo', 'bar']), 'whatever')).toBe('');

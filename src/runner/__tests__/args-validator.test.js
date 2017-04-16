@@ -1,11 +1,22 @@
-import validateArgs from 'bicycle/runner/args-validator';
-import freeze from 'bicycle/utils/freeze';
+// @flow
+
+import validateArgs from '../args-validator';
+import freeze from '../../utils/freeze';
+
+const DEFAULT_ROOT = {
+  kind: 'NodeType',
+  name: 'Root',
+  description: undefined,
+  id: () => 'root',
+  fields: {},
+  mutations: {},
+};
 
 describe('extra arg', () => {
   test('suggests near matches', () => {
     expect(
       () => validateArgs(
-        freeze({}),
+        freeze({Root: DEFAULT_ROOT}),
         freeze({foo: {kind: 'arg', type: {kind: 'NotNull', type: {kind: 'NamedTypeReference', value: 'MyType'}}}}),
         freeze({boo: 'whatever'}),
       ),
@@ -14,7 +25,7 @@ describe('extra arg', () => {
   test('does not suggest matches if there are no close matches', () => {
     expect(
       () => validateArgs(
-        freeze({}),
+        freeze({Root: DEFAULT_ROOT}),
         freeze({whatever: {kind: 'arg', type: {kind: 'NotNull', type: {kind: 'NamedTypeReference', value: 'MyType'}}}}),
         freeze({boo: 'whatever'})
       ),
@@ -23,13 +34,21 @@ describe('extra arg', () => {
 });
 test('validates each arg', () => {
   const schema = freeze({
+    Root: DEFAULT_ROOT,
     Something: {
       kind: 'ScalarType',
       name: 'Something',
+      description: undefined,
       parse(value) {
+        if (typeof value !== 'number') {
+          throw new Error('Expected a number');
+        }
         return value * -1;
       },
       serialize(value) {
+        if (typeof value !== 'number') {
+          throw new Error('Expected a number');
+        }
         return value * -1;
       },
     },

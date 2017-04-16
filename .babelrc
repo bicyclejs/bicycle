@@ -15,8 +15,8 @@
   "env": {
     "development": {
       "plugins": [["flow-runtime", {
-        "assert": true,
-        "decorate": true
+        "annotate": true,
+        "assert": true
       }]]
     },
     "production": {

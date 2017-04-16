@@ -11,6 +11,8 @@ import runQuery from './run-query';
 const error = new TypeError('Unexpected type');
 const BICYCLE_MUTATION_CONTEXT = {};
 
+// declare this so that flow-runtime ignores T
+type T = mixed;
 function throwIfNull<T>(result: ?T): T {
   if (result === null || result === undefined) {
     throw error;

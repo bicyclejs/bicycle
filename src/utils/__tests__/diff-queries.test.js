@@ -1,5 +1,7 @@
-import freeze from 'bicycle/utils/freeze';
-import diffQueries from 'bicycle/utils/diff-queries';
+// @flow
+
+import freeze from '../freeze';
+import diffQueries from '../diff-queries';
 
 test('returns undefined when there is no difference', () => {
   expect(diffQueries(freeze({}), freeze({}))).toBe(undefined);

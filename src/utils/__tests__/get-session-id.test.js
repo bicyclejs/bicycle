@@ -1,5 +1,24 @@
+// @flow
+
+import type {Query, SessionID} from '../../flow-types';
+
 import Promise from 'promise';
-import getSessionID from 'bicycle/utils/get-session-id';
+import getSessionID from '../get-session-id';
+
+const sessionStore = {
+  getCache(sessionId: SessionID): Promise<Object> {
+    return Promise.resolve({});
+  },
+  setCache(sessionId: SessionID, data: Object): PromisePolyfill<any> | Promise<any> {
+    return Promise.resolve({});
+  },
+  getQuery(sessionId: SessionID): PromisePolyfill<?Query> | Promise<?Query> {
+    return Promise.resolve({});
+  },
+  setQuery(sessionId: SessionID, query: Query): PromisePolyfill<any> | Promise<any> {
+    return Promise.resolve({});
+  },
+};
 
 test('generates a string of 16 random characters', () => {
   const results = [];
@@ -7,7 +26,7 @@ test('generates a string of 16 random characters', () => {
   // and to verify that a unique ID is generted across a reasonably large set of IDs.
   for (let i = 0; i < 10000; i++) {
     results.push(
-      getSessionID().then(id => {
+      getSessionID(sessionStore).then(id => {
         expect(typeof id).toBe('string');
         expect(id.length).toBe(16);
         // Note that we verify that there are no `=` signs used for padding.
@@ -24,7 +43,7 @@ test('generates a string of 16 random characters', () => {
 });
 
 test('defers to store if provided', () => {
-  return getSessionID({getSessionID() { return '1'; }}).then(id => {
+  return getSessionID({...sessionStore, getSessionID() { return '1'; }}).then(id => {
     expect(id).toBe('1');
   });
 });

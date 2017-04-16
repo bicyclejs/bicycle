@@ -38,6 +38,9 @@ class FakeClient {
   }
 }
 
+// declare this so that flow-runtime ignores TResult
+type TResult = mixed;
+
 export default function prepare<TResult>(
   schema: Schema,
   sessionStore: SessionStore,

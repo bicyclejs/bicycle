@@ -1,5 +1,7 @@
-import freeze from 'bicycle/utils/freeze';
-import normalizeScalar from 'bicycle/load-schema/normalize-scalar';
+// @flow
+
+import freeze from '../../utils/freeze';
+import normalizeScalar from '../../load-schema/normalize-scalar';
 
 test('no name throws', () => {
   expect(

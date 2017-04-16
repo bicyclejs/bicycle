@@ -1,5 +1,7 @@
-import freeze from 'bicycle/utils/freeze';
-import notEqual from 'bicycle/utils/not-equal';
+// @flow
+
+import freeze from '../freeze';
+import notEqual from '../not-equal';
 
 test('returns false when there is no difference', () => {
   expect(notEqual(freeze({}), freeze({}))).toBe(false);

@@ -1,15 +1,17 @@
+// @flow
+
 // TODO: don't run this until all the other tests have passed
 
 import express from 'express';
-import BicycleClient, {NetworkLayer} from 'bicycle/client';
+import BicycleClient, {NetworkLayer} from '../client';
 import {
   loadSchemaFromFiles,
   createBicycleMiddleware,
   runQuery,
   onBicycleError,
   silenceDefaultBicycleErrorReporting,
-} from 'bicycle/server';
-import MemoryStore from 'bicycle/sessions/memory';
+} from '../server';
+import MemoryStore from '../sessions/memory';
 
 let allowErrors = false;
 const serverErrors = [];

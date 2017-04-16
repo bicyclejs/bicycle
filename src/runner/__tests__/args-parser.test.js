@@ -1,4 +1,6 @@
-import parseArgs from 'bicycle/runner/args-parser';
+// @flow
+
+import parseArgs from '../args-parser';
 
 test('parses args', () => {
   expect(parseArgs('(foo: "bar", bing: 10)')).toEqual({foo: 'bar', bing: 10});

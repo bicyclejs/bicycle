@@ -1,5 +1,7 @@
-import freeze from 'bicycle/utils/freeze';
-import typeName from 'bicycle/utils/type-name-from-value';
+// @flow
+
+import freeze from '../freeze';
+import typeName from '../type-name-from-value';
 
 test('null => null', () => {
   expect(typeName(null)).toBe('null');

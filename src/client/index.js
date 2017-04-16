@@ -177,7 +177,7 @@ class Client {
       });
     });
   }
-  update(method: string, args: Object, optimisticUpdate?: Function): Promise<any> {
+  update(method: string, args: Object, optimisticUpdate?: ?Function): Promise<any> {
     if (!optimisticUpdate) {
       const split = method.split('.');
       optimisticUpdate = this._optimisticUpdaters[split[0]] && this._optimisticUpdaters[split[0]][split[1]];

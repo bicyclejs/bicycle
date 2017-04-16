@@ -3,3 +3,4 @@
 .*/node_modules/fbjs/lib/.*
 [libs]
 ./flow-definitions.js
+./flow-typed/.*

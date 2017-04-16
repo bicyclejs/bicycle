@@ -1,5 +1,7 @@
-import freeze from 'bicycle/utils/freeze';
-import typeName from 'bicycle/utils/type-name-from-definition';
+// @flow
+
+import freeze from '../freeze';
+import typeName from '../type-name-from-definition';
 
 test('NamedTypeReference', () => {
   expect(typeName(freeze({kind: 'NamedTypeReference', value: 'MyType'}))).toBe('MyType?');

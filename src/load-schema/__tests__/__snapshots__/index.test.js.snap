@@ -1,4 +1,6 @@
-exports[`test it can load a schema from a file 1`] = `
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`it can load a schema from a file 1`] = `
 Object {
   "Root": Object {
     "description": undefined,
@@ -11,25 +13,25 @@ Object {
               "kind": "NotNull",
               "type": Object {
                 "kind": "NamedTypeReference",
-                "value": "string"
-              }
-            }
-          }
+                "value": "string",
+              },
+            },
+          },
         },
         "description": undefined,
-        "resolve": [Function resolve],
+        "resolve": [Function],
         "type": Object {
           "kind": "NotNull",
           "type": Object {
             "kind": "NamedTypeReference",
-            "value": "Todo"
-          }
-        }
+            "value": "Todo",
+          },
+        },
       },
       "todos": Object {
         "args": undefined,
         "description": undefined,
-        "resolve": [Function resolve],
+        "resolve": [Function],
         "type": Object {
           "kind": "NotNull",
           "type": Object {
@@ -38,17 +40,17 @@ Object {
               "kind": "NotNull",
               "type": Object {
                 "kind": "NamedTypeReference",
-                "value": "Todo"
-              }
-            }
-          }
-        }
-      }
+                "value": "Todo",
+              },
+            },
+          },
+        },
+      },
     },
-    "id": [Function idGetter],
+    "id": [Function],
     "kind": "NodeType",
     "mutations": Object {},
-    "name": "Root"
+    "name": "Root",
   },
   "Todo": Object {
     "description": undefined,
@@ -61,9 +63,9 @@ Object {
           "kind": "NotNull",
           "type": Object {
             "kind": "NamedTypeReference",
-            "value": "boolean"
-          }
-        }
+            "value": "boolean",
+          },
+        },
       },
       "id": Object {
         "args": undefined,
@@ -73,9 +75,9 @@ Object {
           "kind": "NotNull",
           "type": Object {
             "kind": "NamedTypeReference",
-            "value": "id"
-          }
-        }
+            "value": "id",
+          },
+        },
       },
       "title": Object {
         "args": undefined,
@@ -85,12 +87,12 @@ Object {
           "kind": "NotNull",
           "type": Object {
             "kind": "NamedTypeReference",
-            "value": "string"
-          }
-        }
-      }
+            "value": "string",
+          },
+        },
+      },
     },
-    "id": [Function idGetter],
+    "id": [Function],
     "kind": "NodeType",
     "mutations": Object {
       "addTodo": Object {
@@ -101,9 +103,9 @@ Object {
               "kind": "NotNull",
               "type": Object {
                 "kind": "NamedTypeReference",
-                "value": "boolean"
-              }
-            }
+                "value": "boolean",
+              },
+            },
           },
           "title": Object {
             "kind": "arg",
@@ -111,13 +113,13 @@ Object {
               "kind": "NotNull",
               "type": Object {
                 "kind": "NamedTypeReference",
-                "value": "string"
-              }
-            }
-          }
+                "value": "string",
+              },
+            },
+          },
         },
         "description": undefined,
-        "resolve": [Function resolve],
+        "resolve": [Function],
         "type": Object {
           "kind": "NotNull",
           "type": Object {
@@ -127,18 +129,18 @@ Object {
                 "kind": "NotNull",
                 "type": Object {
                   "kind": "NamedTypeReference",
-                  "value": "id"
-                }
-              }
-            }
-          }
-        }
+                  "value": "id",
+                },
+              },
+            },
+          },
+        },
       },
       "clearCompleted": Object {
         "args": undefined,
         "description": undefined,
-        "resolve": [Function resolve],
-        "type": undefined
+        "resolve": [Function],
+        "type": undefined,
       },
       "destroy": Object {
         "args": Object {
@@ -148,14 +150,14 @@ Object {
               "kind": "NotNull",
               "type": Object {
                 "kind": "NamedTypeReference",
-                "value": "id"
-              }
-            }
-          }
+                "value": "id",
+              },
+            },
+          },
         },
         "description": undefined,
-        "resolve": [Function resolve],
-        "type": undefined
+        "resolve": [Function],
+        "type": undefined,
       },
       "save": Object {
         "args": Object {
@@ -165,9 +167,9 @@ Object {
               "kind": "NotNull",
               "type": Object {
                 "kind": "NamedTypeReference",
-                "value": "id"
-              }
-            }
+                "value": "id",
+              },
+            },
           },
           "title": Object {
             "kind": "arg",
@@ -175,14 +177,14 @@ Object {
               "kind": "NotNull",
               "type": Object {
                 "kind": "NamedTypeReference",
-                "value": "string"
-              }
-            }
-          }
+                "value": "string",
+              },
+            },
+          },
         },
         "description": undefined,
-        "resolve": [Function resolve],
-        "type": undefined
+        "resolve": [Function],
+        "type": undefined,
       },
       "set": undefined,
       "toggle": Object {
@@ -193,9 +195,9 @@ Object {
               "kind": "NotNull",
               "type": Object {
                 "kind": "NamedTypeReference",
-                "value": "boolean"
-              }
-            }
+                "value": "boolean",
+              },
+            },
           },
           "id": Object {
             "kind": "arg",
@@ -203,14 +205,14 @@ Object {
               "kind": "NotNull",
               "type": Object {
                 "kind": "NamedTypeReference",
-                "value": "id"
-              }
-            }
-          }
+                "value": "id",
+              },
+            },
+          },
         },
         "description": undefined,
-        "resolve": [Function resolve],
-        "type": undefined
+        "resolve": [Function],
+        "type": undefined,
       },
       "toggleAll": Object {
         "args": Object {
@@ -220,45 +222,45 @@ Object {
               "kind": "NotNull",
               "type": Object {
                 "kind": "NamedTypeReference",
-                "value": "boolean"
-              }
-            }
-          }
+                "value": "boolean",
+              },
+            },
+          },
         },
         "description": undefined,
-        "resolve": [Function resolve],
-        "type": undefined
-      }
+        "resolve": [Function],
+        "type": undefined,
+      },
     },
-    "name": "Todo"
+    "name": "Todo",
   },
   "boolean": Object {
     "description": "Either \`true\` or \`false\`",
     "kind": "ScalarType",
     "name": "boolean",
-    "parse": [Function parse],
-    "serialize": [Function serialize]
+    "parse": [Function],
+    "serialize": [Function],
   },
   "id": Object {
     "description": undefined,
     "kind": "ScalarType",
     "name": "id",
-    "parse": [Function parse],
-    "serialize": [Function serialize]
+    "parse": [Function],
+    "serialize": [Function],
   },
   "number": Object {
     "description": "Any floating point number",
     "kind": "ScalarType",
     "name": "number",
-    "parse": [Function parse],
-    "serialize": [Function serialize]
+    "parse": [Function],
+    "serialize": [Function],
   },
   "string": Object {
     "description": "A string of arbitrary text",
     "kind": "ScalarType",
     "name": "string",
-    "parse": [Function parse],
-    "serialize": [Function serialize]
-  }
+    "parse": [Function],
+    "serialize": [Function],
+  },
 }
 `;

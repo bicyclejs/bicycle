@@ -1,5 +1,7 @@
-import freeze from 'bicycle/utils/freeze';
-import mergeQueries from 'bicycle/utils/merge-queries';
+// @flow
+
+import freeze from '../freeze';
+import mergeQueries from '../merge-queries';
 
 test('merges queries and removes " as whatever" from the end', () => {
   expect(mergeQueries(freeze({foo: true}), freeze({foo: false}))).toEqual({});

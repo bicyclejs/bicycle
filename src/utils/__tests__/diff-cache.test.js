@@ -1,6 +1,8 @@
-import freeze from 'bicycle/utils/freeze';
-import diffCache from 'bicycle/utils/diff-cache';
-import {DELETE_FIELD} from 'bicycle/constants';
+// @flow
+
+import freeze from '../freeze';
+import diffCache from '../diff-cache';
+import {DELETE_FIELD} from '../../constants';
 
 test('returns undefined when there is no difference', () => {
   expect(diffCache(freeze({}), freeze({}))).toBe(undefined);

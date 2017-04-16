@@ -1,6 +1,8 @@
-import freeze from 'bicycle/utils/freeze';
-import mergeCache from 'bicycle/utils/merge-cache';
-import {DELETE_FIELD, ERROR} from 'bicycle/constants';
+// @flow
+
+import freeze from '../freeze';
+import mergeCache from '../merge-cache';
+import {DELETE_FIELD, ERROR} from '../../constants';
 
 test('merges changes and returns a new object', () => {
   expect(mergeCache(freeze({foo: 10}), freeze({foo: {_type: DELETE_FIELD}}))).toEqual({});

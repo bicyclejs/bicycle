@@ -22,14 +22,8 @@ export type Query = {
 
 export type SessionStore = (
   {
-    getSessionID(): PromisePolyfill<string> | Promise<string> | string,
+    +getSessionID?: () => PromisePolyfill<string> | Promise<string> | string,
 
-    getCache(sessionId: SessionID): PromisePolyfill<Object> | Promise<Object>,
-    setCache(sessionId: SessionID, data: Object): PromisePolyfill<any> | Promise<any>,
-    getQuery(sessionId: SessionID): PromisePolyfill<?Query> | Promise<?Query>,
-    setQuery(sessionId: SessionID, query: Query): PromisePolyfill<any> | Promise<any>,
-  } |
-  {
     getCache(sessionId: SessionID): PromisePolyfill<Object> | Promise<Object>,
     setCache(sessionId: SessionID, data: Object): PromisePolyfill<any> | Promise<any>,
     getQuery(sessionId: SessionID): PromisePolyfill<?Query> | Promise<?Query>,
