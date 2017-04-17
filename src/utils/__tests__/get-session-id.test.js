@@ -24,7 +24,7 @@ test('generates a string of 16 random characters', () => {
   const results = [];
   // run this many many times to compensate for the randomness in generating a random ID.
   // and to verify that a unique ID is generted across a reasonably large set of IDs.
-  for (let i = 0; i < 10000; i++) {
+  for (let i = 0; i < 2000; i++) {
     results.push(
       getSessionID(sessionStore).then(id => {
         expect(typeof id).toBe('string');

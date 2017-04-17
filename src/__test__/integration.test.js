@@ -3,6 +3,7 @@
 // TODO: don't run this until all the other tests have passed
 
 import express from 'express';
+import getPort from 'get-port';
 import BicycleClient, {NetworkLayer} from '../client';
 import prepareServer from '../server-rendering';
 import {
@@ -42,37 +43,40 @@ test('a successful query', () => {
       },
     };
   }));
-  const server = app.listen(3000);
-  return new Promise((resolve, reject) => {
-    const client = new BicycleClient(
-      new NetworkLayer('http://localhost:3000/bicycle'),
-    );
-    client.subscribe(
-      {todos: {id: true, title: true, completed: true}},
-      (result, loaded, errors, errorDetails) => {
-        try {
-          expect(typeof result).toBe('object');
-          expect(typeof loaded).toBe('boolean');
-          expect(Array.isArray(errors)).toBe(true);
-          expect(Array.isArray(errorDetails)).toBe(true);
-          if (errors.length) {
-            throw new Error(errors[0]);
-          }
-          if (loaded) {
-            expect(
-              result,
-            ).toEqual(
-              {todos: [todo]}
-            );
+  return getPort().then(
+    port => ({server: app.listen(port), port}),
+  ).then(({server, port}) => {
+    return new Promise((resolve, reject) => {
+      const client = new BicycleClient(
+        new NetworkLayer('http://localhost:' + port + '/bicycle'),
+      );
+      client.subscribe(
+        {todos: {id: true, title: true, completed: true}},
+        (result, loaded, errors, errorDetails) => {
+          try {
+            expect(typeof result).toBe('object');
+            expect(typeof loaded).toBe('boolean');
+            expect(Array.isArray(errors)).toBe(true);
+            expect(Array.isArray(errorDetails)).toBe(true);
+            if (errors.length) {
+              throw new Error(errors[0]);
+            }
+            if (loaded) {
+              expect(
+                result,
+              ).toEqual(
+                {todos: [todo]}
+              );
+              server.close();
+              resolve();
+            }
+          } catch (ex) {
             server.close();
-            resolve();
+            reject(ex);
           }
-        } catch (ex) {
-          server.close();
-          reject(ex);
-        }
-      },
-    );
+        },
+      );
+    });
   });
 });
 test('a successful server query', () => {
@@ -187,63 +191,66 @@ test('a successful mutation with a result', () => {
       },
     };
   }));
-  const server = app.listen(3001);
-  let resolveMutation, rejectMutation;
-  const muationPromise = new Promise((resolve, reject) => {
-    resolveMutation = resolve;
-    rejectMutation = reject;
-  });
-  return new Promise((resolve, reject) => {
-    const client = new BicycleClient(
-      new NetworkLayer('http://localhost:3001/bicycle'),
-    );
-    client.subscribeToNetworkErrors(reject);
-    client.subscribeToMutationErrors(reject);
-    let firstRun = true;
-    client.subscribe(
-      {todos: {id: true, title: true, completed: true}},
-      (result, loaded, errors, errorDetails) => {
-        try {
-          expect(typeof result).toBe('object');
-          expect(typeof loaded).toBe('boolean');
-          expect(Array.isArray(errors)).toBe(true);
-          expect(Array.isArray(errorDetails)).toBe(true);
-          if (errors.length) {
-            throw new Error(errors[0]);
-          }
-          if (loaded) {
-            if (firstRun) {
-              expect(
-                result,
-              ).toEqual(
-                {todos: []}
-              );
-              firstRun = false;
-              client.update('Todo.addTodo', {title: todo.title, completed: todo.completed}).then(result => {
-                expect(result).toEqual({id: todo.id});
-              }).done(() => {
-                resolveMutation();
-              }, err => {
-                reject(err);
-                rejectMutation(err);
-              });
-            } else {
-              expect(
-                result,
-              ).toEqual(
-                {todos: [todo]}
-              );
-              server.close();
-              resolve();
+  return getPort().then(
+    port => ({server: app.listen(port), port}),
+  ).then(({server, port}) => {
+    let resolveMutation, rejectMutation;
+    const muationPromise = new Promise((resolve, reject) => {
+      resolveMutation = resolve;
+      rejectMutation = reject;
+    });
+    return new Promise((resolve, reject) => {
+      const client = new BicycleClient(
+        new NetworkLayer('http://localhost:' + port + '/bicycle'),
+      );
+      client.subscribeToNetworkErrors(reject);
+      client.subscribeToMutationErrors(reject);
+      let firstRun = true;
+      client.subscribe(
+        {todos: {id: true, title: true, completed: true}},
+        (result, loaded, errors, errorDetails) => {
+          try {
+            expect(typeof result).toBe('object');
+            expect(typeof loaded).toBe('boolean');
+            expect(Array.isArray(errors)).toBe(true);
+            expect(Array.isArray(errorDetails)).toBe(true);
+            if (errors.length) {
+              throw new Error(errors[0]);
             }
+            if (loaded) {
+              if (firstRun) {
+                expect(
+                  result,
+                ).toEqual(
+                  {todos: []}
+                );
+                firstRun = false;
+                client.update('Todo.addTodo', {title: todo.title, completed: todo.completed}).then(result => {
+                  expect(result).toEqual({id: todo.id});
+                }).done(() => {
+                  resolveMutation();
+                }, err => {
+                  reject(err);
+                  rejectMutation(err);
+                });
+              } else {
+                expect(
+                  result,
+                ).toEqual(
+                  {todos: [todo]}
+                );
+                server.close();
+                resolve();
+              }
+            }
+          } catch (ex) {
+            server.close();
+            reject(ex);
           }
-        } catch (ex) {
-          server.close();
-          reject(ex);
-        }
-      },
-    );
-  }).then(() => muationPromise);
+        },
+      );
+    }).then(() => muationPromise);
+  });
 });
 
 test('a failing query', () => {
@@ -260,58 +267,61 @@ test('a failing query', () => {
       },
     };
   }));
-  const server = app.listen(3000);
-  return new Promise((resolve, reject) => {
-    const client = new BicycleClient(
-      new NetworkLayer('http://localhost:3000/bicycle'),
-    );
-    client.subscribe(
-      {todos: {id: true, title: true, completed: true}},
-      (result, loaded, errors, errorDetails) => {
-        try {
-          expect(typeof result).toBe('object');
-          expect(typeof loaded).toBe('boolean');
-          expect(Array.isArray(errors)).toBe(true);
-          expect(Array.isArray(errorDetails)).toBe(true);
-          if (loaded) {
-            allowErrors = false;
-            expect(serverErrors.length).toBe(1);
-            expect(serverErrors[0].message).toBe('Whatever while getting Root(root).todos');
-            expect(
-              result,
-            ).toEqual(
-              {
-                todos: {
-                  _type: 'ERROR',
-                  value: 'Whatever while getting Root(root).todos',
-                  data: {},
-                },
-              },
-            );
-            expect(
-              errors,
-            ).toEqual(
-              ['Whatever while getting Root(root).todos'],
-            );
-            expect(
-              errorDetails,
-            ).toEqual(
-              [
+  return getPort().then(
+    port => ({server: app.listen(port), port}),
+  ).then(({server, port}) => {
+    return new Promise((resolve, reject) => {
+      const client = new BicycleClient(
+        new NetworkLayer('http://localhost:' + port + '/bicycle'),
+      );
+      client.subscribe(
+        {todos: {id: true, title: true, completed: true}},
+        (result, loaded, errors, errorDetails) => {
+          try {
+            expect(typeof result).toBe('object');
+            expect(typeof loaded).toBe('boolean');
+            expect(Array.isArray(errors)).toBe(true);
+            expect(Array.isArray(errorDetails)).toBe(true);
+            if (loaded) {
+              allowErrors = false;
+              expect(serverErrors.length).toBe(1);
+              expect(serverErrors[0].message).toBe('Whatever while getting Root(root).todos');
+              expect(
+                result,
+              ).toEqual(
                 {
-                  _type: 'ERROR',
-                  value: 'Whatever while getting Root(root).todos',
-                  data: {},
+                  todos: {
+                    _type: 'ERROR',
+                    value: 'Whatever while getting Root(root).todos',
+                    data: {},
+                  },
                 },
-              ],
-            );
+              );
+              expect(
+                errors,
+              ).toEqual(
+                ['Whatever while getting Root(root).todos'],
+              );
+              expect(
+                errorDetails,
+              ).toEqual(
+                [
+                  {
+                    _type: 'ERROR',
+                    value: 'Whatever while getting Root(root).todos',
+                    data: {},
+                  },
+                ],
+              );
+              server.close();
+              resolve();
+            }
+          } catch (ex) {
             server.close();
-            resolve();
+            reject(ex);
           }
-        } catch (ex) {
-          server.close();
-          reject(ex);
-        }
-      },
-    );
+        },
+      );
+    });
   });
 });

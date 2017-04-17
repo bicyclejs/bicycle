@@ -18,13 +18,14 @@ function assert(fact: boolean): void {
   }
 }
 
-declare interface Handlers {
-  _handleNetworkError(err: Error): mixed;
-  _handleMutationError(err: Error): mixed;
-  _handleUpdate(data: ?Object, isNew: boolean): mixed;
-  _handleQueueRequest(): mixed;
-  _handleSuccessfulResponse(pendingMutations: number): mixed;
-}
+type Handlers = {
+  +_handleNetworkError: (err: Error) => mixed;
+  +_handleMutationError: (err: Error) => mixed;
+  +_handleUpdate: (data: ?Object, isNew: boolean) => mixed;
+  +_handleQueueRequest: () => mixed;
+  +_handleSuccessfulResponse: (pendingMutations: number) => mixed;
+};
+
 class RequestBatcher {
   _networkLayer: NetworkLayerInterface;
   _handlers: Handlers;
