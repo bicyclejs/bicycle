@@ -2,16 +2,58 @@
 
 import type {Context, MutationResult, Query, Schema} from '../flow-types';
 import Promise from 'promise';
+import throat from 'throat';
+import ms from 'ms';
 import suggestMatch from '../utils/suggest-match';
 import createError from '../utils/create-error';
 import {reportError} from '../error-reporting';
 
+import {
+  startMonitoringPerformance,
+  stopMonitoringPerformance,
+} from './resolve-field';
 import runQueryInternal from './run-query';
 import runMutationInternal from './run-mutation';
 import runSet from './run-set';
 
+let IS_PERFORMANCE_MONITORING = process.argv.indexOf('--monitor-bicycle-performance') !== -1;
+if (IS_PERFORMANCE_MONITORING) {
+  console.log('Bicycle performance monitoring is enabled.');
+  console.log('Please be aware that this will make all queries much slower.');
+}
+export function enablePerformanceMonitoring() {
+  IS_PERFORMANCE_MONITORING = true;
+}
+const lock = throat(Promise)(1);
 export function runQuery(schema: Schema, query: Query, context: Context): Promise<Object> {
   const result = {};
+  if (IS_PERFORMANCE_MONITORING) {
+    return lock(() => {
+      const start = Date.now();
+      startMonitoringPerformance();
+      return runQueryInternal(schema, schema.Root, context, query, context, result).then(() => {
+        const timings = stopMonitoringPerformance();
+        const end = Date.now();
+        console.log('Query completed in ' + ms(end - start));
+        console.log('');
+        console.log('Fields that took over 10ms to resolve:');
+        console.log('');
+        Object.keys(timings).sort((a, b) => {
+          return timings[a] - timings[b];
+        }).forEach((name) => {
+          if (timings[name] > 10) {
+            console.log(' * ' + name + ' - ' + ms(timings[name]));
+          }
+        });
+        console.log('');
+        console.log('Note that this is the **total** time to reolve the fields,');
+        console.log('so you may be seeing some fields that are requested only');
+        console.log('once, but are very slow, and some fields that are quick,');
+        console.log('but are requested thousands of times.');
+        return result;
+      });
+    });
+  }
   return runQueryInternal(schema, schema.Root, context, query, context, result).then(() => result);
 }
 

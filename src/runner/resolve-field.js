@@ -2,6 +2,7 @@
 
 import type {Context, ObjectType, Query, Schema} from '../flow-types';
 import Promise from 'promise';
+import throat from 'throat';
 import freeze from '../utils/freeze';
 import suggestMatch from '../utils/suggest-match';
 import parseArgs from './args-parser';
@@ -10,6 +11,35 @@ import validateReturnType from './validate-return-type';
 import {ERROR} from '../constants';
 
 const EMPTY_OBJECT = freeze({});
+
+let isPerformanceMonitoring = false;
+const lock = throat(Promise)(1);
+let timings = EMPTY_OBJECT;
+
+export function startMonitoringPerformance() {
+  isPerformanceMonitoring = true;
+  return timings = {};
+}
+export function stopMonitoringPerformance() {
+  const oldTimings = timings;
+  isPerformanceMonitoring = false;
+  timings = EMPTY_OBJECT;
+  return oldTimings;
+}
+
+function time(fn, id) {
+  return (...args) => lock(() => {
+    const start = Date.now();
+    return Promise.resolve(fn(...args)).then(result => {
+      const end = Date.now();
+      if (typeof timings[id] !== 'number') {
+        timings[id] = 0;
+      }
+      timings[id] += (end - start);
+      return result;
+    });
+  });
+}
 
 /**
  * Resolve a single field on a node to a value to be returned to the client
@@ -39,7 +69,10 @@ export default function resolveField(
           value: `Expected ${type.name}.${fname}.resolve to be a function.`,
         };
       }
-      const resolveField = type.fields[fname].resolve;
+      let resolveField = type.fields[fname].resolve;
+      if (isPerformanceMonitoring) {
+        resolveField = time(resolveField, `${type.name}.${fname}`);
+      }
       const argsObj = freeze(
         type.fields[fname].args
         ? validateArgs(schema, type.fields[fname].args, parseArgs(args))

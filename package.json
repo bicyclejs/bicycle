@@ -11,8 +11,10 @@
     "flow-runtime": "0.10.0",
     "get-port": "^3.1.0",
     "leven": "^2.0.0",
+    "ms": "^1.0.0",
     "promise": "^7.0.4",
-    "then-request": "^2.1.1"
+    "then-request": "^2.1.1",
+    "throat": "^3.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.3.17",
@@ -43,7 +45,7 @@
     "flow": "flow",
     "lint": "eslint src",
     "pretest": "npm run build",
-    "test": "flow && jest ./src/** --coverage -u && jest ./lib/** ./dev/** -u && npm run lint",
+    "test": "flow && jest ./src/** --coverage && jest ./lib/** ./dev/** -u && npm run lint",
     "watch": "jest ./src/** --coverage --watch",
     "example": "babel-node example/server.js"
   },
