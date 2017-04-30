@@ -31,6 +31,25 @@ function getErrorObject(err: ErrorInterface, context: string): ErrorResult {
   reportError(err);
   return result;
 }
+function isCached(result, id, key, subQuery) {
+  if (result[id][key] === undefined) {
+    return false;
+  }
+  if (subQuery === true) {
+    return true;
+  }
+  const subID = result[id][key];
+  if (!result[subID]) {
+    return false;
+  }
+  const keys = Object.keys(subQuery);
+  for (let i = 0; i < keys.length; i++) {
+    if (!isCached(result, subID, keys[i], subQuery[keys[i]])) {
+      return false;
+    }
+  }
+  return true;
+}
 export default function run(
   schema: Schema,
   type: ObjectType,
@@ -54,6 +73,9 @@ export default function run(
             data: {},
             code: 'INVALID_SUB_QUERY',
           };
+        }
+        if (isCached(result, id, key, subQuery)) {
+          return;
         }
         return resolveField(schema, type, value, key, subQuery, context, result).then(null, err => {
           return getErrorObject(err, 'while getting ' + type.name + '(' + id + ').' + key);
