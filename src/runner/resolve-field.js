@@ -30,21 +30,46 @@ export function stopMonitoringPerformance() {
   return {timings: oldTimings, count: oldCount};
 }
 
+const waitingFields = new Map();
+const queue = [];
+let running = false;
+
+function runTiming() {
+  running = true;
+  const start = Date.now();
+  const id = queue.pop();
+  const fns = waitingFields.get(id) || [];
+  waitingFields.delete(id);
+  return Promise.all(fns.map(f => f())).then(() => {
+    const end = Date.now();
+    if (typeof timings[id] !== 'number') {
+      timings[id] = 0;
+    }
+    if (typeof count[id] !== 'number') {
+      count[id] = 0;
+    }
+    timings[id] += (end - start);
+    count[id] += fns.length;
+    if (queue.length) {
+      runTiming();
+    } else {
+      running = false;
+    }
+  });
+}
+
 function time(fn, id) {
-  return (...args) => lock(() => {
-    const start = Date.now();
-    return Promise.resolve(fn(...args)).then(result => {
-      const end = Date.now();
-      if (typeof timings[id] !== 'number') {
-        timings[id] = 0;
-      }
-      if (typeof count[id] !== 'number') {
-        count[id] = 0;
-      }
-      timings[id] += (end - start);
-      count[id]++;
-      return result;
+  return (...args) => new Promise((resolve, reject) => {
+    if (!waitingFields.has(id)) {
+      waitingFields.set(id, []);
+      queue.push(id);
+    }
+    (waitingFields.get(id) || []).push(() => {
+      return Promise.resolve(fn(...args)).then(resolve, reject);
     });
+    if (!running) {
+      runTiming();
+    }
   });
 }
 
