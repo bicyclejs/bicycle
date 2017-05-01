@@ -65,7 +65,7 @@ function time(fn, id) {
       queue.push(id);
     }
     (waitingFields.get(id) || []).push(() => {
-      return Promise.resolve(fn(...args)).then(resolve, reject);
+      return Promise.resolve(null).then(() => fn(...args)).then(resolve, reject);
     });
     if (!running) {
       runTiming();
