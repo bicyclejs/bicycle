@@ -28,7 +28,7 @@ const lock = throat(Promise)(1);
 export function runQuery(schema: Schema, logging: Logging, query: Query, context: Context): Promise<Object> {
   const result = {};
   if (logging) {
-    logging.onQueryStart({query});
+    logging.onQueryStart({query, context});
   }
   if (IS_PERFORMANCE_MONITORING) {
     return lock(() => {
@@ -54,7 +54,7 @@ export function runQuery(schema: Schema, logging: Logging, query: Query, context
         console.log('once, but are very slow, and some fields that are quick,');
         console.log('but are requested thousands of times.');
         if (logging) {
-          return Promise.resolve(logging.onQueryEnd({query, cacheResult: result})).then(() => result);
+          return Promise.resolve(logging.onQueryEnd({query, cacheResult: result, context})).then(() => result);
         }
         return result;
       });
@@ -62,7 +62,7 @@ export function runQuery(schema: Schema, logging: Logging, query: Query, context
   }
   let done: Promise<any> = runQueryInternal(schema, logging, schema.Root, context, query, context, result);
   if (logging) {
-    done = done.then(() => logging && logging.onQueryEnd({query, cacheResult: result}));
+    done = done.then(() => logging && logging.onQueryEnd({query, cacheResult: result, context}));
   }
   return done.then(() => result);
 }
@@ -74,7 +74,7 @@ export function runMutation(
   context: Context,
 ): Promise<MutationResult> {
   return Promise.resolve(
-    logging ? logging.onMutationStart({mutation}) : null
+    logging ? logging.onMutationStart({mutation, context}) : null
   ).then(() => {
     const [typeName, mutationName] = mutation.method.split('.');
     const args = mutation.args;
@@ -149,7 +149,7 @@ export function runMutation(
   }).then(result => {
     if (logging) {
       return Promise.resolve(
-        logging.onMutationEnd({mutation, result})
+        logging.onMutationEnd({mutation, result, context})
       ).then(() => result);
     } else {
       return result;

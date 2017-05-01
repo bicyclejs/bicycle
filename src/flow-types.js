@@ -122,8 +122,8 @@ export type Schema = {
 export type Logging = ?{
   +disableDefaultLogging: boolean,
   +onError: ({error: ErrorInterface}) => mixed,
-  +onMutationStart: ({mutation: {+method: string, +args: Object}}) => mixed,
-  +onMutationEnd: ({mutation: {+method: string, +args: Object}, result: MutationResult}) => mixed,
-  +onQueryStart: ({query: Object}) => mixed,
-  +onQueryEnd: ({query: Object, cacheResult: Object}) => mixed,
+  +onMutationStart: ({mutation: {+method: string, +args: Object}, context: any}) => mixed,
+  +onMutationEnd: ({mutation: {+method: string, +args: Object}, result: MutationResult, context: any}) => mixed,
+  +onQueryStart: ({query: Object, context: any}) => mixed,
+  +onQueryEnd: ({query: Object, cacheResult: Object, context: any}) => mixed,
 };
