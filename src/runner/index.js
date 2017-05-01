@@ -35,7 +35,7 @@ export function runQuery(schema: Schema, logging: Logging, query: Query, context
       const start = Date.now();
       startMonitoringPerformance();
       return runQueryInternal(schema, logging, schema.Root, context, query, context, result).then(() => {
-        const timings = stopMonitoringPerformance();
+        const {count, timings} = stopMonitoringPerformance();
         const end = Date.now();
         console.log('Query completed in ' + ms(end - start));
         console.log('');
@@ -45,7 +45,7 @@ export function runQuery(schema: Schema, logging: Logging, query: Query, context
           return timings[a] - timings[b];
         }).forEach((name) => {
           if (timings[name] > 10) {
-            console.log(' * ' + name + ' - ' + ms(timings[name]));
+            console.log(` * ${name} - ${ms(timings[name])} (${count[name]} call${count[name] !== 1 ? 's' : ''})`);
           }
         });
         console.log('');

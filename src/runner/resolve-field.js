@@ -15,16 +15,19 @@ const EMPTY_OBJECT = freeze({});
 let isPerformanceMonitoring = false;
 const lock = throat(Promise)(1);
 let timings = EMPTY_OBJECT;
+let count = EMPTY_OBJECT;
 
 export function startMonitoringPerformance() {
   isPerformanceMonitoring = true;
-  return timings = {};
+  return {timings: timings = {}, count: count = {}};
 }
 export function stopMonitoringPerformance() {
   const oldTimings = timings;
+  const oldCount = count;
   isPerformanceMonitoring = false;
   timings = EMPTY_OBJECT;
-  return oldTimings;
+  count = EMPTY_OBJECT;
+  return {timings: oldTimings, count: oldCount};
 }
 
 function time(fn, id) {
@@ -35,7 +38,11 @@ function time(fn, id) {
       if (typeof timings[id] !== 'number') {
         timings[id] = 0;
       }
+      if (typeof count[id] !== 'number') {
+        count[id] = 0;
+      }
       timings[id] += (end - start);
+      count[id]++;
       return result;
     });
   });
