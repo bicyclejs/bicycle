@@ -5,35 +5,31 @@
 import express from 'express';
 import getPort from 'get-port';
 import BicycleClient, {NetworkLayer} from '../client';
-import prepareServer from '../server-rendering';
-import {
-  loadSchemaFromFiles,
-  createBicycleMiddleware,
-  runQuery,
-  onBicycleError,
-  silenceDefaultBicycleErrorReporting,
-} from '../server';
+import BicycleServer from '../server';
 import MemoryStore from '../sessions/memory';
 
 let allowErrors = false;
 const serverErrors = [];
-onBicycleError(err => {
-  if (allowErrors) {
-    serverErrors.push(err);
-  } else {
-    console.error(err.stack);
-    throw err;
-  }
-});
-silenceDefaultBicycleErrorReporting();
 
-const schema = loadSchemaFromFiles(__dirname + '/../test-schema');
+// sessions expire after just 1 second for testing
+const sessionStore = new MemoryStore(1000);
+const bicycle = new BicycleServer(__dirname + '/../test-schema', {
+  sessionStore,
+  disableDefaultLogging: true,
+  onError({error}) {
+    if (allowErrors) {
+      serverErrors.push(error);
+    } else {
+      console.error(error.stack);
+      throw error;
+    }
+  },
+});
+
 test('a successful query', () => {
   const app = express();
-  // sessions expire after just 1 second for testing
-  const sessionStore = new MemoryStore(1000);
   const todo = {id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', title: 'Hello World', completed: false};
-  app.use('/bicycle', createBicycleMiddleware(schema, sessionStore, req => {
+  app.use('/bicycle', bicycle.createMiddleware(req => {
     return {
       db: {
         getTodos() {
@@ -89,7 +85,7 @@ test('a successful server query', () => {
       },
     },
   };
-  return runQuery(schema, {todos: {id: true, title: true, completed: true}}, context).then(result => {
+  return bicycle.runQuery({todos: {id: true, title: true, completed: true}}, context).then(result => {
     expect(
       result,
     ).toEqual(
@@ -113,30 +109,23 @@ test('a successful server render', () => {
     },
   };
 
-  // sessions expire after just 1 second for testing
-  const sessionStore = new MemoryStore(1000);
-
   const A1 = {};
   const A2 = {};
-  const renderServerSide = prepareServer(
-    schema,
-    sessionStore,
-    (client, a1, a2) => {
-      expect(a1).toBe(A1);
-      expect(a2).toBe(A2);
-      const resultA = client.queryCache({todos: {id: true}});
-      if (resultA.loaded) {
-        return client.queryCache({
-          [`todoById(id:${JSON.stringify(resultA.result.todos[0].id)})`]: {
-            id: true,
-            title: true,
-            completed: true,
-          },
-        });
-      }
-      return 'not loaded yet';
+  const renderServerSide = bicycle.createServerRenderer((client, a1, a2) => {
+    expect(a1).toBe(A1);
+    expect(a2).toBe(A2);
+    const resultA = client.queryCache({todos: {id: true}});
+    if (resultA.loaded) {
+      return client.queryCache({
+        [`todoById(id:${JSON.stringify(resultA.result.todos[0].id)})`]: {
+          id: true,
+          title: true,
+          completed: true,
+        },
+      });
     }
-  );
+    return 'not loaded yet';
+  });
 
   return renderServerSide(context, A1, A2).then(({serverPreparation, result}) => {
     expect(typeof serverPreparation).toBe('object');
@@ -171,11 +160,9 @@ test('a successful mutation with a result', () => {
   // 5. check the mutation updated successfully
 
   const app = express();
-  // sessions expire after just 1 second for testing
-  const sessionStore = new MemoryStore(1000);
   const todo = {id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', title: 'Hello World', completed: false};
   const todos = [];
-  app.use('/bicycle', createBicycleMiddleware(schema, sessionStore, req => {
+  app.use('/bicycle', bicycle.createMiddleware(req => {
     return {
       db: {
         getTodos() {
@@ -256,9 +243,7 @@ test('a successful mutation with a result', () => {
 test('a failing query', () => {
   allowErrors = true;
   const app = express();
-  // sessions expire after just 1 second for testing
-  const sessionStore = new MemoryStore(1000);
-  app.use('/bicycle', createBicycleMiddleware(schema, sessionStore, req => {
+  app.use('/bicycle', bicycle.createMiddleware(req => {
     return {
       db: {
         getTodos() {

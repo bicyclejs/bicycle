@@ -1,12 +1,12 @@
 // @flow
 
-import type {Context, MutationResult, Query, Schema} from '../flow-types';
+import type {Context, Logging, MutationResult, Query, Schema} from '../flow-types';
 import Promise from 'promise';
 import throat from 'throat';
 import ms from 'ms';
 import suggestMatch from '../utils/suggest-match';
 import createError from '../utils/create-error';
-import {reportError} from '../error-reporting';
+import reportError from '../error-reporting';
 
 import {
   startMonitoringPerformance,
@@ -25,13 +25,16 @@ export function enablePerformanceMonitoring() {
   IS_PERFORMANCE_MONITORING = true;
 }
 const lock = throat(Promise)(1);
-export function runQuery(schema: Schema, query: Query, context: Context): Promise<Object> {
+export function runQuery(schema: Schema, logging: Logging, query: Query, context: Context): Promise<Object> {
   const result = {};
+  if (logging) {
+    logging.onQueryStart({query});
+  }
   if (IS_PERFORMANCE_MONITORING) {
     return lock(() => {
       const start = Date.now();
       startMonitoringPerformance();
-      return runQueryInternal(schema, schema.Root, context, query, context, result).then(() => {
+      return runQueryInternal(schema, logging, schema.Root, context, query, context, result).then(() => {
         const timings = stopMonitoringPerformance();
         const end = Date.now();
         console.log('Query completed in ' + ms(end - start));
@@ -50,19 +53,29 @@ export function runQuery(schema: Schema, query: Query, context: Context): Promis
         console.log('so you may be seeing some fields that are requested only');
         console.log('once, but are very slow, and some fields that are quick,');
         console.log('but are requested thousands of times.');
+        if (logging) {
+          return Promise.resolve(logging.onQueryEnd({query, cacheResult: result})).then(() => result);
+        }
         return result;
       });
     });
   }
-  return runQueryInternal(schema, schema.Root, context, query, context, result).then(() => result);
+  let done: Promise<any> = runQueryInternal(schema, logging, schema.Root, context, query, context, result);
+  if (logging) {
+    done = done.then(() => logging && logging.onQueryEnd({query, cacheResult: result}));
+  }
+  return done.then(() => result);
 }
 
 export function runMutation(
   schema: Schema,
+  logging: Logging,
   mutation: {method: string, args: Object},
   context: Context,
 ): Promise<MutationResult> {
-  return Promise.resolve(null).then(() => {
+  return Promise.resolve(
+    logging ? logging.onMutationStart({mutation}) : null
+  ).then(() => {
     const [typeName, mutationName] = mutation.method.split('.');
     const args = mutation.args;
     const Type = schema[typeName];
@@ -105,6 +118,7 @@ export function runMutation(
     }
     return runMutationInternal(
       schema,
+      logging,
       mutation,
       typeName,
       mutationName,
@@ -130,7 +144,15 @@ export function runMutation(
       }
     );
     err.message += ' while running ' + mutation.method;
-    reportError(err);
+    reportError(err, logging);
     return {s: false, v: result};
+  }).then(result => {
+    if (logging) {
+      return Promise.resolve(
+        logging.onMutationEnd({mutation, result})
+      ).then(() => result);
+    } else {
+      return result;
+    }
   });
 }

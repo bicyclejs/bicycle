@@ -1,6 +1,6 @@
 // @flow
 
-import type {Schema, ServerPreparation, SessionID, SessionStore, Query, Context} from './flow-types';
+import type {Logging, Schema, ServerPreparation, SessionID, SessionStore, Query, Context} from './flow-types';
 
 import Promise from 'promise';
 import notEqual from './utils/not-equal';
@@ -10,7 +10,7 @@ import getSessionID from './utils/get-session-id';
 import {runQuery} from './runner';
 import {serverPreparation as createServerPreparation} from './messages';
 
-class FakeClient {
+export class FakeClient {
   _sessionID: SessionID;
   _query: Query;
   _cache: Object;
@@ -43,6 +43,7 @@ type TResult = mixed;
 
 export default function prepare<TResult>(
   schema: Schema,
+  logging: Logging,
   sessionStore: SessionStore,
   fn: (client: FakeClient, ...args: any) => TResult,
 ): Function /* (context: Context, ...args: any) => Promise<{serverPreparation: ServerPreparation, result: TResult}> */ {
@@ -60,6 +61,7 @@ export default function prepare<TResult>(
             }
             runQuery(
               schema,
+              logging,
               newServerPreparation.q,
               context
             ).done(data => {

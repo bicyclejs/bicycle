@@ -1,6 +1,6 @@
 // @flow
 
-import type {Context, MutationType, MutationResult, ObjectType, Query, Schema} from '../flow-types';
+import type {Context, Logging, MutationType, MutationResult, ObjectType, Query, Schema} from '../flow-types';
 import Promise from 'promise';
 import typeNameFromValue from '../utils/type-name-from-value';
 import createError from '../utils/create-error';
@@ -12,6 +12,7 @@ import {validateMutationReturnType} from './validate-return-type';
 const EMPTY_OBJECT = freeze({});
 export default function runMutation(
   schema: Schema,
+  logging: Logging,
   mutation: {method: string, args: Object},
   typeName: string,
   mutationName: string,
@@ -30,7 +31,7 @@ export default function runMutation(
   }).then(value => {
     if (method && method.type) {
       return Promise.resolve(
-        validateMutationReturnType(schema, method.type, value),
+        validateMutationReturnType(schema, logging, method.type, value),
       ).then(value => {
         return {s: true, v: value};
       });

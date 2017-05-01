@@ -1,6 +1,6 @@
 // @flow
 
-import type {Context, ObjectType, Query, Schema} from '../flow-types';
+import type {Context, Logging, ObjectType, Query, Schema} from '../flow-types';
 import Promise from 'promise';
 import throat from 'throat';
 import freeze from '../utils/freeze';
@@ -46,6 +46,7 @@ function time(fn, id) {
  */
 export default function resolveField(
   schema: Schema,
+  logging: Logging,
   type: ObjectType,
   value: any,
   name: string,
@@ -90,6 +91,7 @@ export default function resolveField(
     if (value && value._type === ERROR) return value;
     return validateReturnType(
       schema,
+      logging,
       type.fields[fname].type,
       value,
       subQuery === true ? null : subQuery,

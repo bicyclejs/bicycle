@@ -1,14 +1,14 @@
 // @flow
 
-import type {ErrorInterface, ErrorResult, ObjectType, Query, Schema, TypeDefinition} from '../flow-types';
+import type {ErrorInterface, ErrorResult, Logging, ObjectType, Query, Schema, TypeDefinition} from '../flow-types';
 
 import Promise from 'promise';
 import typeNameFromValue from '../utils/type-name-from-value';
 import resolveField from './resolve-field';
 import {ERROR} from '../constants';
-import {reportError} from '../error-reporting';
+import reportError from '../error-reporting';
 
-function getErrorObject(err: ErrorInterface, context: string): ErrorResult {
+function getErrorObject(err: ErrorInterface, context: string, logging: Logging): ErrorResult {
   const result = (
     process.env.NODE_ENV === 'production' && !err.exposeProd
     ? {
@@ -28,7 +28,7 @@ function getErrorObject(err: ErrorInterface, context: string): ErrorResult {
     }
   );
   err.message += ' ' + context;
-  reportError(err);
+  reportError(err, logging);
   return result;
 }
 function isCached(result, id, key, subQuery) {
@@ -52,6 +52,7 @@ function isCached(result, id, key, subQuery) {
 }
 export default function run(
   schema: Schema,
+  logging: Logging,
   type: ObjectType,
   value: any,
   query: Query,
@@ -77,14 +78,14 @@ export default function run(
         if (isCached(result, id, key, subQuery)) {
           return;
         }
-        return resolveField(schema, type, value, key, subQuery, context, result).then(null, err => {
-          return getErrorObject(err, 'while getting ' + type.name + '(' + id + ').' + key);
+        return resolveField(schema, logging, type, value, key, subQuery, context, result).then(null, err => {
+          return getErrorObject(err, 'while getting ' + type.name + '(' + id + ').' + key, logging);
         }).then(value => {
           result[id][key] = value;
         });
       }),
     ).then(() => id);
   }, err => {
-    return getErrorObject(err, 'while getting ID of ' + type.name);
+    return getErrorObject(err, 'while getting ID of ' + type.name, logging);
   });
 }

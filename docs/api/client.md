@@ -1,4 +1,4 @@
-# client
+# BicycleClient
 
 If you don't need to customise any details about the networking, server side rendering etc. you can just do:
 

@@ -1,6 +1,6 @@
 // @flow
 
-import type {Context, Schema, SessionStore} from './flow-types';
+import type {Context, Logging, Schema, SessionStore} from './flow-types';
 import Promise from 'promise';
 import bodyParser from 'body-parser';
 import handleMessage from './message-handler';
@@ -8,6 +8,7 @@ import handleMessage from './message-handler';
 const jsonBody = bodyParser.json();
 export default function createBicycleMiddleware(
   schema: Schema,
+  logging: Logging,
   sessionStore: SessionStore,
   getContext: (req: Object, options: {stage: 'query' | 'mutation'}) => Context,
 ): Function {
@@ -15,7 +16,7 @@ export default function createBicycleMiddleware(
     Promise.resolve(null).then(
      () => Promise.all([getContext(req, {stage: 'query'}), getContext(req, {stage: 'mutation'})])
    ).then(
-      ([context, mutationContext]) => handleMessage(schema, sessionStore, req.body, context, mutationContext)
+      ([context, mutationContext]) => handleMessage(schema, logging, sessionStore, req.body, context, mutationContext)
     ).done(
       response => res.json(response),
       err => next(err)

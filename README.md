@@ -51,17 +51,15 @@ const subscription = client.subscribe(
 
 ```js
 import express from 'express';
-import loadSchema from 'bicycle/lib/load-schema';
-import {createMiddleware} from 'bicycle/lib/server';
-import MemoryStore from 'bicycle/lib/sessions/memory';
+import BicycleServer from 'bicycle/server';
 
 const app = express();
 
 // other routes etc. here
 
-// create the schema.
+// define the schema.
 // in a real app you'd want to split schema definition across multiple files
-const schema = loadSchema({
+const schema = {
   objects: [
     {
       name: 'Root',
@@ -128,14 +126,13 @@ const schema = loadSchema({
       },
     },
   ];
-});
+};
 
-// bicycle requires a session store, you can configure things like session timeouts here
-const sessionStore = new MemoryStore();
+const bicycle = new BicycleServer(schema);
 
 // createMiddleware takes a function that returns the context given a request
 // this allows you to only expose information the user is allowed to see
-app.use('/bicycle', createMiddleware(schema, sessionStore, req => ({user: req.user})));
+app.use('/bicycle', bicycle.createMiddleware(req => ({user: req.user})));
 
 app.listen(3000);
 ```

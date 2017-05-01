@@ -1,6 +1,6 @@
 // @flow
 
-import type {Query, Schema, TypeDefinition} from '../flow-types';
+import type {Logging, Query, Schema, TypeDefinition} from '../flow-types';
 import Promise from 'promise';
 import typeString from '../utils/type-name-from-definition';
 import typeNameFromValue from '../utils/type-name-from-value';
@@ -21,6 +21,7 @@ function throwIfNull<T>(result: ?T): T {
 }
 function checkReturnTypeInner(
   schema: Schema,
+  logging: Logging,
   type: TypeDefinition,
   value: any,
   subQuery: ?Query,
@@ -33,7 +34,7 @@ function checkReturnTypeInner(
         throw error;
       }
       return Promise.resolve(
-        checkReturnTypeInner(schema, type.type, value, subQuery, context, result),
+        checkReturnTypeInner(schema, logging, type.type, value, subQuery, context, result),
       ).then(throwIfNull);
     case 'List':
       if (value === null || value === undefined) return null;
@@ -41,7 +42,7 @@ function checkReturnTypeInner(
       if (!Array.isArray(value)) {
         throw error;
       }
-      return Promise.all(value.map((v, i) => checkReturnTypeInner(schema, subType, v, subQuery, context, result)));
+      return Promise.all(value.map((v, i) => checkReturnTypeInner(schema, logging, subType, v, subQuery, context, result)));
     case 'ObjectScalar':
       const properties = type.properties;
       if (typeof value !== 'object') {
@@ -57,7 +58,7 @@ function checkReturnTypeInner(
       return Promise.all(
         Object.keys(properties).map(key => {
           return Promise.resolve(
-            checkReturnTypeInner(schema, properties[key], value[key], subQuery, context, result),
+            checkReturnTypeInner(schema, logging, properties[key], value[key], subQuery, context, result),
           ).then(v => {
             output[key] = v;
           });
@@ -84,7 +85,7 @@ function checkReturnTypeInner(
               {exposeProd: true, code: 'INVALID_QUERY', data: {typeName: namedType.name}},
             );
           }
-          return runQuery(schema, namedType, value, subQuery, context, result);
+          return runQuery(schema, logging, namedType, value, subQuery, context, result);
         case 'ScalarType':
           try {
             return namedType.serialize(value);
@@ -102,6 +103,7 @@ function checkReturnTypeInner(
 
 export default function validateReturnType(
   schema: Schema,
+  logging: Logging,
   type: TypeDefinition,
   value: any,
   subQuery: ?Query,
@@ -109,7 +111,7 @@ export default function validateReturnType(
   result: Object,
 ): any {
   try {
-    return checkReturnTypeInner(schema, type, value, subQuery, context, result);
+    return checkReturnTypeInner(schema, logging, type, value, subQuery, context, result);
   } catch (ex) {
     if (ex !== error) throw ex;
     const expected = typeString(type);
@@ -123,8 +125,9 @@ export default function validateReturnType(
 }
 export function validateMutationReturnType(
   schema: Schema,
+  logging: Logging,
   type: TypeDefinition,
   value: any,
 ): any {
-  return validateReturnType(schema, type, value, undefined, BICYCLE_MUTATION_CONTEXT, {});
+  return validateReturnType(schema, logging, type, value, undefined, BICYCLE_MUTATION_CONTEXT, {});
 }

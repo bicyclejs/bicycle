@@ -1,6 +1,6 @@
 // @flow
 
-import type {ClientRequest, Context, MutationResult, Query, Schema, ServerResponse, SessionID, SessionStore} from './flow-types';
+import type {ClientRequest, Context, Logging, MutationResult, Query, Schema, ServerResponse, SessionID, SessionStore} from './flow-types';
 
 import Promise from 'promise';
 import mergeQueries from './utils/merge-queries';
@@ -11,6 +11,7 @@ import {response as createResponse} from './messages';
 
 export default function handleMessage(
   schema: Schema,
+  logging: Logging,
   sessionStore: SessionStore,
   message: ClientRequest,
   context: Context,
@@ -21,13 +22,13 @@ export default function handleMessage(
   const mutations = message.m ? message.m.map(m => ({method: m.m, args: m.a})) : [];
   return Promise.all([
     getQuery(sessionID, sessionStore, queryUpdate),
-    runMutations(schema, mutations, mutationContext || context),
+    runMutations(schema, logging, mutations, mutationContext || context),
   ]).then(([getQueryResult, mutationResults]) => {
     if (getQueryResult.isExpired) {
       return createResponse(undefined, mutationResults, undefined);
     } else {
       const {sessionID, query} = getQueryResult;
-      return runAndDiffQuery(schema, sessionID, sessionStore, query, context).then(
+      return runAndDiffQuery(schema, logging, sessionID, sessionStore, query, context).then(
         data => createResponse(sessionID, mutationResults, data || undefined)
       );
     }
@@ -67,12 +68,12 @@ export function getQuery(
   }
 }
 
-export function runMutations(schema: Schema, mutations: Array<{method: string, args: Object}>, context: Object) {
+export function runMutations(schema: Schema, logging: Logging, mutations: Array<{method: string, args: Object}>, context: Object) {
   return new Promise((resolve, reject) => {
     const results = [];
     function nextMutation(i) {
       if (i >= mutations.length) return resolve(results);
-      runMutation(schema, mutations[i], context).done(result => {
+      runMutation(schema, logging, mutations[i], context).done(result => {
         results.push(result);
         nextMutation(i + 1);
       }, reject);
@@ -83,13 +84,14 @@ export function runMutations(schema: Schema, mutations: Array<{method: string, a
 
 export function runAndDiffQuery(
   schema: Schema,
+  logging: Logging,
   sessionID: string,
   sessionStore: SessionStore,
   query: Query,
   context: Context
 ): Promise<?Object> {
   return Promise.all([
-    runQuery(schema, query, context),
+    runQuery(schema, logging, query, context),
     sessionStore.getCache(sessionID),
   ]).then(([data, cache]) => {
     const result = diffCache(cache, data);

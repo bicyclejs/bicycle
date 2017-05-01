@@ -1,18 +1,12 @@
 // @flow
 
-import type {ErrorInterface} from './flow-types';
+import type {ErrorInterface, Logging} from './flow-types';
 
-let defaultErrorReporting = true;
-const handlers = [];
-export function reportError(err: ErrorInterface) {
-  if (defaultErrorReporting) {
+export default function reportError(err: ErrorInterface, logging: Logging) {
+  if (!(logging && logging.disableDefaultLogging)) {
     console.error(err.stack);
   }
-  handlers.forEach(handler => handler(err));
-}
-export function silenceDefaultErrorReporting() {
-  defaultErrorReporting = false;
-}
-export function onError(handler: (err: ErrorInterface) => mixed) {
-  handlers.push(handler);
+  if (logging) {
+    logging.onError({error: err});
+  }
 }

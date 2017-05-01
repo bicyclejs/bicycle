@@ -24,6 +24,7 @@ test('runQuery', async () => {
         },
       ],
     }),
+    null, // logging
     {foo: true},
     {},
   );
