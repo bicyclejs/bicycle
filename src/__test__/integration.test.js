@@ -127,7 +127,7 @@ test('a successful server render', () => {
     return 'not loaded yet';
   });
 
-  return renderServerSide(context, A1, A2).then(({serverPreparation, result}) => {
+  return renderServerSide(() => context, A1, A2).then(({serverPreparation, result}) => {
     expect(typeof serverPreparation).toBe('object');
     expect(typeof serverPreparation.s).toBe('string');
     expect(serverPreparation.q).toEqual({

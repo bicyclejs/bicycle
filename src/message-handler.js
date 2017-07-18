@@ -14,23 +14,42 @@ export default function handleMessage(
   logging: Logging,
   sessionStore: SessionStore,
   message: ClientRequest,
-  context: Context,
-  mutationContext?: Context,
+  context: () => Context,
+  mutationContext?: () => Context,
 ): Promise<ServerResponse> {
   const sessionID = message.s;
   const queryUpdate = message.q;
   const mutations = message.m ? message.m.map(m => ({method: m.m, args: m.a})) : [];
-  return Promise.all([
-    getQuery(sessionID, sessionStore, queryUpdate),
-    runMutations(schema, logging, mutations, mutationContext || context),
-  ]).then(([getQueryResult, mutationResults]) => {
+  return Promise.resolve(null).then(() => {
+    const ctx = mutationContext || context;
+    return ctx();
+  }).then(mutationContext => {
+    return Promise.all([
+      getQuery(sessionID, sessionStore, queryUpdate),
+      runMutations(schema, logging, mutations, mutationContext || context),
+    ]).then(results => {
+      if (mutationContext && mutationContext.dispose) mutationContext.dispose();
+      return results;
+    }, err => {
+      if (mutationContext && mutationContext.dispose) mutationContext.dispose();
+      throw err;
+    });
+  }).then(([getQueryResult, mutationResults]) => {
     if (getQueryResult.isExpired) {
       return createResponse(undefined, mutationResults, undefined);
     } else {
       const {sessionID, query} = getQueryResult;
-      return runAndDiffQuery(schema, logging, sessionID, sessionStore, query, context).then(
-        data => createResponse(sessionID, mutationResults, data || undefined)
-      );
+      return Promise.resolve(null).then(() => context()).then(queryContext => {
+        return runAndDiffQuery(schema, logging, sessionID, sessionStore, query, queryContext).then(
+          data => createResponse(sessionID, mutationResults, data || undefined)
+        ).then(results => {
+          if (queryContext && queryContext.dispose) queryContext.dispose();
+          return results;
+        }, err => {
+          if (queryContext && queryContext.dispose) queryContext.dispose();
+          throw err;
+        });
+      });
     }
   });
 }

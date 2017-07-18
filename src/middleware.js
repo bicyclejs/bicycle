@@ -13,11 +13,7 @@ export default function createBicycleMiddleware(
   getContext: (req: Object, options: {stage: 'query' | 'mutation'}) => Context,
 ): Function {
   function processRequest(req, res, next) {
-    Promise.resolve(null).then(
-     () => Promise.all([getContext(req, {stage: 'query'}), getContext(req, {stage: 'mutation'})])
-   ).then(
-      ([context, mutationContext]) => handleMessage(schema, logging, sessionStore, req.body, context, mutationContext)
-    ).done(
+    handleMessage(schema, logging, sessionStore, req.body, () => getContext(req, {stage: 'query'}), () => getContext(req, {stage: 'mutation'})).done(
       response => res.json(response),
       err => next(err)
     );

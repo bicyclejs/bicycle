@@ -82,8 +82,8 @@ export default class BicycleServer {
 
   handleMessage(
     message: ClientRequest,
-    context: Context,
-    mutationContext?: Context,
+    context: () => Context,
+    mutationContext?: () => Context,
   ): Promise<ServerResponse> {
     return handleMessageInternal(
       this._schema,

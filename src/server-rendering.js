@@ -47,8 +47,8 @@ export default function prepare<TResult>(
   sessionStore: SessionStore,
   fn: (client: FakeClient, ...args: any) => TResult,
 ): Function /* (context: Context, ...args: any) => Promise<{serverPreparation: ServerPreparation, result: TResult}> */ {
-  return (context: Context, ...args: any) => {
-    return getSessionID(sessionStore).then(sessionID => {
+  return (context: () => Context, ...args: any) => {
+    return Promise.all([getSessionID(sessionStore), context()]).then(([sessionID, context]) => {
       const client = new FakeClient(sessionID);
       return new Promise((resolve, reject) => {
         function next() {
@@ -57,6 +57,7 @@ export default function prepare<TResult>(
             const result = fn(client, ...args);
             const newServerPreparation = client._serverPreparation();
             if (!notEqual(oldServerPreparation.q, newServerPreparation.q)) {
+              if (context.dispose) context.dispose();
               return resolve({serverPreparation: newServerPreparation, result});
             }
             runQuery(
@@ -69,10 +70,15 @@ export default function prepare<TResult>(
                 client._cache = data;
                 return next();
               } else {
+                if (context.dispose) context.dispose();
                 return resolve({serverPreparation: newServerPreparation, result});
               }
-            }, reject);
+            }, err => {
+              if (context.dispose) context.dispose();
+              reject(err);
+            });
           } catch (ex) {
+            if (context.dispose) context.dispose();
             reject(ex);
           }
         }
