@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.0.1: 2017-08-03
+
+ - Preserve const enums for non typescript consumers
+
 ## v3.0.0: 2017-08-03
 
 Convert to typescript
