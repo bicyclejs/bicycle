@@ -20,6 +20,6 @@
     "strict": true,
     "suppressImplicitAnyIndexErrors": true,
     "noUnusedLocals": true,
-    "preserveConstEnums": false
+    "preserveConstEnums": true
   }
 }

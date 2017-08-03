@@ -64,11 +64,6 @@
     ]
   },
   "jest": {
-    "globals": {
-      "ts-jest": {
-        "tsConfigFile": "tsconfig-test.json"
-      }
-    },
     "testEnvironment": "node",
     "moduleFileExtensions": [
       "ts",
