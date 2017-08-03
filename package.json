@@ -4,50 +4,74 @@
   "description": "A data synchronisation library for JavaScript",
   "keywords": [],
   "dependencies": {
-    "babel-runtime": "^6.9.2",
+    "@types/body-parser": "^1.16.4",
+    "@types/deep-freeze": "^0.1.1",
+    "@types/express": "^4.0.36",
+    "@types/leven": "^2.1.0",
+    "@types/ms": "^0.7.29",
+    "@types/node": "^8.0.16",
     "body-parser": "^1.15.2",
-    "character-parser": "^2.1.1",
+    "character-parser": "^3.0.0",
     "deep-freeze": "0.0.1",
-    "flow-runtime": "0.10.0",
-    "get-port": "^3.1.0",
     "leven": "^2.0.0",
     "ms": "^1.0.0",
-    "promise": "^7.0.4",
-    "then-request": "^2.1.1",
+    "promise": "^8.0.1",
+    "then-request": "^4.1.0",
     "throat": "^3.0.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.3.17",
-    "babel-plugin-flow-runtime": "0.10.0",
-    "babel-plugin-module-alias": "^1.4.0",
-    "babel-plugin-transform-flow-comments": "^6.3.23",
-    "babel-plugin-typecheck": "^3.5.1",
-    "babel-preset-forbeslindesay": "^2.0.1",
-    "babel-register": "^6.3.13",
-    "babelify": "^7.2.0",
-    "browserify-middleware": "^7.0.0",
-    "eslint": "^2.13.0",
-    "eslint-config-forbeslindesay": "^2.0.1",
-    "express": "^4.13.3",
-    "flow-bin": "^0.44.0",
-    "jest": "^19.0.2",
-    "lsr": "^1.0.0",
+    "@types/get-port": "0.0.4",
+    "@types/jest": "*",
+    "babelify": "*",
+    "browserify-middleware": "*",
+    "express": "*",
+    "get-port": "*",
+    "husky": "*",
+    "jest": "*",
+    "lint-staged": "*",
+    "lsr": "*",
+    "prettier": "*",
     "react": "^15.1.0",
     "react-dom": "^15.1.0",
     "todomvc-app-css": "^2.0.3",
-    "todomvc-common": "^1.0.2"
+    "todomvc-common": "^1.0.2",
+    "ts-jest": "*",
+    "typescript": "^2.4.2"
   },
   "scripts": {
+    "precommit": "lint-staged",
     "prepublish": "npm run build",
-    "build": "npm run build:prod && npm run build:dev && babel-node src/build.js",
-    "build:prod": "NODE_ENV=production babel src --out-dir lib",
-    "build:dev": "babel src --out-dir dev",
-    "flow": "flow",
-    "lint": "eslint src",
+    "prettier": "prettier --parser typescript --single-quote --trailing-comma all --no-bracket-spacing --write \"src/**/*.{ts,tsx}\"",
+    "prettier:check": "prettier --parser typescript --single-quote --trailing-comma all --no-bracket-spacing --list-different \"src/**/*.{ts,tsx}\"",
+    "build": "tsc",
     "pretest": "npm run build",
-    "test": "flow && jest ./src/** --coverage && jest ./lib/** ./dev/** -u && npm run lint",
-    "watch": "jest ./src/** --coverage --watch",
-    "example": "babel-node example/server.js"
+    "test": "jest ./src --coverage",
+    "watch": "jest ./src --coverage --watch"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --parser typescript --single-quote --trailing-comma all --no-bracket-spacing --write",
+      "git add"
+    ]
+  },
+  "jest": {
+    "globals": {
+      "ts-jest": {
+        "tsConfigFile": "tsconfig-test.json"
+      }
+    },
+    "testEnvironment": "node",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
+    "transform": {
+      "\\.(ts|tsx)$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testMatch": [
+      "**/*.test.(ts|tsx|js)"
+    ]
   },
   "repository": {
     "type": "git",

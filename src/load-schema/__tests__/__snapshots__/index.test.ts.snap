@@ -1,0 +1,221 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`it can load a schema from a file 1`] = `
+Object {
+  "Root": Object {
+    "description": undefined,
+    "fields": Object {
+      "todoById": Object {
+        "argType": Object {
+          "kind": "Object",
+          "properties": Object {
+            "id": Object {
+              "kind": "String",
+            },
+          },
+        },
+        "auth": "public",
+        "description": undefined,
+        "kind": "FieldMethod",
+        "name": "Root",
+        "resolve": [Function],
+        "resultType": Object {
+          "kind": "Named",
+          "name": "Todo",
+        },
+      },
+      "todos": Object {
+        "argType": Object {
+          "kind": "Void",
+        },
+        "auth": "public",
+        "description": undefined,
+        "kind": "FieldMethod",
+        "name": "Root",
+        "resolve": [Function],
+        "resultType": Object {
+          "element": Object {
+            "kind": "Named",
+            "name": "Todo",
+          },
+          "kind": "List",
+        },
+      },
+    },
+    "id": [Function],
+    "kind": "NodeType",
+    "matches": [Function],
+    "mutations": Object {},
+    "name": "Root",
+  },
+  "Todo": Object {
+    "description": undefined,
+    "fields": Object {
+      "completed": Object {
+        "auth": "public",
+        "description": undefined,
+        "kind": "FieldProperty",
+        "name": "Todo",
+        "resultType": Object {
+          "kind": "Boolean",
+        },
+      },
+      "id": Object {
+        "auth": "public",
+        "description": undefined,
+        "kind": "FieldProperty",
+        "name": "Todo",
+        "resultType": Object {
+          "kind": "Named",
+          "name": "id",
+        },
+      },
+      "title": Object {
+        "auth": "public",
+        "description": undefined,
+        "kind": "FieldProperty",
+        "name": "Todo",
+        "resultType": Object {
+          "kind": "String",
+        },
+      },
+    },
+    "id": [Function],
+    "kind": "NodeType",
+    "matches": [Function],
+    "mutations": Object {
+      "addTodo": Object {
+        "argType": Object {
+          "kind": "Object",
+          "properties": Object {
+            "completed": Object {
+              "kind": "Boolean",
+            },
+            "title": Object {
+              "kind": "String",
+            },
+          },
+        },
+        "auth": "public",
+        "description": undefined,
+        "kind": "Mutation",
+        "name": "addTodo",
+        "resolve": [Function],
+        "resultType": Object {
+          "kind": "Object",
+          "properties": Object {
+            "id": Object {
+              "kind": "Named",
+              "name": "id",
+            },
+          },
+        },
+      },
+      "clearCompleted": Object {
+        "argType": Object {
+          "kind": "Void",
+        },
+        "auth": "public",
+        "description": undefined,
+        "kind": "Mutation",
+        "name": "clearCompleted",
+        "resolve": [Function],
+        "resultType": Object {
+          "kind": "Void",
+        },
+      },
+      "destroy": Object {
+        "argType": Object {
+          "kind": "Object",
+          "properties": Object {
+            "id": Object {
+              "kind": "Named",
+              "name": "id",
+            },
+          },
+        },
+        "auth": "public",
+        "description": undefined,
+        "kind": "Mutation",
+        "name": "destroy",
+        "resolve": [Function],
+        "resultType": Object {
+          "kind": "Void",
+        },
+      },
+      "save": Object {
+        "argType": Object {
+          "kind": "Object",
+          "properties": Object {
+            "id": Object {
+              "kind": "Named",
+              "name": "id",
+            },
+            "title": Object {
+              "kind": "String",
+            },
+          },
+        },
+        "auth": "public",
+        "description": undefined,
+        "kind": "Mutation",
+        "name": "save",
+        "resolve": [Function],
+        "resultType": Object {
+          "kind": "Void",
+        },
+      },
+      "toggle": Object {
+        "argType": Object {
+          "kind": "Object",
+          "properties": Object {
+            "checked": Object {
+              "kind": "Boolean",
+            },
+            "id": Object {
+              "kind": "Named",
+              "name": "id",
+            },
+          },
+        },
+        "auth": "public",
+        "description": undefined,
+        "kind": "Mutation",
+        "name": "toggle",
+        "resolve": [Function],
+        "resultType": Object {
+          "kind": "Void",
+        },
+      },
+      "toggleAll": Object {
+        "argType": Object {
+          "kind": "Object",
+          "properties": Object {
+            "checked": Object {
+              "kind": "Boolean",
+            },
+          },
+        },
+        "auth": "public",
+        "description": undefined,
+        "kind": "Mutation",
+        "name": "toggleAll",
+        "resolve": [Function],
+        "resultType": Object {
+          "kind": "Void",
+        },
+      },
+    },
+    "name": "Todo",
+  },
+  "id": Object {
+    "baseType": Object {
+      "kind": "String",
+    },
+    "description": undefined,
+    "kind": "Scalar",
+    "name": "id",
+    "validate": [Function],
+  },
+}
+`;
