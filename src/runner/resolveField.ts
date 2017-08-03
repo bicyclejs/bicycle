@@ -10,6 +10,7 @@ import {NodeType} from '../types/Schema';
 
 import IContext from '../types/IContext';
 import QueryContext from '../types/QueryContext';
+import parseLegacyArgs from './legacyArgParser';
 
 const EMPTY_OBJECT = {};
 
@@ -94,6 +95,14 @@ export default function resolveField<Context extends IContext>(
     name.indexOf('(') !== -1
       ? name.split('(').slice(1).join('(').replace(/\)$/, '')
       : undefined;
+  let parsedArg: any = undefined;
+  if (args) {
+    if (/^\s*[a-zA-Z0-9]+\s*\:/.test(args)) {
+      parsedArg = parseLegacyArgs('(' + args + ')');
+    } else {
+      parsedArg = JSON.parse(args);
+    }
+  }
   const field = type.fields[fname];
   if (!field) {
     const suggestion = suggestMatch(Object.keys(type.fields), fname);
@@ -121,8 +130,6 @@ export default function resolveField<Context extends IContext>(
       if (isPerformanceMonitoring) {
         resolveField = time(resolveField, `${type.name}.${fname}`);
       }
-      // TODO: support the legacy query format
-      const parsedArg = args ? JSON.parse(args) : undefined;
       validateArg(field.argType, parsedArg, qCtx.schema);
       return Promise.resolve(
         field.auth === 'public' || field.auth(value, parsedArg, qCtx.context),

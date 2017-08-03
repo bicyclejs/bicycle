@@ -142,12 +142,12 @@ export default async function resolveFieldResult<Context extends IContext>(
         const s = qCtx.schema[type.name];
         if (s.kind == SchemaKind.Scalar) {
           validateResult(s.baseType, value, qCtx.schema);
-          if (!s.validate(value)) {
+          if (s.validate(value) !== true) {
             throw getError(type, value);
           }
           return value;
         }
-        if (!s.matches(value)) {
+        if (s.matches(value) !== true) {
           throw createError(
             'Expected subQuery to be an Object but got ' +
               typeNameFromValue(subQuery) +

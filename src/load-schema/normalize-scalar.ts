@@ -21,9 +21,9 @@ function normalizeScalar(
   );
   const description = TA.Void
     .or(TA.String)
-    .validate(s.description, 'scalar.description');
+    .validate(s.description, name + '.description');
   const baseType = getType(s.baseType, name + '.baseType', typeNames);
-  const validate = TA.Void.or(TA.Fn).validate(s.validate, 'scalar.validate');
+  const validate = TA.Void.or(TA.Fn).validate(s.validate, name + '.validate');
   return {
     kind: SchemaKind.Scalar,
     name,

@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
+    "declaration": true,
     "outDir": "lib",
     "module": "commonjs",
     "target": "es5",

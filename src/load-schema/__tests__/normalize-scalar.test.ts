@@ -5,7 +5,7 @@ import normalizeScalar from '../../load-schema/normalize-scalar';
 
 test('no name throws', () => {
   expect(() => normalizeScalar(freeze({}), [])).toThrowError(
-    /Expected Scalar\.name to be a string but got undefined/,
+    /Expected Scalar\.name to be a string but got void/,
   );
 });
 test('name must be alphabetic characters', () => {
@@ -18,23 +18,25 @@ test('name must be alphabetic characters', () => {
 test('description not a string throws', () => {
   expect(() =>
     normalizeScalar(freeze({name: 'Something', description: null}), []),
-  ).toThrowError(/Expected Something\.description to be a string but got null/);
-});
-test('no methods throws', () => {
-  expect(() => normalizeScalar(freeze({name: 'Something'}), [])).toThrowError(
-    /Something expected either a validate method or a serialize and parse method/,
+  ).toThrowError(
+    /Expected Something\.description to be a undefined \| string but got null/,
   );
 });
-test('validate + parse/serialize throws', () => {
+test('no base type throws', () => {
+  expect(() => normalizeScalar(freeze({name: 'Something'}), [])).toThrowError(
+    /Something\.baseType has an invalid type\. Types must be strings or objects\./,
+  );
+});
+test('parse/serialize throws', () => {
   expect(() =>
     normalizeScalar(
       freeze({name: 'Something', validate() {}, serialize() {}}),
       [],
     ),
-  ).toThrowError(/Something has a validate method and serialize\/parse/);
+  ).toThrowError(/Invalid key "serialize" in Scalar/);
   expect(() =>
     normalizeScalar(freeze({name: 'Something', validate() {}, parse() {}}), []),
-  ).toThrowError(/Something has a validate method and serialize\/parse/);
+  ).toThrowError(/Invalid key "parse" in Scalar/);
 });
 test('.validate', () => {
   test('non-function validate throws', () => {

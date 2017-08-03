@@ -1,4 +1,4 @@
-import {Request} from 'express';
+import {Request, RequestHandler} from 'express';
 import runQueryAgainstCache from './utils/run-query-against-cache';
 import loadSchema, {loadSchemaFromFiles} from './load-schema';
 import {
@@ -104,16 +104,19 @@ export default class BicycleServer<Context extends IContext> {
 
   handleMessage(
     message: ClientRequest,
-    context: () => Context,
-    mutationContext?: () => Context,
+    getContext: (
+      options: {
+        stage: 'query' | 'mutation';
+      },
+    ) => Context,
   ): Promise<ServerResponse> {
     return handleMessageInternal(
       this._schema,
       this._logging,
       this._sessionStore,
       message,
-      context,
-      mutationContext,
+      () => getContext({stage: 'query'}),
+      () => getContext({stage: 'mutation'}),
     );
   }
 
@@ -122,7 +125,7 @@ export default class BicycleServer<Context extends IContext> {
       req: Request,
       options: {stage: 'query' | 'mutation'},
     ) => Context,
-  ) {
+  ): RequestHandler {
     return createBicycleMiddlewareInner(
       this._schema,
       this._logging,

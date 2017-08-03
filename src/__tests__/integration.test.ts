@@ -2,11 +2,13 @@
 
 // TODO: don't run this until all the other tests have passed
 
-import express, {Request} from 'express';
+import express, {Request, Response, NextFunction} from 'express';
 import getPort from 'get-port';
 import BicycleClient, {NetworkLayer} from '../client';
 import BicycleServer from '../server';
 import MemoryStore from '../sessions/MemorySessionStore';
+import {createErrorResult} from '../types/ErrorResult';
+import {createNodeID} from '../types/NodeID';
 
 let allowErrors = false;
 const serverErrors: Error[] = [];
@@ -46,6 +48,10 @@ test('a successful query', () => {
       };
     }),
   );
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    res.statusCode = 500;
+    res.end(err.stack);
+  });
   return getPort()
     .then(port => ({server: app.listen(port), port}))
     .then(({server, port}) => {
@@ -114,11 +120,13 @@ test('a successful server render', () => {
     },
   };
 
-  const A1 = {};
-  const A2 = {};
+  const req: Request = {request: true} as any;
+  const A1 = {a: 1};
+  const A2 = {a: 2};
   const renderServerSide = bicycle.createServerRenderer<any, Object, Object>(
     () => context,
-    (client, req, a1, a2) => {
+    (client, reqArg, a1, a2) => {
+      expect(reqArg).toBe(req);
       expect(a1).toBe(A1);
       expect(a2).toBe(A2);
       const resultA = client.queryCache({todos: {id: true}});
@@ -137,11 +145,7 @@ test('a successful server render', () => {
     },
   );
 
-  return renderServerSide(
-    ({} as any) as Request,
-    A1,
-    A2,
-  ).then(({serverPreparation, result}) => {
+  return renderServerSide(req, A1, A2).then(({serverPreparation, result}) => {
     expect(typeof serverPreparation).toBe('object');
     expect(typeof serverPreparation.s).toBe('string');
     expect(serverPreparation.q).toEqual({
@@ -153,11 +157,15 @@ test('a successful server render', () => {
       todos: {id: true},
     });
     expect(serverPreparation.c).toEqual({
-      root: {
-        ['todoById(id:"' + todoID + '")']: 'Todo:' + todoID,
-        todos: ['Todo:' + todoID],
+      Root: {
+        root: {
+          ['todoById(id:"' + todoID + '")']: createNodeID('Todo', todoID),
+          todos: [createNodeID('Todo', todoID)],
+        },
       },
-      ['Todo:' + todoID]: todo,
+      Todo: {
+        [todoID]: todo,
+      },
     });
     expect(result).toEqual({
       result: {
@@ -203,6 +211,10 @@ test('a successful mutation with a result', () => {
       };
     }),
   );
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    res.statusCode = 500;
+    res.end(err.stack);
+  });
   return getPort()
     .then(port => ({server: app.listen(port), port}))
     .then(({server, port}) => {
@@ -281,6 +293,10 @@ test('a failing query', () => {
       };
     }),
   );
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    res.statusCode = 500;
+    res.end(err.stack);
+  });
   return getPort()
     .then(port => ({server: app.listen(port), port}))
     .then(({server, port}) => {
@@ -303,21 +319,19 @@ test('a failing query', () => {
                   'Whatever while getting Root(root).todos',
                 );
                 expect(result).toEqual({
-                  todos: {
-                    _type: 'ERROR',
-                    value: 'Whatever while getting Root(root).todos',
-                    data: {},
-                  },
+                  todos: createErrorResult(
+                    'Whatever while getting Root(root).todos',
+                    {},
+                  ),
                 });
                 expect(errors).toEqual([
                   'Whatever while getting Root(root).todos',
                 ]);
                 expect(errorDetails).toEqual([
-                  {
-                    _type: 'ERROR',
-                    value: 'Whatever while getting Root(root).todos',
-                    data: {},
-                  },
+                  createErrorResult(
+                    'Whatever while getting Root(root).todos',
+                    {},
+                  ),
                 ]);
                 server.close();
                 resolve();

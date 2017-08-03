@@ -47,7 +47,7 @@ export default function prepare<Context extends IContext, TResult>(
   logging: Logging,
   sessionStore: SessionStore,
   getContext: (req: Request, options: {stage: 'query' | 'mutation'}) => Context,
-  fn: (client: FakeClient, ...args: any[]) => TResult,
+  fn: (client: FakeClient, req: Request, ...args: any[]) => TResult,
 ): (
   req: Request,
   ...args: any[]
@@ -67,7 +67,7 @@ export default function prepare<Context extends IContext, TResult>(
           function next() {
             try {
               const oldServerPreparation = client._serverPreparation();
-              const result = fn(client, ...args);
+              const result = fn(client, req, ...args);
               const newServerPreparation = client._serverPreparation();
               if (!notEqual(oldServerPreparation.q, newServerPreparation.q)) {
                 if (context.dispose) context.dispose();

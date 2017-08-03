@@ -52,7 +52,7 @@ function matchesNamedType(
   const t = schema[type.name];
   switch (t.kind) {
     case SchemaKind.NodeType:
-      return t.matches(value);
+      return t.matches(value) === true;
     case SchemaKind.Scalar:
       return (
         matchesType(t.baseType, value, schema) && t.validate(value) === true

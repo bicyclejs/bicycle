@@ -1,6 +1,6 @@
 {
   "name": "bicycle",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "A data synchronisation library for JavaScript",
   "keywords": [],
   "dependencies": {
@@ -43,10 +43,14 @@
     "prepublish": "npm run build",
     "prettier": "prettier --parser typescript --single-quote --trailing-comma all --no-bracket-spacing --write \"src/**/*.{ts,tsx}\"",
     "prettier:check": "prettier --parser typescript --single-quote --trailing-comma all --no-bracket-spacing --list-different \"src/**/*.{ts,tsx}\"",
+    "prebuild": "rimraf lib",
     "build": "tsc",
+    "postbuild": "node lib/build",
     "pretest": "npm run build",
     "test": "jest ./src --coverage",
-    "watch": "jest ./src --coverage --watch"
+    "watch": "jest ./src --coverage --watch",
+    "prerelease": "npm run prettier && npm run build",
+    "release": "cd lib && npm publish"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

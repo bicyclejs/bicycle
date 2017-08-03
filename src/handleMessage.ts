@@ -94,7 +94,7 @@ export default function handleMessage<Context extends IContext>(
     });
 }
 
-type GetQueryResult =
+export type GetQueryResult =
   | {isExpired: true}
   | {isExpired: false; sessionID: SessionID; query: Query};
 export function getQuery(

@@ -1,7 +1,7 @@
 import suggestMatch from '../utils/suggest-match';
 import typeNameFromValue from '../utils/type-name-from-value';
 
-class Type<T> {
+export class Type<T> {
   typeName: string;
   _validate: (value: any, context: string) => value is T;
   constructor(

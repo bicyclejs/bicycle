@@ -16,7 +16,7 @@ import OptimisticUpdate from '../types/OptimisticUpdate';
 
 export {NetworkLayer};
 
-type ClientOptions = {
+export type ClientOptions = {
   cacheTimeout?: number;
 };
 class Client {

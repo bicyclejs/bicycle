@@ -24,7 +24,7 @@ function assertUnreachable(p: never): never {
   throw new Error('Expected code to be unreachable');
 }
 
-interface Handlers {
+export interface Handlers {
   _handleNetworkError: (err: Error) => any;
   _handleMutationError: (err: Error) => any;
   _handleNewSession: (data: void | Cache) => any;
@@ -34,13 +34,13 @@ interface Handlers {
 }
 
 class RequestBatcher {
-  _networkLayer: NetworkLayerInterface;
-  _handlers: Handlers;
-  _sessionID: SessionID | void;
-  _pendingMutations: Array<Mutation>;
-  _localQuery: Query;
-  _serverQuery: Query | void;
-  _status: RequestStatus;
+  private _networkLayer: NetworkLayerInterface;
+  private _handlers: Handlers;
+  private _sessionID: SessionID | void;
+  private _pendingMutations: Array<Mutation>;
+  private _localQuery: Query;
+  private _serverQuery: Query | void;
+  private _status: RequestStatus;
 
   constructor(
     networkLayer: NetworkLayerInterface,
@@ -75,7 +75,7 @@ class RequestBatcher {
   }
 
   // make request, using any in-flight requests
-  _request() {
+  private _request() {
     switch (this._status) {
       case RequestStatus.IDLE:
         this._queueRequest(30);
@@ -91,7 +91,7 @@ class RequestBatcher {
   }
 
   // queue a new request
-  _queueRequest(timeout: number, errCount: number = 0) {
+  private _queueRequest(timeout: number, errCount: number = 0) {
     this._handlers._handleQueueRequest();
     assert(this._status === RequestStatus.IDLE);
     this._status = RequestStatus.REQUEST_QUEUED;
@@ -130,7 +130,7 @@ class RequestBatcher {
     );
   }
 
-  _fireRequest() {
+  private _fireRequest() {
     assert(this._status === RequestStatus.REQUEST_QUEUED);
     this._status = RequestStatus.REQUEST_IN_FLIGHT;
     return new Promise((resolve, reject) => {

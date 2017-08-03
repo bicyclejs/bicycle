@@ -9,6 +9,9 @@ export default function parseArgs(args: string): {[key: string]: any} {
   const result = {};
   const fullArgsString = args;
   let state = 'key';
+  if (args[0] !== '(') {
+    throw new Error('Legacy args must start with an open parenthesis');
+  }
   args = args.trim().substr(1); // ignore initial open bracket
   let currentKey = '';
   let currentValue = '';

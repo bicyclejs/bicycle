@@ -13,7 +13,7 @@ export type CacheDataPrimative =
 // cannot include the array here as it makes this data type circular
 export type CacheDataBase = CacheDataPrimative | NodeID | CacheObject;
 
-type CacheUpdateDataBase =
+export type CacheUpdateDataBase =
   | CacheDataPrimative
   | NodeID
   | DeleteField

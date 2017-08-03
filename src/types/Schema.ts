@@ -2,7 +2,7 @@ import Query from './Query';
 import SchemaKind from './SchemaKind';
 import ValueType from './ValueType';
 
-interface FieldMethod<Value, Arg, Result, Context> {
+export interface FieldMethod<Value, Arg, Result, Context> {
   kind: SchemaKind.FieldMethod;
   name: string;
   description: void | string;
@@ -22,7 +22,7 @@ interface FieldMethod<Value, Arg, Result, Context> {
     extraContext: {type: string; name: string; subQuery: true | Query},
   ) => Result | PromiseLike<Result>;
 }
-interface FieldProperty<Value, Context> {
+export interface FieldProperty<Value, Context> {
   kind: SchemaKind.FieldProperty;
   name: string;
   description: void | string;
