@@ -22,6 +22,9 @@
   "devDependencies": {
     "@types/get-port": "0.0.4",
     "@types/jest": "*",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
+    "babel-preset-react-app": "^3.0.1",
+    "babel-register": "^6.24.1",
     "babelify": "*",
     "browserify-middleware": "*",
     "express": "*",
@@ -50,7 +53,9 @@
     "test": "jest ./src --coverage",
     "watch": "jest ./src --coverage --watch",
     "prerelease": "npm run prettier && npm run build",
-    "release": "cd lib && npm publish"
+    "release": "cd lib && npm publish",
+    "prestart": "npm run build",
+    "start": "node example"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

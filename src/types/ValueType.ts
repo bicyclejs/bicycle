@@ -23,7 +23,8 @@ export interface PrimativeType {
     | SchemaKind.Number
     | SchemaKind.String
     | SchemaKind.Void
-    | SchemaKind.Null;
+    | SchemaKind.Null
+    | SchemaKind.Any;
   loc?: LocationInfo;
   _hasNamedType?: boolean;
 }

@@ -9,9 +9,8 @@ test('NamedTypeReference', () => {
         kind: SchemaKind.Named,
         name: 'String',
       },
-      {
-        kind: SchemaKind.Null,
-      },
+      {kind: SchemaKind.Null},
+      {kind: SchemaKind.Void},
     ],
   });
   expect(getType('String', 'context', ['String'])).toEqual({
@@ -33,10 +32,12 @@ test('List', () => {
               name: 'String',
             },
             {kind: SchemaKind.Null},
+            {kind: SchemaKind.Void},
           ],
         },
       },
       {kind: SchemaKind.Null},
+      {kind: SchemaKind.Void},
     ],
   });
   expect(getType('String[]', 'context', ['String'])).toEqual({

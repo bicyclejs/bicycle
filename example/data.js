@@ -52,9 +52,9 @@ export function clearCompleted() {
 }
 
 export function getTodos() {
-  return Promise.resolve(JSON.parse(JSON.stringify(todos)));
+  return new Promise((resolve) => { setTimeout(() => resolve(JSON.parse(JSON.stringify(todos))), LATENCY); });
 }
 
 export function getTodo(id) {
-  return Promise.resolve(JSON.parse(JSON.stringify(todos.filter(t => t.id === id)[0] || null)));
+  return new Promise((resolve) => { setTimeout(() => resolve(JSON.parse(JSON.stringify(todos.filter(t => t.id === id)[0] || null))), LATENCY); });
 }

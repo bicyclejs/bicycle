@@ -3,8 +3,6 @@ import MutationContext from '../types/MutationContext';
 import MutationResult from '../types/MutationResult';
 import {Mutation} from '../types/Schema';
 import SchemaKind from '../types/SchemaKind';
-
-import Promise from 'promise';
 import {validateArg, validateResult} from './validate';
 
 const enum AccessDeniedType {}
@@ -23,13 +21,13 @@ export default function runMutation<Arg, Result, Context extends IContext>(
       validateArg(mutation.argType, arg, mCtx.schema);
       return mutation.auth === 'public'
         ? true
-        : mutation.auth(arg, mCtx.context);
+        : mutation.auth(arg, mCtx.context, mCtx);
     })
     .then<Result | AccessDeniedType>(auth => {
       if (auth !== true) {
         return ACCESS_DENIED;
       }
-      return mutation.resolve(arg, mCtx.context);
+      return mutation.resolve(arg, mCtx.context, mCtx);
     })
     .then((value: Result | AccessDeniedType): MutationResult<Result> => {
       if (isAccessDenied(value)) {

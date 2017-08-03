@@ -2,7 +2,6 @@ import Cache, {CacheUpdate} from '../types/Cache';
 import NetworkLayerInterface from '../types/NetworkLayerInterface';
 import Query, {QueryUpdate} from '../types/Query';
 import SessionID from '../types/SessionID';
-import Promise from 'promise';
 import diffQueries from '../utils/diff-queries';
 import createError from '../utils/create-error';
 import Mutation from './mutation';
@@ -98,7 +97,7 @@ class RequestBatcher {
     // Set up the request but don't fire it for 30ms, this batches up requests
     setTimeout(
       () =>
-        this._fireRequest().done(
+        this._fireRequest().then(
           () => {
             switch (this._status) {
               case RequestStatus.IDLE:
@@ -156,7 +155,7 @@ class RequestBatcher {
         );
         return Promise.resolve(
           this._networkLayer.send(message),
-        ).done(response => {
+        ).then(response => {
           const mutationResults = response.m;
           if (mutationResults) {
             mutations.forEach((mutation, i) => {

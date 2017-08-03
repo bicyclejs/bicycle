@@ -132,7 +132,8 @@ export default function resolveField<Context extends IContext>(
       }
       validateArg(field.argType, parsedArg, qCtx.schema);
       return Promise.resolve(
-        field.auth === 'public' || field.auth(value, parsedArg, qCtx.context),
+        field.auth === 'public' ||
+          field.auth(value, parsedArg, qCtx.context, subQuery, qCtx),
       ).then(hasAuth => {
         if (!hasAuth) {
           return createErrorResult(
@@ -141,11 +142,7 @@ export default function resolveField<Context extends IContext>(
             'AUTH_FAILED',
           );
         }
-        return resolveField(value, parsedArg, qCtx.context, {
-          type: type.name,
-          name,
-          subQuery,
-        });
+        return resolveField(value, parsedArg, qCtx.context, subQuery, qCtx);
       });
     })
     .then<CacheData>(value => {

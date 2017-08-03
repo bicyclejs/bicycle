@@ -1,4 +1,4 @@
-import assert from 'assert';
+import assert = require('assert');
 import getTypeName from '../utils/type-name-from-value';
 import normalizeFields from './normalize-fields';
 import normalizeMutations from './normalize-mutations';

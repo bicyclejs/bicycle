@@ -1,5 +1,6 @@
 const enum SchemaKind {
   // primative types
+  Any = 'Any',
   Boolean = 'Boolean',
   Number = 'Number',
   String = 'String',

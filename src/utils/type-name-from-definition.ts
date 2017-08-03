@@ -20,6 +20,8 @@ export default function typeNameFromDefinition(type: ValueType): string {
       return type.name;
     case SchemaKind.Null:
       return 'null';
+    case SchemaKind.Any:
+      return 'any';
     case SchemaKind.Number:
       return 'number';
     case SchemaKind.Object:

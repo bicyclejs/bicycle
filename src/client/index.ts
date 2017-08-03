@@ -2,7 +2,6 @@ import Cache, {CacheUpdate} from '../types/Cache';
 import Query from '../types/Query';
 import ServerPreparation from '../types/ServerPreparation';
 import NetworkLayerInterface from '../types/NetworkLayerInterface';
-import Promise from 'promise';
 import createError from '../utils/create-error';
 import mergeQueries from '../utils/merge-queries';
 import runQueryAgainstCache from '../utils/run-query-against-cache';
@@ -13,8 +12,9 @@ import RequestBatcher from './request-batcher';
 import Mutation from './mutation';
 import ErrorResult from '../types/ErrorResult';
 import OptimisticUpdate from '../types/OptimisticUpdate';
+import {createNodeID} from '../types/NodeID';
 
-export {NetworkLayer};
+export {NetworkLayer, NetworkLayerInterface as INetworkLayer, createNodeID};
 
 export type ClientOptions = {
   cacheTimeout?: number;

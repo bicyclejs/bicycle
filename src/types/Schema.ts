@@ -1,6 +1,8 @@
 import Query from './Query';
 import SchemaKind from './SchemaKind';
 import ValueType from './ValueType';
+import QueryContext from './QueryContext';
+import MutationContext from './MutationContext';
 
 export interface FieldMethod<Value, Arg, Result, Context> {
   kind: SchemaKind.FieldMethod;
@@ -14,12 +16,15 @@ export interface FieldMethod<Value, Arg, Result, Context> {
         value: Value,
         arg: Arg,
         context: Context,
+        subQuery: true | Query,
+        qCtx: QueryContext<Context>,
       ) => boolean | PromiseLike<boolean>);
   resolve: (
     value: Value,
     arg: Arg,
     context: Context,
-    extraContext: {type: string; name: string; subQuery: true | Query},
+    subQuery: true | Query,
+    qCtx: QueryContext<Context>,
   ) => Result | PromiseLike<Result>;
 }
 export interface FieldProperty<Value, Context> {
@@ -32,6 +37,8 @@ export interface FieldProperty<Value, Context> {
         value: Value,
         arg: void,
         context: Context,
+        subQuery: true | Query,
+        qCtx: QueryContext<Context>,
       ) => boolean | PromiseLike<boolean>);
   resultType: ValueType;
 }
@@ -50,8 +57,16 @@ export interface Mutation<Arg, Result, Context> {
   argType: ValueType;
   auth:
     | 'public'
-    | ((arg: Arg, context: Context) => boolean | PromiseLike<boolean>);
-  resolve: (arg: Arg, context: Context) => Result | PromiseLike<Result>;
+    | ((
+        arg: Arg,
+        context: Context,
+        mCtx: MutationContext<Context>,
+      ) => boolean | PromiseLike<boolean>);
+  resolve: (
+    arg: Arg,
+    context: Context,
+    mCtx: MutationContext<Context>,
+  ) => Result | PromiseLike<Result>;
 }
 
 export interface NodeType<Value, Context> {

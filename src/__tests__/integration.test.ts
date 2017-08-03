@@ -1,9 +1,8 @@
-// @flow
-
 // TODO: don't run this until all the other tests have passed
 
-import express, {Request, Response, NextFunction} from 'express';
-import getPort from 'get-port';
+import {Request, Response, NextFunction} from 'express';
+import express = require('express');
+import getPort = require('get-port');
 import BicycleClient, {NetworkLayer} from '../client';
 import BicycleServer from '../server';
 import MemoryStore from '../sessions/MemorySessionStore';
@@ -253,7 +252,7 @@ test('a successful mutation with a result', () => {
                     .then(result => {
                       expect(result).toEqual({id: todo.id});
                     })
-                    .done(
+                    .then(
                       () => {
                         resolveMutation();
                       },

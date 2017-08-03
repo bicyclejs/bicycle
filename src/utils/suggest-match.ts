@@ -1,4 +1,4 @@
-import leven from 'leven';
+import leven = require('leven');
 
 /**
  * Find the closest match for a string in a list of valid strings.  This can be used to suggest corrections for typos.

@@ -1,4 +1,3 @@
-import Promise from 'promise';
 import typeNameFromValue from '../utils/type-name-from-value';
 import resolveField from './resolveField';
 import reportError from '../error-reporting';

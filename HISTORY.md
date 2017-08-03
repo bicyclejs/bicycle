@@ -2,11 +2,19 @@
 
 ## v3.0.0: 2017-08-03
 
- - Convert to typescript
+Convert to typescript
+
+### Breaking:
+
  - Scalars `validate` method now has to return a boolean indicating whether the value is valid, and requires a "baseType".
  - Scalars can no longer have `parse` and `validate`.
  - The cache format, used by optimistic updaters, is now `{[typeName: string]: {[id: string]: Node}}` where it used to be `{[typeName + ':' + id]: Node}`. This is to allow for strongly typed bicycle caches.
  - Void and Null are now treated as different, distinct values.
+ - The empty object is no longer cast to undefined for mutation arguments
+ - `createServerRenderer` now expects a `getContext` argument and then takes `Request` instead of `Context`
+
+ ### Features:
+
  - You can optionally add an `auth` property to each mutation/field. It is called with the same arguments as `resolve` and returns `true`, `false` (or a Promise for `true` or `false`) to idicate whether the current context is authorized to perform that action.
  - Args do not have to be objects, you an direclty use e.g. `number` now.
 

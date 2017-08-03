@@ -1,4 +1,3 @@
-import Promise from 'promise';
 import getSessionID from '../get-session-id';
 import Cache from '../../types/Cache';
 import Query from '../../types/Query';

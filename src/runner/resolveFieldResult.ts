@@ -67,13 +67,14 @@ export default async function resolveFieldResult<Context extends IContext>(
       case SchemaKind.Union:
         if (
           type.elements.some(
-            e => !hasNamedType(e) && matchesType(type, value, qCtx.schema),
+            e =>
+              !hasNamedType(e) && matchesType(type, value, qCtx.schema, false),
           )
         ) {
           return value;
         }
         const matchingElements = type.elements.filter(
-          e => hasNamedType(e) && matchesType(type, value, qCtx.schema),
+          e => hasNamedType(e) && matchesType(type, value, qCtx.schema, true),
         );
         if (matchingElements.length === 1) {
           return await resolveFieldResult(

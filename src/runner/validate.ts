@@ -17,7 +17,7 @@ function validate(
   schema: Schema<any>,
   options: Options,
 ): void {
-  if (!matchesType(type, value, schema)) {
+  if (!matchesType(type, value, schema, false)) {
     const expected = typeNameFromDefinition(type);
     if (
       options.exposeValueInProduction ||

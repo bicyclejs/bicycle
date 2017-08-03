@@ -1,5 +1,4 @@
 import {Request} from 'express';
-import Promise from 'promise';
 import notEqual from './utils/not-equal';
 import mergeQueries from './utils/merge-queries';
 import runQueryAgainstCache from './utils/run-query-against-cache';

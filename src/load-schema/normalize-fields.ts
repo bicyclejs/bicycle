@@ -1,4 +1,4 @@
-import assert from 'assert';
+import assert = require('assert');
 import {Field} from '../types/Schema';
 import normalizeField from './normalize-field';
 import * as ta from './TypeAssertions';

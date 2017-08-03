@@ -1,4 +1,4 @@
-import assert from 'assert';
+import assert = require('assert');
 import SchemaKind from '../types/SchemaKind';
 import ValueType from '../types/ValueType';
 import suggestMatch from '../utils/suggest-match';
@@ -14,6 +14,7 @@ function getTypeFromString(
       elements: [
         getType(strType.substr(0, strType.length - 1), context, typeNames),
         {kind: SchemaKind.Null},
+        {kind: SchemaKind.Void},
       ],
     };
   }
@@ -46,6 +47,8 @@ function getTypeFromString(
       return {kind: SchemaKind.Void};
     case 'null':
       return {kind: SchemaKind.Null};
+    case 'any':
+      return {kind: SchemaKind.Any};
   }
   if (typeNames.indexOf(strType) === -1) {
     const suggestion = suggestMatch(typeNames, strType);

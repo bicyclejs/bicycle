@@ -1,8 +1,9 @@
-import assert from 'assert';
+import assert = require('assert');
 import normalizeMutation from './normalize-mutation';
 import SchemaKind from '../types/SchemaKind';
 import {Field, Mutation} from '../types/Schema';
 import * as ta from './TypeAssertions';
+import {validateArg} from '../runner/validate';
 
 function normalizeMutations(
   mutations: {},
@@ -10,16 +11,6 @@ function normalizeMutations(
   typeNames: string[],
   fields: {[name: string]: Field<any, any, any, any>},
 ): {[mutationName: string]: Mutation<any, any, any>} {
-  // const result = {
-  //   set: mutations.set,
-  // };
-  // if (mutations.set !== undefined && typeof mutations.set !== 'function') {
-  //   throw new Error(
-  //     'The `set` mutation is a special case, it automatically takes `id`, `field` and `value`. ' +
-  //     'You don\'t need to specify argument types for it so you should just use a function as shorthand. ' +
-  //     `Look in ${typeName}.mutations.set to fix this.`
-  //   );
-  // }
   const result: {[mutationName: string]: Mutation<any, any, any>} = {};
   const m = ta.Void
     .or(ta.AnyObject)
@@ -28,9 +19,6 @@ function normalizeMutations(
     return {};
   }
   Object.keys(m).forEach(mutationName => {
-    if (mutationName === 'set') {
-      return;
-    }
     const mutation = m[mutationName];
     if (mutation === undefined) {
       return;
@@ -40,6 +28,7 @@ function normalizeMutations(
       `Expected ${typeName}'s mutation names to match [A-Za-z0-9]+ but got '${mutationName}'`,
     );
     if (mutationName === 'set') {
+      const set = ta.Fn.validate(m.set, 'Set Mutation');
       result.set = {
         kind: SchemaKind.Mutation,
         name: 'set',
@@ -58,6 +47,9 @@ function normalizeMutations(
                 value: n,
               })),
             },
+            value: {
+              kind: SchemaKind.Any,
+            },
           },
         },
         resultType: {kind: SchemaKind.Void},
@@ -65,7 +57,11 @@ function normalizeMutations(
         resolve(
           args: {id: number | string; field: string; value: any},
           ctx: any,
-        ): void {},
+          mCtx,
+        ): void {
+          validateArg(fields[args.field].resultType, args.value, mCtx.schema);
+          return set(args, ctx, mCtx);
+        },
       } as Mutation<any, any, any>;
     } else {
       result[mutationName] = normalizeMutation(

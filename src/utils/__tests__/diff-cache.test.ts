@@ -18,6 +18,12 @@ test('returns undefined when there is no difference', () => {
       freeze({Item: {foo: {bar: [1, 2, 3]}}}),
     ),
   ).toBe(undefined);
+  expect(
+    diffCache(
+      freeze({Item: {foo: {bar: [{foo: 10}]}}}),
+      freeze({Item: {foo: {bar: [{foo: 10}]}}}),
+    ),
+  ).toBe(undefined);
 });
 test('returns the correct diff when there is a difference', () => {
   expect(diffCache(freeze({Item: {foo: {bar: 10}}}), freeze({}))).toEqual({

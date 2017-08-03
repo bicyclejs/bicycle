@@ -1,4 +1,3 @@
-import Promise from 'promise';
 import OptimisticValue from './optimistic-value';
 import Cache from '../types/Cache';
 import OptimisticUpdate from '../types/OptimisticUpdate';

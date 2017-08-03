@@ -1,4 +1,4 @@
-import BicycleClient from '../../src/client'; // in a real app, the path should be 'bicycle/client'
+import BicycleClient, {createNodeID} from '../../lib/client'; // in a real app, the path should be 'bicycle/client'
 
 export default function TodoModel() {
   this.errors = [];
@@ -33,16 +33,20 @@ TodoModel.prototype.inform = function () {
 
 TodoModel.prototype.addTodo = function (title) {
   this._client.update('Todo.addTodo', {title, completed: false}, (mutation, cache, optimistic) => {
-    if (cache.root.todos) {
+    if (cache.Root.root.todos) {
       const id = optimistic('id');
       return {
-        ['Todo:' + id]: {
-          id,
-          title: mutation.args.title,
-          completed: mutation.args.completed,
+        Todo: {
+          [id]: {
+            id,
+            title: mutation.args.title,
+            completed: mutation.args.completed,
+          },
         },
-        root: {
-          todos: ['Todo:' + id].concat(cache.root.todos),
+        Root: {
+          root: {
+            todos: [createNodeID('Todo', id)].concat(cache.Root.root.todos),
+          },
         },
       };
     }
@@ -52,9 +56,9 @@ TodoModel.prototype.addTodo = function (title) {
 
 TodoModel.prototype.toggleAll = function (checked) {
   this._client.update('Todo.toggleAll', {checked}, (mutation, cache) => {
-    if (cache.root.todos) {
+    if (cache.Root.root.todos) {
       const result = {};
-      cache.root.todos.forEach(key => {
+      cache.Root.root.todos.forEach(key => {
         result[key] = {completed: checked};
       });
       return result;
@@ -65,16 +69,18 @@ TodoModel.prototype.toggleAll = function (checked) {
 
 TodoModel.prototype.toggle = function (todoToToggle) {
   this._client.update('Todo.toggle', {id: todoToToggle.id, checked: !todoToToggle.completed}, (mutation, cache) => {
-    return {['Todo:' + mutation.args.id]: {completed: mutation.args.checked}};
+    return {Todo: {[mutation.args.id]: {completed: mutation.args.checked}}};
   });
 };
 
 TodoModel.prototype.destroy = function (todo) {
   this._client.update('Todo.destroy', {id: todo.id}, (mutation, cache) => {
-    if (cache.root.todos) {
+    if (cache.Root.root.todos) {
       return {
-        root: {
-          todos: cache.root.todos.filter(id => id !== 'Todo:' + mutation.args.id),
+        Root: {
+          root: {
+            todos: cache.Root.root.todos.filter(id => id.i !== mutation.args.id),
+          },
         },
       };
     }
@@ -85,17 +91,19 @@ TodoModel.prototype.destroy = function (todo) {
 TodoModel.prototype.save = function (todoToSave, text) {
   this._client.update('Todo.save', {id: todoToSave.id, title: text}, (mutation, cache) => {
     return {
-      ['Todo:' + mutation.args.id]: {title: mutation.args.title},
+      Todo: {[mutation.args.id]: {title: mutation.args.title}},
     };
   });
 };
 
 TodoModel.prototype.clearCompleted = function () {
-  this._client.update('Todo.clearCompleted', {}, (mutation, cache) => {
-    if (cache.root.todos) {
+  this._client.update('Todo.clearCompleted', undefined, (mutation, cache) => {
+    if (cache.Root.root.todos) {
       return {
-        root: {
-          todos: cache.root.todos.filter(id => !cache[id].completed),
+        Root: {
+          root: {
+            todos: cache.Root.root.todos.filter(id => !cache.Todo[id.i].completed),
+          },
         },
       };
     }

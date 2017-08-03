@@ -1,4 +1,4 @@
-import throat from 'throat';
+import throat = require('throat');
 import ms = require('ms');
 import suggestMatch from '../utils/suggest-match';
 import createError from '../utils/create-error';

@@ -1,6 +1,6 @@
 import SchemaKind from '../types/SchemaKind';
 import {ScalarDeclaration} from '../types/Schema';
-import assert from 'assert';
+import assert = require('assert');
 import getType from './get-type';
 import * as TA from './TypeAssertions';
 
