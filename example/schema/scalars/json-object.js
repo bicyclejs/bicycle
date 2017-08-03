@@ -1,6 +1,7 @@
 export default {
   name: 'JsonObject',
+  baseType: 'any',
   validate(value) {
-    // no-op
+    return value && typeof value === 'object';
   },
 };

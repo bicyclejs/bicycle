@@ -2,7 +2,7 @@ import fs from 'fs';
 import express from 'express';
 import browserify from 'browserify-middleware';
 import babelify from 'babelify';
-import BicycleServer from '../src/server';
+import BicycleServer from '../lib/server';
 
 const bicycle = new BicycleServer(__dirname + '/schema');
 
@@ -24,10 +24,11 @@ app.get('/client.js', browserify(__dirname + '/client/index.js', {transform: [ba
 app.use('/bicycle', bicycle.createMiddleware(req => ({user: req.user})));
 
 // TODO: use this capability to actually do server side rendering
-const serverRenderer = bicycle.createServerRenderer((client, ...args) => {
+const serverRenderer = bicycle.createServerRenderer(req => ({user: 'my user'}), (client, req, ...args) => {
   return client.queryCache({todos: {id: true, title: true, completed: true}}).result;
 });
-serverRenderer({user: 'my user'}).done(result => {
+const fakeRequest = {};
+serverRenderer(fakeRequest).then(result => {
   console.log('server renderer result');
   console.dir(result, {depth: 10, colors: true});
 });

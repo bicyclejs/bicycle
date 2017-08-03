@@ -1,6 +1,0 @@
-[ignore]
-.*/node_modules/\(flow-runtime\|babel-plugin-flow-runtime\)/.*
-.*/node_modules/fbjs/lib/.*
-[libs]
-./flow-definitions.js
-./flow-typed/.*

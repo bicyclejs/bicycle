@@ -1,26 +1,4 @@
 {
-  "presets": ["forbeslindesay"],
-  "plugins": [
-    "transform-flow-comments",
-    [
-      "module-alias",
-      [
-        {
-          "src": "./src",
-          "expose": "bicycle"
-        }
-      ]
-    ]
-  ],
-  "env": {
-    "development": {
-      "plugins": [["flow-runtime", {
-        "annotate": true,
-        "assert": true
-      }]]
-    },
-    "production": {
-      "plugins": []
-    }
-  }
+  "presets": ["react-app"],
+  "plugins": ["transform-es2015-modules-commonjs"]
 }
