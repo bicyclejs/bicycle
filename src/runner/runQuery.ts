@@ -66,56 +66,58 @@ export default function runQuery<Context extends IContext>(
   query: Query,
   qCtx: QueryContext<Context>,
 ): Promise<NodeID | ErrorResult> {
-  return Promise.resolve(null).then(() => type.id(value)).then(
-    id => {
-      const nodeID = createNodeID(type.name, id);
-      const result = getNode(qCtx.result, nodeID);
-      return Promise.all(
-        Object.keys(query).map(key => {
-          const subQuery = query[key];
-          if (
-            !(
-              subQuery === true ||
-              (subQuery != null && typeof subQuery === 'object')
-            )
-          ) {
-            result[key] = createErrorResult(
-              'Expected subQuery to be "true" or an Object but got ' +
-                typeNameFromValue(subQuery) +
-                ' while getting ' +
-                type.name +
-                '(' +
-                id +
-                ').' +
-                key,
-              {},
-              'INVALID_SUB_QUERY',
-            );
-            return;
-          }
-          if (isCached(qCtx.result, nodeID, key, subQuery)) {
-            return;
-          }
-          return resolveField(type, value, key, subQuery, qCtx)
-            .then(null, err => {
-              return getErrorObject(
-                err,
-                'while getting ' + type.name + '(' + nodeID.i + ').' + key,
-                qCtx.logging,
+  return Promise.resolve(null)
+    .then(() => type.id(value, qCtx.context, qCtx))
+    .then(
+      id => {
+        const nodeID = createNodeID(type.name, id);
+        const result = getNode(qCtx.result, nodeID);
+        return Promise.all(
+          Object.keys(query).map(key => {
+            const subQuery = query[key];
+            if (
+              !(
+                subQuery === true ||
+                (subQuery != null && typeof subQuery === 'object')
+              )
+            ) {
+              result[key] = createErrorResult(
+                'Expected subQuery to be "true" or an Object but got ' +
+                  typeNameFromValue(subQuery) +
+                  ' while getting ' +
+                  type.name +
+                  '(' +
+                  id +
+                  ').' +
+                  key,
+                {},
+                'INVALID_SUB_QUERY',
               );
-            })
-            .then(value => {
-              result[key] = value;
-            });
-        }),
-      ).then(() => nodeID);
-    },
-    err => {
-      return getErrorObject(
-        err,
-        'while getting ID of ' + type.name,
-        qCtx.logging,
-      );
-    },
-  );
+              return;
+            }
+            if (isCached(qCtx.result, nodeID, key, subQuery)) {
+              return;
+            }
+            return resolveField(type, value, key, subQuery, qCtx)
+              .then(null, err => {
+                return getErrorObject(
+                  err,
+                  'while getting ' + type.name + '(' + nodeID.i + ').' + key,
+                  qCtx.logging,
+                );
+              })
+              .then(value => {
+                result[key] = value;
+              });
+          }),
+        ).then(() => nodeID);
+      },
+      err => {
+        return getErrorObject(
+          err,
+          'while getting ID of ' + type.name,
+          qCtx.logging,
+        );
+      },
+    );
 }

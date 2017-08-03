@@ -73,7 +73,7 @@ export interface NodeType<Value, Context> {
   kind: SchemaKind.NodeType;
   name: string;
   description: void | string;
-  id: (obj: any) => string;
+  id: (obj: any, ctx: Context, qCtx: QueryContext<Context>) => string;
   matches: (obj: any) => obj is Value;
   fields: {[fieldName: string]: Field<Value, any, any, Context>};
   mutations: {[mutationName: string]: Mutation<any, any, Context>};
