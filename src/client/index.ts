@@ -13,14 +13,28 @@ import Mutation from './mutation';
 import ErrorResult from '../types/ErrorResult';
 import OptimisticUpdate from '../types/OptimisticUpdate';
 import {createNodeID} from '../types/NodeID';
+import {BaseRootQuery, Mutation as TypedMutation} from '../query-utils';
 
 export {NetworkLayer, NetworkLayerInterface as INetworkLayer, createNodeID};
 
 export type ClientOptions = {
   cacheTimeout?: number;
 };
-class Client {
-  private _options: ClientOptions;
+export interface QueryCacheResult<TResult> {
+  result: TResult;
+  loaded: boolean;
+  errors: ReadonlyArray<string>;
+  errorDetails: ReadonlyArray<ErrorResult>;
+}
+export interface Subscription {
+  unsubscribe: () => void;
+}
+class Client<
+  OptimisticUpdatersType = {
+    [typeName: string]: {[mutationName: string]: OptimisticUpdate};
+  }
+> {
+  private readonly _options: ClientOptions;
 
   private _cache: Cache;
   private _optimisticCache: Cache;
@@ -35,9 +49,12 @@ class Client {
     pendingMutations: number,
   ) => any)[] = [];
 
-  private readonly _optimisticUpdaters: Object = {};
-  private _pendingMutations: Mutation[];
-  private _request: RequestBatcher;
+  private readonly _optimisticUpdaters: {
+    [typeName: string]: void | {
+      [mutationName: string]: void | OptimisticUpdate;
+    };
+  } = {};
+  private readonly _request: RequestBatcher;
 
   constructor(
     networkLayer: NetworkLayerInterface = new NetworkLayer(),
@@ -47,12 +64,9 @@ class Client {
     this._options = options;
 
     this._cache =
-      (serverPreparation && serverPreparation.c) || ({root: {}} as Cache);
+      (serverPreparation && serverPreparation.c) ||
+      ({Root: {root: {}}} as Cache);
     this._optimisticCache = this._cache;
-
-    this._optimisticUpdaters = {};
-
-    this._pendingMutations = [];
 
     this._request = new RequestBatcher(
       networkLayer,
@@ -151,27 +165,28 @@ class Client {
     this._updateQuery();
   }
 
-  queryCache(
-    query: Query,
-  ): {
-    result: Object;
-    loaded: boolean;
-    errors: ReadonlyArray<string>;
-    errorDetails: ReadonlyArray<ErrorResult>;
-  } {
-    return runQueryAgainstCache(this._optimisticCache, query);
+  queryCache<TResult>(query: BaseRootQuery<TResult>): QueryCacheResult<TResult>;
+  queryCache(query: Query): QueryCacheResult<any>;
+  queryCache(query: Query | BaseRootQuery<any>): QueryCacheResult<any> {
+    return runQueryAgainstCache(
+      this._optimisticCache,
+      query instanceof BaseRootQuery ? query._query : query,
+    );
   }
-  query(query: Query): Promise<Object> {
+  query<TResult>(query: BaseRootQuery<TResult>): Promise<TResult>;
+  query(query: Query): Promise<any>;
+  query(query: Query | BaseRootQuery<any>): Promise<any> {
+    const q = query instanceof BaseRootQuery ? query._query : query;
     return new Promise((resolve, reject) => {
-      let subscription: null | {unsubscribe: () => void} = null;
+      let subscription: null | Subscription = null;
       let done = false;
-      subscription = this.subscribe(query, (result, loaded, errors) => {
+      subscription = this.subscribe(q, (result, loaded, errors) => {
         if (errors.length) {
           const err = createError(
             'Error fetching data for query:\n' + errors.join('\n'),
             {
               code: 'BICYCLE_QUERY_ERROR',
-              query,
+              query: q,
               errors,
               result,
             },
@@ -188,41 +203,72 @@ class Client {
       if (done) subscription.unsubscribe();
     });
   }
-  defineOptimisticUpdaters(updates: Object) {
-    Object.keys(updates).forEach(t => {
+  defineOptimisticUpdaters(updates: OptimisticUpdatersType) {
+    const u = updates as any;
+    Object.keys(u).forEach(t => {
       if (!this._optimisticUpdaters[t]) this._optimisticUpdaters[t] = {};
-      Object.keys(updates[t]).forEach(k => {
-        this._optimisticUpdaters[t][k] = updates[t][k];
+      Object.keys(u[t]).forEach(k => {
+        this._optimisticUpdaters[t][k] = u[t][k];
       });
     });
   }
+  update<TResult>(mutation: TypedMutation<TResult>): Promise<TResult>;
   update(
     method: string,
-    args: Object,
+    args: any,
+    optimisticUpdate?: OptimisticUpdate,
+  ): Promise<any>;
+  update(
+    method: string | TypedMutation<any>,
+    args?: any,
     optimisticUpdate?: OptimisticUpdate,
   ): Promise<any> {
-    if (!optimisticUpdate) {
-      const split = method.split('.');
-      optimisticUpdate =
+    // TODO: share a single "Mutation" class
+    const m = method instanceof TypedMutation ? method._name : method;
+    const a = method instanceof TypedMutation ? method._args : args;
+    let o =
+      method instanceof TypedMutation
+        ? method._optimisticUpdate
+        : optimisticUpdate;
+    if (!o) {
+      const split = m.split('.');
+      o =
         this._optimisticUpdaters[split[0]] &&
         this._optimisticUpdaters[split[0]][split[1]];
     }
-    return this._request.runMutation(
-      new Mutation(method, args, optimisticUpdate),
-    );
+    return this._request.runMutation(new Mutation(m, a, o));
   }
-  subscribe(
-    query: Query,
+  subscribe<TResult>(
+    query: BaseRootQuery<TResult>,
     fn: (
-      result: Object,
+      result: TResult,
       loaded: boolean,
       errors: ReadonlyArray<string>,
       errorDetails: ReadonlyArray<ErrorResult>,
     ) => any,
-  ) {
+  ): Subscription;
+  subscribe(
+    query: Query,
+    fn: (
+      result: any,
+      loaded: boolean,
+      errors: ReadonlyArray<string>,
+      errorDetails: ReadonlyArray<ErrorResult>,
+    ) => any,
+  ): Subscription;
+  subscribe(
+    query: Query | BaseRootQuery<any>,
+    fn: (
+      result: any,
+      loaded: boolean,
+      errors: ReadonlyArray<string>,
+      errorDetails: ReadonlyArray<ErrorResult>,
+    ) => any,
+  ): Subscription {
+    const q = query instanceof BaseRootQuery ? query._query : query;
     let lastValue: any = null;
     const onUpdate = () => {
-      const nextValue = this.queryCache(query);
+      const nextValue = this.queryCache(q);
       if (lastValue === null || notEqual(lastValue, nextValue)) {
         lastValue = nextValue;
         fn(
@@ -235,22 +281,19 @@ class Client {
     };
     this._onUpdate(onUpdate);
     onUpdate();
-    this._addQuery(query);
+    this._addQuery(q);
     return {
       unsubscribe: () => {
         this._offUpdate(onUpdate);
         if (this._options.cacheTimeout) {
-          setTimeout(
-            () => this._removeQuery(query),
-            this._options.cacheTimeout,
-          );
+          setTimeout(() => this._removeQuery(q), this._options.cacheTimeout);
         } else {
-          this._removeQuery(query);
+          this._removeQuery(q);
         }
       },
     };
   }
-  subscribeToNetworkErrors(fn: (err: Error) => any) {
+  subscribeToNetworkErrors(fn: (err: Error) => any): Subscription {
     this._networkErrorHandlers.push(fn);
     return {
       unsubscribe: () => {
@@ -261,7 +304,7 @@ class Client {
       },
     };
   }
-  subscribeToMutationErrors(fn: (err: Error) => any) {
+  subscribeToMutationErrors(fn: (err: Error) => any): Subscription {
     this._mutationErrorHandlers.push(fn);
     return {
       unsubscribe: () => {
@@ -272,7 +315,7 @@ class Client {
       },
     };
   }
-  subscribeToQueueRequest(fn: () => any) {
+  subscribeToQueueRequest(fn: () => any): Subscription {
     this._queueRequestHandlers.push(fn);
     return {
       unsubscribe: () => {
@@ -283,7 +326,9 @@ class Client {
       },
     };
   }
-  subscribeToSuccessfulResponse(fn: (pendingMutations: number) => any) {
+  subscribeToSuccessfulResponse(
+    fn: (pendingMutations: number) => any,
+  ): Subscription {
     this._successfulResponseHandlers.push(fn);
     return {
       unsubscribe: () => {

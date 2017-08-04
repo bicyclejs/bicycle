@@ -16,6 +16,7 @@
     "leven": "^2.0.0",
     "ms": "^1.0.0",
     "promise": "^8.0.1",
+    "stable-stringify": "^1.0.0",
     "then-request": "^4.1.0",
     "throat": "^3.0.0"
   },
