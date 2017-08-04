@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.1.1: 2017-08-04
+
+ - Moved some of the typed helpers and added some new ones
+
 ## v3.1.0: 2017-08-04
 
  - Pass context to ID getter
