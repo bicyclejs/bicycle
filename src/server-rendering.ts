@@ -45,7 +45,10 @@ export default function prepare<Context extends IContext, TResult>(
   schema: Schema<Context>,
   logging: Logging,
   sessionStore: SessionStore,
-  getContext: (req: Request, options: {stage: 'query' | 'mutation'}) => Context,
+  getContext: (
+    req: Request,
+    options: {stage: 'query' | 'mutation'},
+  ) => Context | PromiseLike<Context>,
   fn: (client: FakeClient, req: Request, ...args: any[]) => TResult,
 ): (
   req: Request,

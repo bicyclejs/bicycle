@@ -34,8 +34,8 @@ export default function handleMessage<Context extends IContext>(
   logging: Logging,
   sessionStore: SessionStore,
   message: ClientRequest,
-  context: () => Context,
-  mutationContext?: () => Context,
+  context: () => Context | PromiseLike<Context>,
+  mutationContext?: () => Context | PromiseLike<Context>,
 ): Promise<ServerResponse> {
   const sessionID = message.s;
   const queryUpdate = message.q;

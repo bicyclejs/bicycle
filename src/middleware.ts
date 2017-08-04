@@ -11,7 +11,10 @@ export default function createBicycleMiddleware<Context extends IContext>(
   schema: Schema<Context>,
   logging: Logging,
   sessionStore: SessionStore,
-  getContext: (req: Request, options: {stage: 'query' | 'mutation'}) => Context,
+  getContext: (
+    req: Request,
+    options: {stage: 'query' | 'mutation'},
+  ) => Context | PromiseLike<Context>,
 ): RequestHandler {
   const processRequest: RequestHandler = (req, res, next) => {
     handleMessage(

@@ -123,7 +123,7 @@ export default class BicycleServer<Context extends IContext> {
       options: {
         stage: 'query' | 'mutation';
       },
-    ) => Context,
+    ) => Context | PromiseLike<Context>,
   ): Promise<ServerResponse> {
     return handleMessageInternal(
       this._schema,
@@ -139,7 +139,7 @@ export default class BicycleServer<Context extends IContext> {
     getContext: (
       req: Request,
       options: {stage: 'query' | 'mutation'},
-    ) => Context,
+    ) => Context | PromiseLike<Context>,
   ): RequestHandler {
     return createBicycleMiddlewareInner(
       this._schema,
@@ -162,7 +162,7 @@ export default class BicycleServer<Context extends IContext> {
     getContext: (
       req: Request,
       options: {stage: 'query' | 'mutation'},
-    ) => Context,
+    ) => Context | PromiseLike<Context>,
     fn: (client: FakeClient, req: Request, a1: TArg1) => TResult,
   ): (
     req: Request,
@@ -172,7 +172,7 @@ export default class BicycleServer<Context extends IContext> {
     getContext: (
       req: Request,
       options: {stage: 'query' | 'mutation'},
-    ) => Context,
+    ) => Context | PromiseLike<Context>,
     fn: (client: FakeClient, req: Request, a1: TArg1, a2: TArg2) => TResult,
   ): (
     req: Request,
@@ -183,7 +183,7 @@ export default class BicycleServer<Context extends IContext> {
     getContext: (
       req: Request,
       options: {stage: 'query' | 'mutation'},
-    ) => Context,
+    ) => Context | PromiseLike<Context>,
     fn: (
       client: FakeClient,
       req: Request,
@@ -201,7 +201,7 @@ export default class BicycleServer<Context extends IContext> {
     getContext: (
       req: Request,
       options: {stage: 'query' | 'mutation'},
-    ) => Context,
+    ) => Context | PromiseLike<Context>,
     fn: (
       client: FakeClient,
       req: Request,
@@ -221,7 +221,7 @@ export default class BicycleServer<Context extends IContext> {
     getContext: (
       req: Request,
       options: {stage: 'query' | 'mutation'},
-    ) => Context,
+    ) => Context | PromiseLike<Context>,
     fn: (client: FakeClient, req: Request, ...args: any[]) => TResult,
   ): (
     req: Request,
