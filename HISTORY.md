@@ -1,5 +1,10 @@
 # Changelog
 
+## v3.1.0: 2017-08-04
+
+ - Pass context to ID getter
+ - Add helpers for typed code
+
 ## v3.0.1: 2017-08-03
 
  - Preserve const enums for non typescript consumers
