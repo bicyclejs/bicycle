@@ -153,7 +153,7 @@ export default class BicycleServer<Context extends IContext> {
     getContext: (
       req: Request,
       options: {stage: 'query' | 'mutation'},
-    ) => Context,
+    ) => Context | PromiseLike<Context>,
     fn: (client: FakeClient, req: Request) => TResult,
   ): (
     req: Request,
