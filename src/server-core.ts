@@ -19,7 +19,7 @@ import Schema from './types/Schema';
 import ServerPreparation from './types/ServerPreparation';
 import ServerResponse from './types/ServerResponse';
 
-import {BaseRootQuery, Mutation} from './query-utils';
+import {BaseRootQuery, Mutation} from './typed-helpers/query';
 
 export interface Options {
   readonly disableDefaultLogging?: boolean;

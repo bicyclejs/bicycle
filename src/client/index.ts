@@ -13,7 +13,7 @@ import Mutation from './mutation';
 import ErrorResult from '../types/ErrorResult';
 import OptimisticUpdate from '../types/OptimisticUpdate';
 import {createNodeID} from '../types/NodeID';
-import {BaseRootQuery, Mutation as TypedMutation} from '../query-utils';
+import {BaseRootQuery, Mutation as TypedMutation} from '../typed-helpers/query';
 
 export {NetworkLayer, NetworkLayerInterface as INetworkLayer, createNodeID};
 

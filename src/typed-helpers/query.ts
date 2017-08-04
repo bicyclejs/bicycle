@@ -1,5 +1,6 @@
-import Q from './types/Query';
-import OptimisticUpdate from './types/OptimisticUpdate';
+import Q from '../types/Query';
+import OptimisticUpdate from '../types/OptimisticUpdate';
+import {OptimisticUpdateHandler, createOptimisticUpdate} from './optimistic';
 
 const stringify: (value: any) => string = require('stable-stringify');
 
@@ -33,6 +34,7 @@ export function addField(query: Q, field: string, subQuery: true | Q): Q {
   }
   return result;
 }
+
 export abstract class BaseQuery<TResult> {
   readonly _query: Q;
   /**
@@ -45,6 +47,7 @@ export abstract class BaseQuery<TResult> {
     this.$type = null as any;
   }
 }
+
 export abstract class BaseRootQuery<TResult> extends BaseQuery<TResult> {
   private _root: true;
   constructor(query: Q) {
@@ -65,12 +68,14 @@ export class Mutation<TResult> {
   constructor(
     name: string,
     args: any,
-    optimisticUpdate: void | OptimisticUpdate,
+    optimisticUpdate: void | OptimisticUpdateHandler,
   ) {
     this._name = name;
     this._args = args;
     this.$type = null as any;
-    this._optimisticUpdate = optimisticUpdate;
+    this._optimisticUpdate = optimisticUpdate
+      ? createOptimisticUpdate(optimisticUpdate)
+      : undefined;
   }
 }
 
