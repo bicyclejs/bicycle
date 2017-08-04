@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.1.2: 2017-08-04
+
+ - All server methods can have getContext return a Promise for context, as well as returning the context directly.  This lets you setup database connections asynchronously, before returning a context.
+
 ## v3.1.1: 2017-08-04
 
  - Moved some of the typed helpers and added some new ones
