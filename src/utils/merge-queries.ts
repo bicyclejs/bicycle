@@ -11,8 +11,14 @@ export default function mergeQueries(...queries: Array<QueryUpdate>): Query {
         if (resultKey in result) delete result[resultKey];
       } else if (q === true) {
         result[resultKey] = query[key];
-      } else {
+      } else if (!q || typeof q !== 'object') {
         result[resultKey] = mergeQueries(result[resultKey] || {}, q);
+      } else {
+        throw new Error(
+          'Invalid type in query ' +
+            query +
+            ', queries should match `{[key: string]: boolean}`',
+        );
       }
     });
   }

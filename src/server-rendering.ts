@@ -1,7 +1,9 @@
 import {Request} from 'express';
 import notEqual from './utils/not-equal';
 import mergeQueries from './utils/merge-queries';
-import runQueryAgainstCache from './utils/run-query-against-cache';
+import runQueryAgainstCache, {
+  QueryCacheResult,
+} from './utils/run-query-against-cache';
 import getSessionID from './utils/get-session-id';
 import {runQuery} from './runner';
 import {serverPreparation as createServerPreparation} from './messages';
@@ -15,6 +17,8 @@ import Schema from './types/Schema';
 import SessionID from './types/SessionID';
 import ServerPreparation from './types/ServerPreparation';
 
+import {BaseRootQuery} from './typed-helpers/query';
+
 export class FakeClient {
   _sessionID: SessionID;
   _query: Query;
@@ -27,11 +31,14 @@ export class FakeClient {
   _serverPreparation(): ServerPreparation {
     return createServerPreparation(this._sessionID, this._query, this._cache);
   }
-  queryCache(
-    query: Query,
-  ): {result: Object; loaded: boolean; errors: ReadonlyArray<string>} {
-    this._query = mergeQueries(this._query, query);
-    return runQueryAgainstCache(this._cache, query);
+  queryCache<TResult>(query: BaseRootQuery<TResult>): QueryCacheResult<TResult>;
+  queryCache(query: Query): QueryCacheResult<any>;
+  queryCache<TResult>(
+    query: Query | BaseRootQuery<TResult>,
+  ): QueryCacheResult<TResult> {
+    const q = query instanceof BaseRootQuery ? query._query : query;
+    this._query = mergeQueries(this._query, q);
+    return runQueryAgainstCache(this._cache, q);
   }
   update() {
     throw new Error('Bicycle server renderer does not implement update');

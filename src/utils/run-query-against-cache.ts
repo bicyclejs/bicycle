@@ -14,15 +14,16 @@ function getRoot(cache: Cache): CacheObject {
   if (!c) return EMPTY_OBJECT;
   return c.root || EMPTY_OBJECT;
 }
-export default function runQueryAgainstCache(
-  cache: Cache,
-  query: Query,
-): {
-  result: Object;
+export interface QueryCacheResult<TResult> {
+  result: TResult;
   loaded: boolean;
   errors: ReadonlyArray<string>;
   errorDetails: ReadonlyArray<ErrorResult>;
-} {
+}
+export default function runQueryAgainstCache(
+  cache: Cache,
+  query: Query,
+): QueryCacheResult<any> {
   let loaded = true;
   let errors = spareArray;
   let errorDetails = spareDetailsArray;

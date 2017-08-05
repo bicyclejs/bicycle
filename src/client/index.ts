@@ -4,7 +4,9 @@ import ServerPreparation from '../types/ServerPreparation';
 import NetworkLayerInterface from '../types/NetworkLayerInterface';
 import createError from '../utils/create-error';
 import mergeQueries from '../utils/merge-queries';
-import runQueryAgainstCache from '../utils/run-query-against-cache';
+import runQueryAgainstCache, {
+  QueryCacheResult,
+} from '../utils/run-query-against-cache';
 import notEqual from '../utils/not-equal';
 import mergeCache from '../utils/merge-cache';
 import NetworkLayer from '../network-layer';
@@ -20,12 +22,6 @@ export {NetworkLayer, NetworkLayerInterface as INetworkLayer, createNodeID};
 export type ClientOptions = {
   cacheTimeout?: number;
 };
-export interface QueryCacheResult<TResult> {
-  result: TResult;
-  loaded: boolean;
-  errors: ReadonlyArray<string>;
-  errorDetails: ReadonlyArray<ErrorResult>;
-}
 export interface Subscription {
   unsubscribe: () => void;
 }
