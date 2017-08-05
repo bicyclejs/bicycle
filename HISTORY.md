@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.1.4: 2017-08-05
+
+ - Fix server side rendering with typescript
+
 ## v3.1.3: 2017-08-04
 
  - Fix one broken overload of server renderer
