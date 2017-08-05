@@ -1,5 +1,9 @@
 # Changelog
 
+## v3.1.5: 2017-08-05
+
+ - Fix broken queries (I forgot to run the tests)
+
 ## v3.1.4: 2017-08-05
 
  - Fix server side rendering with typescript
