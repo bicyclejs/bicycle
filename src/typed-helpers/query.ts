@@ -1,6 +1,5 @@
 import Q from '../types/Query';
-import OptimisticUpdate from '../types/OptimisticUpdate';
-import {OptimisticUpdateHandler, createOptimisticUpdate} from './optimistic';
+import {OptimisticUpdateHandler} from '../client/optimistic';
 
 const stringify: (value: any) => string = require('stable-stringify');
 
@@ -59,7 +58,7 @@ export abstract class BaseRootQuery<TResult> extends BaseQuery<TResult> {
 export class Mutation<TResult> {
   readonly _name: string;
   readonly _args: any;
-  readonly _optimisticUpdate: OptimisticUpdate | void;
+  readonly _optimisticUpdate: OptimisticUpdateHandler | void;
   /**
    * Usage:
    *   type Result = typeof Mutation.$type;
@@ -68,14 +67,12 @@ export class Mutation<TResult> {
   constructor(
     name: string,
     args: any,
-    optimisticUpdate: void | OptimisticUpdateHandler,
+    optimisticUpdate: OptimisticUpdateHandler | void,
   ) {
     this._name = name;
     this._args = args;
+    this._optimisticUpdate = optimisticUpdate;
     this.$type = null as any;
-    this._optimisticUpdate = optimisticUpdate
-      ? createOptimisticUpdate(optimisticUpdate)
-      : undefined;
   }
 }
 

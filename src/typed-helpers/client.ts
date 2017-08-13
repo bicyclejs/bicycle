@@ -2,10 +2,9 @@
 // do not edit by hand
 
 import BicycleClient from '../client';
-import {createOptimisticUpdates} from './optimistic';
 
 export default class Client<T> extends BicycleClient<T> {
   defineOptimisticUpdaters(updates: T) {
-    super.defineOptimisticUpdaters(createOptimisticUpdates(updates as any));
+    super.defineOptimisticUpdaters(updates);
   }
 }

@@ -1,7 +1,7 @@
 import Cache, {CacheData, CacheObject} from '../types/Cache';
 import NodeID, {isID, getNode, createNodeID} from '../types/NodeID';
 import {isErrorResult} from '../types/ErrorResult';
-import OptimisticValue from '../types/OptimisticValue';
+import {PendingOptimisticValue} from './OptimisticValueStore';
 
 const stringify: (value: any) => string = require('stable-stringify');
 
@@ -45,14 +45,14 @@ function packageCacheData(data: any): CacheData {
   return data;
 }
 
-export type GetOptimisticValue = (name: string) => OptimisticValue;
+export type GetOptimisticValue = (name: string) => PendingOptimisticValue;
 
 export class BaseCache {
   public readonly id: NodeID;
-  private _data: CacheObject;
-  private _cache: Cache;
+  private readonly _data: CacheObject;
+  private readonly _cache: Cache;
   private _resultData: void | CacheObject = undefined;
-  private _resultCache: Cache;
+  private readonly _resultCache: Cache;
   constructor(id: NodeID, cache: Cache, resultCache: Cache) {
     this.id = id;
     this._data = (cache[id.n] && cache[id.n][id.i]) || {};
@@ -90,38 +90,3 @@ export type OptimisticUpdateHandler = (
   cache: BaseCache,
   getOptimisticValue: GetOptimisticValue,
 ) => any;
-export function createOptimisticUpdate(
-  fn: OptimisticUpdateHandler,
-): (
-  mutation: {objectName: string; methodName: string; args: any},
-  cache: Cache,
-  getOptimisticValue: GetOptimisticValue,
-) => Cache {
-  return (mutation, cache, getOptimisticValue) => {
-    const result: Cache = {};
-    fn(
-      mutation,
-      new BaseCache(createNodeID('Root', 'root'), cache, result),
-      getOptimisticValue,
-    );
-    return result;
-  };
-}
-function createOptimisticUpdatesForNode(o: {
-  [key: string]: OptimisticUpdateHandler;
-}): any {
-  const result = {};
-  Object.keys(o).forEach(key => {
-    result[key] = createOptimisticUpdate(o[key]);
-  });
-  return result;
-}
-export function createOptimisticUpdates(o: {
-  [key: string]: {[key: string]: OptimisticUpdateHandler};
-}): any {
-  const result = {};
-  Object.keys(o).forEach(key => {
-    result[key] = createOptimisticUpdatesForNode(o[key]);
-  });
-  return result;
-}

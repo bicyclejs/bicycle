@@ -33,80 +33,48 @@ TodoModel.prototype.inform = function () {
 
 TodoModel.prototype.addTodo = function (title) {
   this._client.update('Todo.addTodo', {title, completed: false}, (mutation, cache, optimistic) => {
-    if (cache.Root.root.todos) {
-      const id = optimistic('id');
-      return {
-        Todo: {
-          [id]: {
-            id,
-            title: mutation.args.title,
-            completed: mutation.args.completed,
-          },
-        },
-        Root: {
-          root: {
-            todos: [createNodeID('Todo', id)].concat(cache.Root.root.todos),
-          },
-        },
-      };
-    }
-    return {};
+    const id = optimistic('id');
+    const todo = cache.getObject('Todo', id);
+    todo.set('id', id);
+    todo.set('title', mutation.args.title);
+    todo.set('completed', mutation.args.completed);
+
+    const todos = cache.get('todos') || [];
+    cache.set('todos', [todo].concat(todos));
   });
 };
 
 TodoModel.prototype.toggleAll = function (checked) {
   this._client.update('Todo.toggleAll', {checked}, (mutation, cache) => {
-    if (cache.Root.root.todos) {
-      const result = {};
-      cache.Root.root.todos.forEach(key => {
-        result[key] = {completed: checked};
-      });
-      return result;
-    }
-    return {};
+    const todos = cache.get('todos') || [];
+    todos.forEach(todo => {
+      todo.set('completed', checked);
+    });
   });
 };
 
 TodoModel.prototype.toggle = function (todoToToggle) {
   this._client.update('Todo.toggle', {id: todoToToggle.id, checked: !todoToToggle.completed}, (mutation, cache) => {
-    return {Todo: {[mutation.args.id]: {completed: mutation.args.checked}}};
+    cache.getObject('Todo', mutation.args.id).set('completed', mutation.args.checked);
   });
 };
 
 TodoModel.prototype.destroy = function (todo) {
   this._client.update('Todo.destroy', {id: todo.id}, (mutation, cache) => {
-    if (cache.Root.root.todos) {
-      return {
-        Root: {
-          root: {
-            todos: cache.Root.root.todos.filter(id => id.i !== mutation.args.id),
-          },
-        },
-      };
-    }
-    return {};
+    const todos = cache.get('todos') || [];
+    cache.set('todos', todos.filter(t => t.get('id') !== mutation.args.id));
   });
 };
 
 TodoModel.prototype.save = function (todoToSave, text) {
   this._client.update('Todo.save', {id: todoToSave.id, title: text}, (mutation, cache) => {
-    return {
-      Todo: {[mutation.args.id]: {title: mutation.args.title}},
-    };
+    cache.getObject('Todo', mutation.args.id).set('title', mutation.args.title);
   });
 };
 
 TodoModel.prototype.clearCompleted = function () {
   this._client.update('Todo.clearCompleted', undefined, (mutation, cache) => {
-    if (cache.Root.root.todos) {
-      return {
-        Root: {
-          root: {
-            todos: cache.Root.root.todos.filter(id => !cache.Todo[id.i].completed),
-          },
-        },
-      };
-    }
-    return {};
+    const todos = cache.get('todos') || [];
+    cache.set('todos', todos.filter(t => !t.get('completed')));
   });
 };

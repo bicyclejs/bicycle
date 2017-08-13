@@ -13,7 +13,8 @@ import NetworkLayer from '../network-layer';
 import RequestBatcher from './request-batcher';
 import Mutation from './mutation';
 import ErrorResult from '../types/ErrorResult';
-import OptimisticUpdate from '../types/OptimisticUpdate';
+import {OptimisticUpdateHandler, BaseCache} from './optimistic';
+import OptimisticValueStore from './OptimisticValueStore';
 import {createNodeID} from '../types/NodeID';
 import {BaseRootQuery, Mutation as TypedMutation} from '../typed-helpers/query';
 
@@ -27,13 +28,15 @@ export interface Subscription {
 }
 class Client<
   OptimisticUpdatersType = {
-    [typeName: string]: {[mutationName: string]: OptimisticUpdate};
+    [typeName: string]: {[mutationName: string]: OptimisticUpdateHandler};
   }
 > {
   private readonly _options: ClientOptions;
 
   private _cache: Cache;
   private _optimisticCache: Cache;
+
+  private readonly _optimisticValueStore: OptimisticValueStore = new OptimisticValueStore();
 
   private readonly _queries: Query[] = [];
   private readonly _queriesCount: number[] = [];
@@ -47,7 +50,7 @@ class Client<
 
   private readonly _optimisticUpdaters: {
     [typeName: string]: void | {
-      [mutationName: string]: void | OptimisticUpdate;
+      [mutationName: string]: void | OptimisticUpdateHandler;
     };
   } = {};
   private readonly _request: RequestBatcher;
@@ -118,15 +121,19 @@ class Client<
     this._updateOptimistCache();
   }
   private _updateOptimistCache() {
-    this._optimisticCache = this._request
-      .getPendingMutations()
-      .reduce((cache, mutation) => {
-        const update = mutation.applyOptimistic(cache);
-        if (!update) {
-          return cache;
-        }
-        return mergeCache(cache, update);
-      }, this._cache);
+    const pendingMutations = this._request.getPendingMutations();
+    if (pendingMutations.length) {
+      const result = {};
+      const cache = new BaseCache(
+        createNodeID('Root', 'root'),
+        this._cache,
+        result,
+      );
+      pendingMutations.forEach(mutation => mutation.applyOptimistic(cache));
+      this._optimisticCache = mergeCache(this._cache, result);
+    } else {
+      this._optimisticCache = this._cache;
+    }
     this._updateHandlers.forEach(handler => {
       handler();
     });
@@ -212,12 +219,12 @@ class Client<
   update(
     method: string,
     args: any,
-    optimisticUpdate?: OptimisticUpdate,
+    optimisticUpdate?: OptimisticUpdateHandler,
   ): Promise<any>;
   update(
     method: string | TypedMutation<any>,
     args?: any,
-    optimisticUpdate?: OptimisticUpdate,
+    optimisticUpdate?: OptimisticUpdateHandler,
   ): Promise<any> {
     // TODO: share a single "Mutation" class
     const m = method instanceof TypedMutation ? method._name : method;
@@ -232,7 +239,9 @@ class Client<
         this._optimisticUpdaters[split[0]] &&
         this._optimisticUpdaters[split[0]][split[1]];
     }
-    return this._request.runMutation(new Mutation(m, a, o));
+    return this._request.runMutation(
+      new Mutation(m, a, o, this._optimisticValueStore),
+    );
   }
   subscribe<TResult>(
     query: BaseRootQuery<TResult>,
