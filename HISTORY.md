@@ -1,5 +1,10 @@
 # Changelog
 
+## v4.0.0: 2017-08-05
+
+ - Optimistic values are now strings. They still get replaced once the true values are discovered.
+ - Optimistic handlers are now given a mutable Cache Object. This means they always have the same API wheather they are typed (using ts-bicycle) or not.
+
 ## v3.1.5: 2017-08-05
 
  - Fix broken queries (I forgot to run the tests)
