@@ -1,4 +1,7 @@
 # Changelog
+## v4.0.1: 2017-10-03
+
+ - Fix broken publish
 
 ## v4.0.0: 2017-08-05
 
