@@ -73,8 +73,9 @@ export const ObjectKeys = <T extends string>(keys: T[]) =>
       return true;
     },
   );
-export const AnyObject = new Type<
-  Record<string, {}>
->('Object', (v): v is Record<string, {}> => {
-  return v && typeof v === 'object' && !Array.isArray(v);
-});
+export const AnyObject = new Type<Record<string, {}>>(
+  'Object',
+  (v): v is Record<string, {}> => {
+    return v && typeof v === 'object' && !Array.isArray(v);
+  },
+);

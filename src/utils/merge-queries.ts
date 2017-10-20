@@ -14,6 +14,13 @@ export default function mergeQueries(...queries: Array<QueryUpdate>): Query {
       } else if (q && typeof q === 'object') {
         result[resultKey] = mergeQueries(result[resultKey] || {}, q);
       } else {
+        if (process.env.NODE_ENV !== 'production') {
+          throw new Error(
+            'Invalid type in query ' +
+              require('util').inspect(query) +
+              ', queries should match `{[key: string]: boolean}`',
+          );
+        }
         throw new Error(
           'Invalid type in query ' +
             query +

@@ -93,7 +93,11 @@ export default function resolveField<Context extends IContext>(
   const fname = name.split('(')[0];
   const args =
     name.indexOf('(') !== -1
-      ? name.split('(').slice(1).join('(').replace(/\)$/, '')
+      ? name
+          .split('(')
+          .slice(1)
+          .join('(')
+          .replace(/\)$/, '')
       : undefined;
   let parsedArg: any = undefined;
   if (args) {

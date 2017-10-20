@@ -22,7 +22,11 @@ export default class OptimisticValueStore {
   private readonly _rejected: Map<number, Error> = new Map();
   constructor(key?: string, nextID?: number) {
     // make it difficult to intentionally forge the optimistic values
-    this._key = key || Math.random().toString(16).substr(2);
+    this._key =
+      key ||
+      Math.random()
+        .toString(16)
+        .substr(2);
     this._nextID = nextID || 0;
   }
   isOptimisticValue(value: any): value is OptimisticValue {

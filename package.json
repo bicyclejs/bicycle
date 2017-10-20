@@ -46,8 +46,8 @@
   "scripts": {
     "precommit": "lint-staged",
     "prepublish": "npm run build",
-    "prettier": "prettier --parser typescript --single-quote --trailing-comma all --no-bracket-spacing --write \"src/**/*.{ts,tsx}\"",
-    "prettier:check": "prettier --parser typescript --single-quote --trailing-comma all --no-bracket-spacing --list-different \"src/**/*.{ts,tsx}\"",
+    "prettier": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "prettier:check": "prettier --list-different \"src/**/*.{ts,tsx}\"",
     "prebuild": "rimraf lib",
     "build": "tsc",
     "postbuild": "node lib/build",
@@ -61,17 +61,23 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "prettier --parser typescript --single-quote --trailing-comma all --no-bracket-spacing --write",
+      "prettier --write",
       "git add"
     ]
   },
   "jest": {
     "testEnvironment": "node",
-    "moduleFileExtensions": ["ts", "tsx", "js"],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ],
     "transform": {
       "\\.(ts|tsx)$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
-    "testMatch": ["**/*.test.(ts|tsx|js)"]
+    "testMatch": [
+      "**/*.test.(ts|tsx|js)"
+    ]
   },
   "repository": {
     "type": "git",
