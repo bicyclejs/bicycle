@@ -1,7 +1,7 @@
 {
   "name": "bicycle",
   "private": true,
-  "version": "4.0.1",
+  "version": "4.1.0",
   "description": "A data synchronisation library for JavaScript",
   "keywords": [],
   "dependencies": {
@@ -60,24 +60,15 @@
     "start": "node example"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "prettier --write",
-      "git add"
-    ]
+    "*.{ts,tsx}": ["prettier --write", "git add"]
   },
   "jest": {
     "testEnvironment": "node",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js"
-    ],
+    "moduleFileExtensions": ["ts", "tsx", "js"],
     "transform": {
       "\\.(ts|tsx)$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
     },
-    "testMatch": [
-      "**/*.test.(ts|tsx|js)"
-    ]
+    "testMatch": ["**/*.test.(ts|tsx|js)"]
   },
   "repository": {
     "type": "git",

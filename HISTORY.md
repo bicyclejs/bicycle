@@ -1,4 +1,9 @@
 # Changelog
+
+## v4.1.0: 2017-10-20
+
+ - Inspect queries when an invalid query happens in merge in development.
+
 ## v4.0.1: 2017-10-03
 
  - Fix broken publish
