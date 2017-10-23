@@ -18,7 +18,12 @@ import OptimisticValueStore from './OptimisticValueStore';
 import {createNodeID} from '../types/NodeID';
 import {BaseRootQuery, Mutation as TypedMutation} from '../typed-helpers/query';
 
-export {NetworkLayer, NetworkLayerInterface as INetworkLayer, createNodeID};
+export {
+  NetworkLayer,
+  NetworkLayerInterface as INetworkLayer,
+  QueryCacheResult,
+  createNodeID,
+};
 
 export type ClientOptions = {
   cacheTimeout?: number;
