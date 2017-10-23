@@ -1,5 +1,9 @@
 # Changelog
 
+## v4.2.0: 2017-10-23
+
+ - Expose `QueryCacheResult` interface on `client` module
+
 ## v4.1.0: 2017-10-20
 
  - Inspect queries when an invalid query happens in merge in development.
