@@ -6,10 +6,10 @@ import Logging from '../types/Logging';
 import Query from '../types/Query';
 import {NodeType} from '../types/Schema';
 
-import Cache from '../types/Cache';
-import NodeID, {createNodeID, isID, getNode} from '../types/NodeID';
+import NodeID, {createNodeID, getNode} from '../types/NodeID';
 import IContext from '../types/IContext';
 import QueryContext from '../types/QueryContext';
+import isCached from '../utils/is-cached';
 
 function getErrorObject(
   err: Error,
@@ -33,31 +33,6 @@ function getErrorObject(
   err.message += ' ' + context;
   reportError(err, logging);
   return result;
-}
-function isCached(
-  result: Cache,
-  id: NodeID,
-  key: string,
-  subQuery: true | Query,
-) {
-  const node = getNode(result, id);
-  if (node[key] === undefined) {
-    return false;
-  }
-  if (subQuery === true) {
-    return true;
-  }
-  const subID = node[key];
-  if (!isID(subID)) {
-    return true;
-  }
-  const keys = Object.keys(subQuery);
-  for (let i = 0; i < keys.length; i++) {
-    if (!isCached(result, subID, keys[i], subQuery[keys[i]])) {
-      return false;
-    }
-  }
-  return true;
 }
 
 export default function runQuery<Context extends IContext>(

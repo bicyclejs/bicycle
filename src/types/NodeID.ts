@@ -22,3 +22,10 @@ export function getNode(cache: Cache, id: NodeID): CacheObject {
   const nodeCache = cache[id.n] || (cache[id.n] = {});
   return nodeCache[id.i] || (nodeCache[id.i] = {});
 }
+export function getNodeIfExists(cache: Cache, id: NodeID): CacheObject | null {
+  const nodeCache = cache[id.n];
+  if (!nodeCache) {
+    return null;
+  }
+  return nodeCache[id.i] || null;
+}
