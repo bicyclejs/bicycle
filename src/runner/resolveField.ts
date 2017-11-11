@@ -119,7 +119,12 @@ export default function resolveField<Context extends IContext>(
     );
   }
   if (field.kind === SchemaKind.FieldProperty) {
-    return resolveFieldResult(field.resultType, value[fname], subQuery, qCtx);
+    return resolveFieldResult(
+      field.resultType,
+      value[fname],
+      subQuery,
+      qCtx,
+    ).then(result => (result === undefined ? null : result));
   }
   return Promise.resolve(null)
     .then(() => {
@@ -152,5 +157,6 @@ export default function resolveField<Context extends IContext>(
     .then<CacheData>(value => {
       if (isErrorResult(value)) return value;
       return resolveFieldResult(field.resultType, value, subQuery, qCtx);
-    });
+    })
+    .then(value => (value === undefined ? null : value));
 }
