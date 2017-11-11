@@ -1,5 +1,9 @@
 # Changelog
 
+## v4.2.2: 2017-11-11
+
+ - Fix `isCached` which sometimes incorrectly reported values as being cached, leading to them never loading.
+
 ## v4.2.1: 2017-11-11
 
  - Cast `undefined` fields to `null`. We use `undefined` to represent "not yet loaded".
