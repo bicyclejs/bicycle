@@ -1,5 +1,9 @@
 # Changelog
 
+## v4.2.1: 2017-11-11
+
+ - Cast `undefined` fields to `null`. We use `undefined` to represent "not yet loaded".
+
 ## v4.2.0: 2017-10-23
 
  - Expose `QueryCacheResult` interface on `client` module
