@@ -38,30 +38,33 @@ test('parse/serialize throws', () => {
     normalizeScalar(freeze({name: 'Something', validate() {}, parse() {}}), []),
   ).toThrowError(/Invalid key "parse" in Scalar/);
 });
-test('.validate', () => {
-  test('non-function validate throws', () => {
-    expect(() =>
-      normalizeScalar(
-        freeze({name: 'Something', validate: 'not a function'}),
-        [],
-      ),
-    ).toThrowError(
-      /Expected Something\.validate to be a function but got string/,
-    );
-  });
-  test('validates input', () => {
-    const result = normalizeScalar(
+test('.validate -> non-function validate throws', () => {
+  expect(() =>
+    normalizeScalar(
       freeze({
         name: 'Something',
-        validate: (val: any) => {
-          expect(val).toBe('Something');
-          return true;
-        },
+        baseType: 'string',
+        validate: 'not a function',
       }),
       [],
-    );
-    expect(result.kind).toBe('ScalarType');
-    expect(result.name).toBe('Something');
-    expect(result.validate('Something')).toBe(true);
-  });
+    ),
+  ).toThrowError(
+    /Expected Something\.validate to be a undefined \| function but got string/,
+  );
+});
+test('.validate -> validates input', () => {
+  const result = normalizeScalar(
+    freeze({
+      name: 'Something',
+      baseType: 'string',
+      validate: (val: any) => {
+        expect(val).toBe('Something');
+        return true;
+      },
+    }),
+    [],
+  );
+  expect(result.kind).toBe('Scalar');
+  expect(result.name).toBe('Something');
+  expect(result.validate('Something')).toBe(true);
 });
