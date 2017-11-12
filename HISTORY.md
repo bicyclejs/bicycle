@@ -1,5 +1,10 @@
 # Changelog
 
+## v4.3.0: 2017-11-12
+
+ - Pass `fieldName` as part of query context for `resolve` field methods.
+
+
 ## v4.2.2: 2017-11-11
 
  - Fix `isCached` which sometimes incorrectly reported values as being cached, leading to them never loading.
