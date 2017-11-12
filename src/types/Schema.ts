@@ -24,7 +24,7 @@ export interface FieldMethod<Value, Arg, Result, Context> {
     arg: Arg,
     context: Context,
     subQuery: true | Query,
-    qCtx: QueryContext<Context>,
+    qCtx: QueryContext<Context> & {fieldName: string; subQuery: true | Query},
   ) => Result | PromiseLike<Result>;
 }
 export interface FieldProperty<Value, Context> {

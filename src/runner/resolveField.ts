@@ -151,7 +151,14 @@ export default function resolveField<Context extends IContext>(
             'AUTH_FAILED',
           );
         }
-        return resolveField(value, parsedArg, qCtx.context, subQuery, qCtx);
+        return resolveField(value, parsedArg, qCtx.context, subQuery, {
+          fieldName: fname,
+          subQuery,
+          schema: qCtx.schema,
+          context: qCtx.context,
+          result: qCtx.result,
+          logging: qCtx.logging,
+        });
       });
     })
     .then<CacheData>(value => {
