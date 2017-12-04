@@ -48,6 +48,7 @@ export function runQuery<Context extends IContext>(
     context,
     logging,
     result,
+    startedQueries: {},
   };
   logging.onQueryStart({query, context});
   if (IS_PERFORMANCE_MONITORING) {

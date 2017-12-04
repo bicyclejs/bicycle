@@ -166,6 +166,7 @@ export default function resolveField<Context extends IContext>(
           context: qCtx.context,
           result: qCtx.result,
           logging: qCtx.logging,
+          startedQueries: qCtx.startedQueries,
         });
       });
     })

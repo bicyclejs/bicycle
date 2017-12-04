@@ -8,7 +8,10 @@ import {NodeType} from '../types/Schema';
 
 import NodeID, {createNodeID, getNode} from '../types/NodeID';
 import IContext from '../types/IContext';
-import QueryContext from '../types/QueryContext';
+import QueryContext, {
+  MutableQuery,
+  NormalizedQuery,
+} from '../types/QueryContext';
 import isCached from '../utils/is-cached';
 
 function getErrorObject(
@@ -35,6 +38,61 @@ function getErrorObject(
   return result;
 }
 
+function makeMutableCopy(query: Query): MutableQuery {
+  const result: MutableQuery = {};
+  Object.keys(query).forEach(key => {
+    const q = query[key];
+    if (q === true) {
+      result[key] = true;
+    } else {
+      result[key] = makeMutableCopy(q);
+    }
+  });
+  return result;
+}
+function subtractQueryPart(
+  existingQuery: MutableQuery,
+  newQuery: Query,
+): void | Query {
+  const result: MutableQuery = {};
+  let added = false;
+  Object.keys(newQuery).forEach(key => {
+    const existingPart = existingQuery[key];
+    const newPart = newQuery[key];
+    if (!existingPart) {
+      existingQuery[key] = newPart === true ? true : makeMutableCopy(newPart);
+      result[key] = newPart;
+      added = true;
+      return;
+    }
+    if (existingPart === true || newPart === true) {
+      return;
+    }
+    const diff = subtractQueryPart(existingPart, newPart);
+    if (diff) {
+      result[key] = diff;
+      added = true;
+      return;
+    }
+  });
+  return added ? result : undefined;
+}
+function subtractQuery(
+  id: NodeID,
+  alreadyStartedQueries: NormalizedQuery,
+  query: Query,
+): void | Query {
+  if (!alreadyStartedQueries[id.n]) {
+    alreadyStartedQueries[id.n] = {};
+    alreadyStartedQueries[id.n][id.i] = makeMutableCopy(query);
+    return query;
+  }
+  if (!alreadyStartedQueries[id.n][id.i]) {
+    alreadyStartedQueries[id.n][id.i] = makeMutableCopy(query);
+    return query;
+  }
+  return subtractQueryPart(alreadyStartedQueries[id.n][id.i], query);
+}
 export default function runQuery<Context extends IContext>(
   type: NodeType<any, Context>,
   value: any,
@@ -47,9 +105,17 @@ export default function runQuery<Context extends IContext>(
       id => {
         const nodeID = createNodeID(type.name, id);
         const result = getNode(qCtx.result, nodeID);
+        const remainingQuery = subtractQuery(
+          nodeID,
+          qCtx.startedQueries,
+          query,
+        );
+        if (!remainingQuery) {
+          return nodeID;
+        }
         return Promise.all(
-          Object.keys(query).map(key => {
-            const subQuery = query[key];
+          Object.keys(remainingQuery).map(key => {
+            const subQuery = remainingQuery[key];
             if (
               !(
                 subQuery === true ||
