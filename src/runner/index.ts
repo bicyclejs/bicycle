@@ -67,8 +67,11 @@ export function runQuery<Context extends IContext>(
           })
           .forEach(name => {
             if (timings[name] > 10 * NS_PER_MS) {
+              // although we compute timing in nanoseconds, this is to account for having potentially
+              // thousands of calls, each less than a millisecond.  We actually report at 1ms accuracy
+              // because everything less than that is likely just random noise.
               console.log(
-                ` * ${name} - ${ms(timings[name] / NS_PER_MS)} (${
+                ` * ${name} - ${ms(Math.round(timings[name] / NS_PER_MS))} (${
                   count[name]
                 } call${count[name] !== 1 ? 's' : ''})`,
               );
