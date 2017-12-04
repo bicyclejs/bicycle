@@ -26,9 +26,10 @@ function normalizeObject(
     `Expected ObjectType.name to match [A-Za-z]+ but got '${typeName}'`,
   );
   const id = TA.Void.or(TA.Fn).validate(t.id, typeName + '.id');
-  const description = TA.Void
-    .or(TA.String)
-    .validate(t.description, typeName + '.description');
+  const description = TA.Void.or(TA.String).validate(
+    t.description,
+    typeName + '.description',
+  );
 
   assert(
     typeName !== 'Root' || id === undefined,
@@ -65,9 +66,10 @@ function normalizeObject(
     typeName,
     typeNames,
   );
-  const m = TA.Void
-    .or(TA.AnyObject)
-    .validate(t.mutations, typeName + '.mutations');
+  const m = TA.Void.or(TA.AnyObject).validate(
+    t.mutations,
+    typeName + '.mutations',
+  );
   const mutations = m ? normalizeMutations(m, typeName, typeNames, fields) : {};
   return {
     kind: SchemaKind.NodeType,

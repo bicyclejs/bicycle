@@ -12,9 +12,10 @@ function normalizeMutations(
   fields: {[name: string]: Field<any, any, any, any>},
 ): {[mutationName: string]: Mutation<any, any, any>} {
   const result: {[mutationName: string]: Mutation<any, any, any>} = {};
-  const m = ta.Void
-    .or(ta.AnyObject)
-    .validate(mutations, typeName + '.mutations');
+  const m = ta.Void.or(ta.AnyObject).validate(
+    mutations,
+    typeName + '.mutations',
+  );
   if (m === undefined) {
     return {};
   }
@@ -25,7 +26,9 @@ function normalizeMutations(
     }
     assert(
       /^[A-Za-z]+$/.test(mutationName),
-      `Expected ${typeName}'s mutation names to match [A-Za-z0-9]+ but got '${mutationName}'`,
+      `Expected ${typeName}'s mutation names to match [A-Za-z0-9]+ but got '${
+        mutationName
+      }'`,
     );
     if (mutationName === 'set') {
       const set = ta.Fn.validate(m.set, 'Set Mutation');

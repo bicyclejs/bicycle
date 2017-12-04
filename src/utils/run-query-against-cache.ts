@@ -61,7 +61,7 @@ export default function runQueryAgainstCache(
       if (key[0] === '_') return;
       const cacheKey = key.replace(/ as [a-zA-Z0-9]+$/, '');
       const resultKey = / as [a-zA-Z0-9]+$/.test(key)
-        ? key.split(' as ').pop() as string
+        ? (key.split(' as ').pop() as string)
         : cacheKey.split('(')[0];
 
       const value = node[cacheKey];

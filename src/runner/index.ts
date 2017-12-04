@@ -25,6 +25,7 @@ if (IS_PERFORMANCE_MONITORING) {
   console.log('Bicycle performance monitoring is enabled.');
   console.log('Please be aware that this will make all queries much slower.');
 }
+const NS_PER_MS = 1e6;
 export function enablePerformanceMonitoring() {
   IS_PERFORMANCE_MONITORING = true;
 }
@@ -36,7 +37,7 @@ export function runQuery<Context extends IContext>(
     logging,
     context,
   }: {
-    schema: Schema<IContext>;
+    schema: Schema<Context>;
     logging: Logging;
     context: Context;
   },
@@ -65,13 +66,11 @@ export function runQuery<Context extends IContext>(
             return timings[a] - timings[b];
           })
           .forEach(name => {
-            if (timings[name] > 10) {
+            if (timings[name] > 10 * NS_PER_MS) {
               console.log(
-                ` * ${name} - ${ms(timings[name])} (${count[name]} call${count[
-                  name
-                ] !== 1
-                  ? 's'
-                  : ''})`,
+                ` * ${name} - ${ms(timings[name] / NS_PER_MS)} (${
+                  count[name]
+                } call${count[name] !== 1 ? 's' : ''})`,
               );
             }
           });
@@ -117,7 +116,9 @@ export function runMutation<Context extends IContext>(
       }
       if (Type.kind !== 'NodeType') {
         throw createError(
-          `The type ${typeName} is not an Object, so you cannot call the ${mutationName} mutation on it.`,
+          `The type ${typeName} is not an Object, so you cannot call the ${
+            mutationName
+          } mutation on it.`,
           {
             exposeProd: true,
             code: 'INVALID_MUTATION',
@@ -142,7 +143,9 @@ export function runMutation<Context extends IContext>(
           mutationName,
         );
         throw createError(
-          `The type ${typeName} does not define a mutation ${mutationName}${suggestion}`,
+          `The type ${typeName} does not define a mutation ${mutationName}${
+            suggestion
+          }`,
           {
             exposeProd: true,
             code: 'INVALID_MUTATION',

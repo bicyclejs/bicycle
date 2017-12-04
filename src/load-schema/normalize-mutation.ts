@@ -16,9 +16,10 @@ function normalizeMutation(
   return {
     kind: SchemaKind.Mutation,
     name: mutationName,
-    description: ta.Void
-      .or(ta.String)
-      .validate(m.description, ctx + '.description'),
+    description: ta.Void.or(ta.String).validate(
+      m.description,
+      ctx + '.description',
+    ),
     argType: getType(
       m.args === undefined ? 'void' : m.args,
       ctx + '.args',

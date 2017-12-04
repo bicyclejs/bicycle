@@ -12,6 +12,8 @@ import IContext from '../types/IContext';
 import QueryContext from '../types/QueryContext';
 import parseLegacyArgs from './legacyArgParser';
 
+const NS_PER_SEC = 1e9;
+const NS_PER_MS = 1e6;
 const EMPTY_OBJECT = {};
 
 let isPerformanceMonitoring = false;
@@ -35,9 +37,10 @@ const waitingFields: Map<string, (() => Promise<void>)[]> = new Map();
 const queue: string[] = [];
 let running = false;
 
+const highPrecisionTiming = typeof process.hrtime === 'function';
 function runTiming() {
   running = true;
-  const start = Date.now();
+  const start: any = highPrecisionTiming ? process.hrtime() : Date.now();
   const id = queue.pop();
   if (!id) {
     return;
@@ -45,14 +48,19 @@ function runTiming() {
   const fns = waitingFields.get(id) || [];
   waitingFields.delete(id);
   return Promise.all(fns.map(f => f())).then(() => {
-    const end = Date.now();
+    const durationDiff: any = highPrecisionTiming
+      ? process.hrtime(start)
+      : Date.now() - start;
+    const durationNanoseconds = highPrecisionTiming
+      ? durationDiff[0] * NS_PER_SEC + durationDiff[1]
+      : durationDiff * NS_PER_MS;
     if (typeof timings[id] !== 'number') {
       timings[id] = 0;
     }
     if (typeof count[id] !== 'number') {
       count[id] = 0;
     }
-    timings[id] += end - start;
+    timings[id] += durationNanoseconds;
     count[id] += fns.length;
     if (queue.length) {
       runTiming();

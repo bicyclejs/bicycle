@@ -48,11 +48,7 @@ export abstract class BaseQuery<TResult> {
 }
 
 export abstract class BaseRootQuery<TResult> extends BaseQuery<TResult> {
-  private _root: true;
-  constructor(query: Q) {
-    super(query);
-    this._root = true;
-  }
+  protected _root: true = true;
 }
 
 export class Mutation<TResult> {
@@ -78,9 +74,9 @@ export class Mutation<TResult> {
 
 /**
  * Usage:
- * 
+ *
  *     type TResult = typeof getType(query);
- * 
+ *
  * @param query A bicycle query
  */
 function getType<TResult>(query: BaseQuery<TResult>): TResult;

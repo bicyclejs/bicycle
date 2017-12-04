@@ -26,7 +26,7 @@ function assertUnreachable(p: never): never {
 export interface Handlers {
   _handleNetworkError: (err: Error) => any;
   _handleMutationError: (err: Error) => any;
-  _handleNewSession: (data: void | Cache) => any;
+  _handleNewSession: (data: Cache) => any;
   _handleUpdate: (data: void | CacheUpdate) => any;
   _handleQueueRequest: () => any;
   _handleSuccessfulResponse: (pendingMutations: number) => any;
@@ -150,77 +150,78 @@ class RequestBatcher {
           this._sessionID,
           this._serverQuery
             ? diffQueries(this._serverQuery, localQuery)
-            : localQuery as QueryUpdate,
+            : (localQuery as QueryUpdate),
           mutations.map(m => m.mutation),
         );
-        return Promise.resolve(
-          this._networkLayer.send(message),
-        ).then(response => {
-          const mutationResults = response.m;
-          if (mutationResults) {
-            mutations.forEach((mutation, i) => {
-              const result = mutationResults[i];
-              if (result.s) {
-                mutation.resolve(result.v);
-              } else {
-                const err = createError(result.v.message, {
-                  data: result.v.data,
-                  code: result.v.code,
-                  mutation: mutation.mutation,
-                });
-                this._handlers._handleMutationError(err);
-                mutation.reject(err);
-              }
-            });
-          }
-          switch (response.k) {
-            case ServerResponseKind.EXPIRED:
-              console.warn('session expired, starting new session');
-              this._sessionID = undefined;
-              this._serverQuery = undefined;
-              this._status = RequestStatus.REQUEST_IN_FLIGHT;
-              // if we haven't managed to run the query, we cannot remove mutations that have been successfully applied
-              // on the server side because their optimistic effects may still apply.
-              this._pendingMutations = this._pendingMutations.filter(
-                mutation => {
-                  mutation.updateStatus();
-                  return !mutation.isRejected();
-                },
-              );
-              this._handlers._handleUpdate(undefined);
-              attempt();
-              break;
-            case ServerResponseKind.NEW_SESSION:
-              this._sessionID = response.s;
-              this._serverQuery = localQuery;
-              this._pendingMutations = this._pendingMutations.filter(
-                mutation => {
-                  mutation.updateStatus();
-                  return mutation.isPending();
-                },
-              );
-              this._handlers._handleSuccessfulResponse(
-                this._pendingMutations.length,
-              );
-              this._handlers._handleNewSession(response.d);
-              resolve();
-              break;
-            case ServerResponseKind.UPDATE:
-              this._serverQuery = localQuery;
-              this._pendingMutations = this._pendingMutations.filter(
-                mutation => {
-                  mutation.updateStatus();
-                  return mutation.isPending();
-                },
-              );
-              this._handlers._handleSuccessfulResponse(
-                this._pendingMutations.length,
-              );
-              this._handlers._handleUpdate(response.d);
-              resolve();
-              break;
-          }
-        }, reject);
+        return Promise.resolve(this._networkLayer.send(message)).then(
+          response => {
+            const mutationResults = response.m;
+            if (mutationResults) {
+              mutations.forEach((mutation, i) => {
+                const result = mutationResults[i];
+                if (result.s) {
+                  mutation.resolve(result.v);
+                } else {
+                  const err = createError(result.v.message, {
+                    data: result.v.data,
+                    code: result.v.code,
+                    mutation: mutation.mutation,
+                  });
+                  this._handlers._handleMutationError(err);
+                  mutation.reject(err);
+                }
+              });
+            }
+            switch (response.k) {
+              case ServerResponseKind.EXPIRED:
+                console.warn('session expired, starting new session');
+                this._sessionID = undefined;
+                this._serverQuery = undefined;
+                this._status = RequestStatus.REQUEST_IN_FLIGHT;
+                // if we haven't managed to run the query, we cannot remove mutations that have been successfully applied
+                // on the server side because their optimistic effects may still apply.
+                this._pendingMutations = this._pendingMutations.filter(
+                  mutation => {
+                    mutation.updateStatus();
+                    return !mutation.isRejected();
+                  },
+                );
+                this._handlers._handleUpdate(undefined);
+                attempt();
+                break;
+              case ServerResponseKind.NEW_SESSION:
+                this._sessionID = response.s;
+                this._serverQuery = localQuery;
+                this._pendingMutations = this._pendingMutations.filter(
+                  mutation => {
+                    mutation.updateStatus();
+                    return mutation.isPending();
+                  },
+                );
+                this._handlers._handleSuccessfulResponse(
+                  this._pendingMutations.length,
+                );
+                this._handlers._handleNewSession(response.d);
+                resolve();
+                break;
+              case ServerResponseKind.UPDATE:
+                this._serverQuery = localQuery;
+                this._pendingMutations = this._pendingMutations.filter(
+                  mutation => {
+                    mutation.updateStatus();
+                    return mutation.isPending();
+                  },
+                );
+                this._handlers._handleSuccessfulResponse(
+                  this._pendingMutations.length,
+                );
+                this._handlers._handleUpdate(response.d);
+                resolve();
+                break;
+            }
+          },
+          reject,
+        );
       };
       attempt();
     });

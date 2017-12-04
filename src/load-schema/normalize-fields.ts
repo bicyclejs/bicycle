@@ -15,7 +15,9 @@ function normalizeFields(
     if (field === undefined) return;
     assert(
       /^[A-Za-z0-9]+$/.test(fieldName),
-      `Expected ${typeName}'s field names to match [A-Za-z0-9]+ but got '${fieldName}'`,
+      `Expected ${typeName}'s field names to match [A-Za-z0-9]+ but got '${
+        fieldName
+      }'`,
     );
     result[fieldName] = normalizeField(field, fieldName, typeName, typeNames);
   });

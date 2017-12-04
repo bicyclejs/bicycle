@@ -80,7 +80,11 @@ export default function handleMessage<Context extends IContext>(
               });
             }
             return thenDispose(
-              runQuery(query, {schema, logging, context: queryContext}),
+              runQuery(query, {
+                schema,
+                logging,
+                context: queryContext,
+              }),
               queryContext,
             ).then(data => {
               return sessionStore

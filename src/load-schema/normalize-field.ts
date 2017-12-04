@@ -10,9 +10,9 @@ function normalizeField(
   typeNames: Array<string>,
 ): Field<any, any, any, any> {
   const ctx = typeName + '.' + fieldName;
-  const f = ta.String
-    .or(ta.ObjectKeys(['type', 'description', 'args', 'auth', 'resolve']))
-    .validate(field, ctx);
+  const f = ta.String.or(
+    ta.ObjectKeys(['type', 'description', 'args', 'auth', 'resolve']),
+  ).validate(field, ctx);
   if (typeof f === 'string') {
     return {
       kind: SchemaKind.FieldProperty,
@@ -27,9 +27,10 @@ function normalizeField(
     return {
       kind: SchemaKind.FieldMethod,
       name: typeName,
-      description: ta.Void
-        .or(ta.String)
-        .validate(f.description, ctx + '.description'),
+      description: ta.Void.or(ta.String).validate(
+        f.description,
+        ctx + '.description',
+      ),
       resultType: getType(f.type, ctx + '.type', typeNames),
       argType: getType(
         f.args === undefined ? 'void' : f.args,
@@ -46,9 +47,10 @@ function normalizeField(
   return {
     kind: SchemaKind.FieldProperty,
     name: typeName,
-    description: ta.Void
-      .or(ta.String)
-      .validate(f.description, ctx + '.description'),
+    description: ta.Void.or(ta.String).validate(
+      f.description,
+      ctx + '.description',
+    ),
     resultType: getType(f.type, ctx + '.type', typeNames),
     auth: ta
       .Literal<'public'>('public')

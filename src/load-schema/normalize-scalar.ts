@@ -19,9 +19,10 @@ function normalizeScalar(
     /^[A-Za-z]+$/.test(name),
     `Expected Scalar.name to match [A-Za-z]+ but got '${name}'`,
   );
-  const description = TA.Void
-    .or(TA.String)
-    .validate(s.description, name + '.description');
+  const description = TA.Void.or(TA.String).validate(
+    s.description,
+    name + '.description',
+  );
   const baseType = getType(s.baseType, name + '.baseType', typeNames);
   const validate = TA.Void.or(TA.Fn).validate(s.validate, name + '.validate');
   return {

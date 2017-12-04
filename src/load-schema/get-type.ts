@@ -34,7 +34,9 @@ function getTypeFromString(
   const contextStr = context ? ' for ' + context : '';
   assert(
     /^[A-Za-z0-9]+$/.test(strType),
-    `Expected type name to match [A-Za-z0-9]+ but got '${strType}'${contextStr}`,
+    `Expected type name to match [A-Za-z0-9]+ but got '${strType}'${
+      contextStr
+    }`,
   );
   switch (strType) {
     case 'boolean':
@@ -53,7 +55,9 @@ function getTypeFromString(
   if (typeNames.indexOf(strType) === -1) {
     const suggestion = suggestMatch(typeNames, strType);
     throw new Error(
-      `${context} refers to ${strType}, but there is no type by that name${suggestion}`,
+      `${context} refers to ${strType}, but there is no type by that name${
+        suggestion
+      }`,
     );
   }
   return {kind: SchemaKind.Named, name: strType};

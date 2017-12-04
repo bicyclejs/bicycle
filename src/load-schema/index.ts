@@ -10,9 +10,10 @@ export default function loadSchema(input: {
 }): Schema<any> {
   const i = TA.ObjectKeys(['scalars', 'objects']).validate(input, 'input');
   const objects = TA.ArrayOf(TA.AnyObject).validate(i.objects, 'input.objects');
-  const scalars = TA.Void
-    .or(TA.ArrayOf(TA.AnyObject))
-    .validate(i.scalars, 'input.objects');
+  const scalars = TA.Void.or(TA.ArrayOf(TA.AnyObject)).validate(
+    i.scalars,
+    'input.objects',
+  );
   const types: Schema<any> = {Root: null as any};
   const typeNames: string[] = [];
 
@@ -29,7 +30,9 @@ export default function loadSchema(input: {
     } else if (typeName) {
       if (typeNames.indexOf(typeName) !== -1) {
         throw new Error(
-          `Duplicate Object, "${typeName}".  Each object & scalar must have a unique name.`,
+          `Duplicate Object, "${
+            typeName
+          }".  Each object & scalar must have a unique name.`,
         );
       }
       typeNames.push(typeName);
@@ -41,7 +44,9 @@ export default function loadSchema(input: {
       const scalarName = TA.String.validate(Scalar.name, 'Scalar.name');
       if (typeNames.indexOf(scalarName) !== -1) {
         throw new Error(
-          `Duplicate Scalar, "${scalarName}".  Each object & scalar must have a unique name.`,
+          `Duplicate Scalar, "${
+            scalarName
+          }".  Each object & scalar must have a unique name.`,
         );
       } else if (scalarName === 'Root') {
         throw new Error('You cannot have a scalar called Root');

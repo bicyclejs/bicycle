@@ -41,8 +41,9 @@ export default class OptimisticValueStore {
   }
   createValue(): PendingOptimisticValue {
     const id = this._nextID++;
-    return `__bicycle_optimistic_value_${this
-      ._key}_${id}__` as PendingOptimisticValue;
+    return `__bicycle_optimistic_value_${this._key}_${
+      id
+    }__` as PendingOptimisticValue;
   }
   resolve(optimisticValue: PendingOptimisticValue, value: string) {
     const id = extractID(optimisticValue);
