@@ -1,6 +1,12 @@
 # Changelog
 
-## v4.4.0: 2017-11-12
+## v4.5.0: 2017-12-05
+
+* Only show timing to the nearest millisecond, but still use nanoseconds in the
+  background
+* Add an optimisation that helps avoid querying the same data twice
+
+## v4.4.0: 2017-12-04
 
 * Time to the nanosecond when `--monitor-bicycle-performance` is passed
 
