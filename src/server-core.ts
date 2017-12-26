@@ -1,4 +1,4 @@
-import {Request, RequestHandler} from 'express';
+import {Request, Response, RequestHandler} from 'express';
 import runQueryAgainstCache from './utils/run-query-against-cache';
 import {
   runQuery as runQueryToGetCache,
@@ -11,7 +11,6 @@ import MemoryStore from './sessions/MemorySessionStore';
 import SessionStore from './sessions/SessionStore';
 
 import ClientRequest from './types/ClientRequest';
-import IContext from './types/IContext';
 import Logging from './types/Logging';
 import MutationResult from './types/MutationResult';
 import Query from './types/Query';
@@ -20,6 +19,8 @@ import ServerPreparation from './types/ServerPreparation';
 import ServerResponse from './types/ServerResponse';
 
 import {BaseRootQuery, Mutation} from './typed-helpers/query';
+
+import withContext, {Ctx} from './Ctx';
 
 export interface Options {
   readonly disableDefaultLogging?: boolean;
@@ -40,7 +41,7 @@ export interface Options {
 function noop() {
   return null;
 }
-export default class BicycleServer<Context extends IContext> {
+export default class BicycleServer<Context> {
   _logging: Logging;
   _schema: Schema<Context>;
   _sessionStore: SessionStore;
@@ -60,19 +61,21 @@ export default class BicycleServer<Context extends IContext> {
 
   runQuery<TResult>(
     query: BaseRootQuery<TResult>,
-    context: Context,
+    context: Ctx<Context>,
   ): Promise<TResult>;
-  runQuery(query: Query, context: Context): Promise<any>;
+  runQuery(query: Query, context: Ctx<Context>): Promise<any>;
   runQuery<TResult>(
     query: Query | BaseRootQuery<TResult>,
-    context: Context,
+    context: Ctx<Context>,
   ): Promise<any> {
     const q: Query = query instanceof BaseRootQuery ? query._query : query;
-    return runQueryToGetCache(q, {
-      schema: this._schema,
-      logging: this._logging,
-      context: context,
-    }).then(cache => {
+    return withContext(context, context =>
+      runQueryToGetCache(q, {
+        schema: this._schema,
+        logging: this._logging,
+        context: context,
+      }),
+    ).then(cache => {
       const {loaded, result, errors} = runQueryAgainstCache(cache, q);
       if (errors.length) {
         throw new Error(errors[0]);
@@ -87,24 +90,26 @@ export default class BicycleServer<Context extends IContext> {
   }
   runMutation<TResult>(
     mutation: Mutation<TResult>,
-    context: Context,
+    context: Ctx<Context>,
   ): Promise<TResult>;
-  runMutation(method: string, args: any, context: Context): Promise<any>;
+  runMutation(method: string, args: any, context: Ctx<Context>): Promise<any>;
   runMutation<TResult>(
     method: string | Mutation<TResult>,
     args: any,
-    context?: Context,
+    context?: Ctx<Context>,
   ): Promise<any> {
-    const m = method instanceof Mutation ? method._name : method;
-    const a = method instanceof Mutation ? method._args : args;
-    const c = method instanceof Mutation ? args : context;
-    return tryRunMutation(
-      {method: m, args: a},
-      {
-        schema: this._schema,
-        logging: this._logging,
-        context: c,
-      },
+    const m: string = method instanceof Mutation ? method._name : method;
+    const a: any = method instanceof Mutation ? method._args : args;
+    const c: Ctx<Context> = method instanceof Mutation ? args : context;
+    return withContext(c, c =>
+      tryRunMutation(
+        {method: m, args: a},
+        {
+          schema: this._schema,
+          logging: this._logging,
+          context: c,
+        },
+      ),
     ).then(({s, v}) => {
       if (s) {
         return v;
@@ -123,7 +128,7 @@ export default class BicycleServer<Context extends IContext> {
       options: {
         stage: 'query' | 'mutation';
       },
-    ) => Context | PromiseLike<Context>,
+    ) => Ctx<Context>,
   ): Promise<ServerResponse> {
     return handleMessageInternal(
       this._schema,
@@ -138,8 +143,9 @@ export default class BicycleServer<Context extends IContext> {
   createMiddleware(
     getContext: (
       req: Request,
+      res: Response,
       options: {stage: 'query' | 'mutation'},
-    ) => Context | PromiseLike<Context>,
+    ) => Ctx<Context>,
   ): RequestHandler {
     return createBicycleMiddlewareInner(
       this._schema,
@@ -152,17 +158,20 @@ export default class BicycleServer<Context extends IContext> {
   createServerRenderer<TResult>(
     getContext: (
       req: Request,
+      res: Response,
       options: {stage: 'query' | 'mutation'},
-    ) => Context | PromiseLike<Context>,
-    fn: (client: FakeClient, req: Request) => TResult,
+    ) => Ctx<Context>,
+    fn: (client: FakeClient, req: Request, res: Response) => TResult,
   ): (
     req: Request,
+    res: Response,
   ) => Promise<{serverPreparation: ServerPreparation; result: TResult}>;
   createServerRenderer<TResult, TArg1>(
     getContext: (
       req: Request,
+      res: Response,
       options: {stage: 'query' | 'mutation'},
-    ) => Context | PromiseLike<Context>,
+    ) => Ctx<Context>,
     fn: (client: FakeClient, req: Request, a1: TArg1) => TResult,
   ): (
     req: Request,
@@ -171,28 +180,39 @@ export default class BicycleServer<Context extends IContext> {
   createServerRenderer<TResult, TArg1, TArg2>(
     getContext: (
       req: Request,
+      res: Response,
       options: {stage: 'query' | 'mutation'},
-    ) => Context | PromiseLike<Context>,
-    fn: (client: FakeClient, req: Request, a1: TArg1, a2: TArg2) => TResult,
+    ) => Ctx<Context>,
+    fn: (
+      client: FakeClient,
+      req: Request,
+      res: Response,
+      a1: TArg1,
+      a2: TArg2,
+    ) => TResult,
   ): (
     req: Request,
+    res: Response,
     a1: TArg1,
     a2: TArg2,
   ) => Promise<{serverPreparation: ServerPreparation; result: TResult}>;
   createServerRenderer<TResult, TArg1, TArg2, TArg3>(
     getContext: (
       req: Request,
+      res: Response,
       options: {stage: 'query' | 'mutation'},
-    ) => Context | PromiseLike<Context>,
+    ) => Ctx<Context>,
     fn: (
       client: FakeClient,
       req: Request,
+      res: Response,
       a1: TArg1,
       a2: TArg2,
       a3: TArg3,
     ) => TResult,
   ): (
     req: Request,
+    res: Response,
     a1: TArg1,
     a2: TArg2,
     a3: TArg3,
@@ -200,11 +220,13 @@ export default class BicycleServer<Context extends IContext> {
   createServerRenderer<TResult, TArg1, TArg2, TArg3, TArg4>(
     getContext: (
       req: Request,
+      res: Response,
       options: {stage: 'query' | 'mutation'},
-    ) => Context | PromiseLike<Context>,
+    ) => Ctx<Context>,
     fn: (
       client: FakeClient,
       req: Request,
+      res: Response,
       a1: TArg1,
       a2: TArg2,
       a3: TArg3,
@@ -212,6 +234,7 @@ export default class BicycleServer<Context extends IContext> {
     ) => TResult,
   ): (
     req: Request,
+    res: Response,
     a1: TArg1,
     a2: TArg2,
     a3: TArg3,
@@ -220,11 +243,18 @@ export default class BicycleServer<Context extends IContext> {
   createServerRenderer<TResult>(
     getContext: (
       req: Request,
+      res: Response,
       options: {stage: 'query' | 'mutation'},
-    ) => Context | PromiseLike<Context>,
-    fn: (client: FakeClient, req: Request, ...args: any[]) => TResult,
+    ) => Ctx<Context>,
+    fn: (
+      client: FakeClient,
+      req: Request,
+      res: Response,
+      ...args: any[]
+    ) => TResult,
   ): (
     req: Request,
+    res: Response,
     ...args: any[]
   ) => Promise<{serverPreparation: ServerPreparation; result: TResult}> {
     return createServerRendererInner(

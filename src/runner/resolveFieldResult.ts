@@ -9,7 +9,6 @@ import typeNameFromValue from '../utils/type-name-from-value';
 import createError from '../utils/create-error';
 import runQuery from './runQuery';
 
-import IContext from '../types/IContext';
 import QueryContext from '../types/QueryContext';
 
 function getError(type: ValueType, value: any): Error {
@@ -56,7 +55,7 @@ function hasNamedType(type: ValueType): boolean {
   return result;
 }
 
-export default async function resolveFieldResult<Context extends IContext>(
+export default async function resolveFieldResult<Context>(
   type: ValueType,
   value: any,
   subQuery: true | Query,

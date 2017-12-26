@@ -7,7 +7,6 @@ import Query from '../types/Query';
 import {NodeType} from '../types/Schema';
 
 import NodeID, {createNodeID, getNode} from '../types/NodeID';
-import IContext from '../types/IContext';
 import QueryContext, {
   MutableQuery,
   NormalizedQuery,
@@ -93,7 +92,7 @@ function subtractQuery(
   }
   return subtractQueryPart(alreadyStartedQueries[id.n][id.i], query);
 }
-export default function runQuery<Context extends IContext>(
+export default function runQuery<Context>(
   type: NodeType<any, Context>,
   value: any,
   query: Query,

@@ -1,5 +1,26 @@
 # Changelog
 
+## v5.0.0: 2017-12-26
+
+* Pass the `res` as the second argument to `getContext` functions. This makes it
+  simpler to handle session state (login, logout etc.) as part of a bicycle
+  request.
+* Remove the `dispose` method from context objects.
+* Add a new "function" approach for transactions in sessions. To use:
+
+```js
+function getContext(req, res) {
+  return async fn => {
+    const ctx = new Context();
+    try {
+      return await fn();
+    } finally {
+      ctx.dispose();
+    }
+  };
+}
+```
+
 ## v4.5.0: 2017-12-05
 
 * Only show timing to the nearest millisecond, but still use nanoseconds in the

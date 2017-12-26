@@ -8,7 +8,6 @@ import Query from '../types/Query';
 import SchemaKind from '../types/SchemaKind';
 import {NodeType} from '../types/Schema';
 
-import IContext from '../types/IContext';
 import QueryContext from '../types/QueryContext';
 import parseLegacyArgs from './legacyArgParser';
 
@@ -91,7 +90,7 @@ function time(fn: (...args: any[]) => any, id: string) {
 /**
  * Resolve a single field on a node to a value to be returned to the client
  */
-export default function resolveField<Context extends IContext>(
+export default function resolveField<Context>(
   type: NodeType<any, Context>,
   value: any,
   name: string,

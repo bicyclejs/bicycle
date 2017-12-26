@@ -1,4 +1,3 @@
-import IContext from '../types/IContext';
 import MutationContext from '../types/MutationContext';
 import MutationResult from '../types/MutationResult';
 import {Mutation} from '../types/Schema';
@@ -11,7 +10,7 @@ function isAccessDenied(v: any): v is AccessDeniedType {
   return v === ACCESS_DENIED;
 }
 
-export default function runMutation<Arg, Result, Context extends IContext>(
+export default function runMutation<Arg, Result, Context>(
   mutation: Mutation<Arg, Result, Context>,
   arg: Arg,
   mCtx: MutationContext<Context>,

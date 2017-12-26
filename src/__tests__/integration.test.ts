@@ -36,7 +36,7 @@ test('a successful query', () => {
   };
   app.use(
     '/bicycle',
-    bicycle.createMiddleware(req => {
+    bicycle.createMiddleware((req, res) => {
       return {
         db: {
           getTodos() {
@@ -120,12 +120,14 @@ test('a successful server render', () => {
   };
 
   const req: Request = {request: true} as any;
+  const res: Response = {response: true} as any;
   const A1 = {a: 1};
   const A2 = {a: 2};
   const renderServerSide = bicycle.createServerRenderer<any, Object, Object>(
     () => context,
-    (client, reqArg, a1, a2) => {
+    (client, reqArg, resArg, a1, a2) => {
       expect(reqArg).toBe(req);
+      expect(resArg).toBe(res);
       expect(a1).toBe(A1);
       expect(a2).toBe(A2);
       const resultA = client.queryCache({todos: {id: true}});
@@ -144,37 +146,39 @@ test('a successful server render', () => {
     },
   );
 
-  return renderServerSide(req, A1, A2).then(({serverPreparation, result}) => {
-    expect(typeof serverPreparation).toBe('object');
-    expect(typeof serverPreparation.s).toBe('string');
-    expect(serverPreparation.q).toEqual({
-      'todoById(id:"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")': {
-        completed: true,
-        id: true,
-        title: true,
-      },
-      todos: {id: true},
-    });
-    expect(serverPreparation.c).toEqual({
-      Root: {
-        root: {
-          ['todoById(id:"' + todoID + '")']: createNodeID('Todo', todoID),
-          todos: [createNodeID('Todo', todoID)],
+  return renderServerSide(req, res, A1, A2).then(
+    ({serverPreparation, result}) => {
+      expect(typeof serverPreparation).toBe('object');
+      expect(typeof serverPreparation.s).toBe('string');
+      expect(serverPreparation.q).toEqual({
+        'todoById(id:"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")': {
+          completed: true,
+          id: true,
+          title: true,
         },
-      },
-      Todo: {
-        [todoID]: todo,
-      },
-    });
-    expect(result).toEqual({
-      result: {
-        todoById: todo,
-      },
-      loaded: true,
-      errors: [],
-      errorDetails: [],
-    });
-  });
+        todos: {id: true},
+      });
+      expect(serverPreparation.c).toEqual({
+        Root: {
+          root: {
+            ['todoById(id:"' + todoID + '")']: createNodeID('Todo', todoID),
+            todos: [createNodeID('Todo', todoID)],
+          },
+        },
+        Todo: {
+          [todoID]: todo,
+        },
+      });
+      expect(result).toEqual({
+        result: {
+          todoById: todo,
+        },
+        loaded: true,
+        errors: [],
+        errorDetails: [],
+      });
+    },
+  );
 });
 
 test('a successful mutation with a result', () => {
@@ -193,7 +197,7 @@ test('a successful mutation with a result', () => {
   const todos: any[] = [];
   app.use(
     '/bicycle',
-    bicycle.createMiddleware(req => {
+    bicycle.createMiddleware((req, res) => {
       return {
         db: {
           getTodos() {
@@ -282,7 +286,7 @@ test('a failing query', () => {
   const app = express();
   app.use(
     '/bicycle',
-    bicycle.createMiddleware(req => {
+    bicycle.createMiddleware((req, res) => {
       return {
         db: {
           getTodos() {

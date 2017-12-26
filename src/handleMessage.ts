@@ -6,7 +6,6 @@ import {runQuery, runMutation} from './runner';
 import {CacheUpdate} from './types/Cache';
 import SessionStore from './sessions/SessionStore';
 import ClientRequest from './types/ClientRequest';
-import IContext from './types/IContext';
 import Logging from './types/Logging';
 import Query, {QueryUpdate} from './types/Query';
 import Schema from './types/Schema';
@@ -17,25 +16,15 @@ import ServerResponse, {
   createUpdateResponse,
 } from './types/ServerResponse';
 import MutationResult from './types/MutationResult';
+import withContext, {Ctx} from './Ctx';
 
-function thenDispose<T>(promise: Promise<T>, context: IContext): Promise<T> {
-  promise.then(
-    () => {
-      context.dispose && context.dispose();
-    },
-    () => {
-      context.dispose && context.dispose();
-    },
-  );
-  return promise;
-}
-export default function handleMessage<Context extends IContext>(
+export default function handleMessage<Context>(
   schema: Schema<Context>,
   logging: Logging,
   sessionStore: SessionStore,
   message: ClientRequest,
-  context: () => Context | PromiseLike<Context>,
-  mutationContext?: () => Context | PromiseLike<Context>,
+  context: () => Ctx<Context>,
+  mutationContext?: () => Ctx<Context>,
 ): Promise<ServerResponse> {
   const sessionID = message.s;
   const queryUpdate = message.q;
@@ -44,15 +33,10 @@ export default function handleMessage<Context extends IContext>(
     : [];
   return Promise.resolve(null)
     .then(() => {
-      const ctx = mutationContext || context;
-      return ctx();
-    })
-    .then(mutationContext => {
       return Promise.all([
         getQuery(sessionID, sessionStore, queryUpdate),
-        thenDispose(
+        withContext((mutationContext || context)(), mutationContext =>
           runMutations(schema, logging, mutations, mutationContext),
-          mutationContext,
         ),
       ]);
     })
@@ -61,39 +45,33 @@ export default function handleMessage<Context extends IContext>(
         return createExpiredResponse(mutationResults);
       } else {
         const {sessionID, query} = getQueryResult;
-        return Promise.resolve(null)
-          .then(() => context())
-          .then<ServerResponse>(queryContext => {
-            if (message.s) {
-              return thenDispose(
-                runAndDiffQuery(
-                  schema,
-                  logging,
-                  sessionID,
-                  sessionStore,
-                  query,
-                  queryContext,
-                ),
-                queryContext,
-              ).then(data => {
-                return createUpdateResponse(data || undefined, mutationResults);
-              });
-            }
-            return thenDispose(
-              runQuery(query, {
-                schema,
-                logging,
-                context: queryContext,
-              }),
+        if (message.s) {
+          return withContext(context(), queryContext =>
+            runAndDiffQuery(
+              schema,
+              logging,
+              sessionID,
+              sessionStore,
+              query,
               queryContext,
-            ).then(data => {
-              return sessionStore
-                .setCache(sessionID, data)
-                .then(() =>
-                  createNewSessionResponse(sessionID, data, mutationResults),
-                );
-            });
+            ),
+          ).then(data => {
+            return createUpdateResponse(data || undefined, mutationResults);
           });
+        }
+        return withContext(context(), queryContext =>
+          runQuery(query, {
+            schema,
+            logging,
+            context: queryContext,
+          }),
+        ).then(data => {
+          return sessionStore
+            .setCache(sessionID, data)
+            .then(() =>
+              createNewSessionResponse(sessionID, data, mutationResults),
+            );
+        });
       }
     });
 }
@@ -146,7 +124,7 @@ export function getQuery(
   }
 }
 
-export function runMutations<Context extends IContext>(
+export function runMutations<Context>(
   schema: Schema<Context>,
   logging: Logging,
   mutations: Array<{method: string; args: any}>,

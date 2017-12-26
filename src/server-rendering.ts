@@ -1,4 +1,4 @@
-import {Request} from 'express';
+import {Request, Response} from 'express';
 import notEqual from './utils/not-equal';
 import mergeQueries from './utils/merge-queries';
 import runQueryAgainstCache, {
@@ -10,7 +10,6 @@ import {serverPreparation as createServerPreparation} from './messages';
 
 import SessionStore from './sessions/SessionStore';
 import Cache from './types/Cache';
-import IContext from './types/IContext';
 import Logging from './types/Logging';
 import Query from './types/Query';
 import Schema from './types/Schema';
@@ -18,6 +17,7 @@ import SessionID from './types/SessionID';
 import ServerPreparation from './types/ServerPreparation';
 
 import {BaseRootQuery} from './typed-helpers/query';
+import withContext, {Ctx} from './Ctx';
 
 export class FakeClient {
   _sessionID: SessionID;
@@ -48,67 +48,72 @@ export class FakeClient {
   }
 }
 
-export default function prepare<Context extends IContext, TResult>(
+export default function prepare<Context, TResult>(
   schema: Schema<Context>,
   logging: Logging,
   sessionStore: SessionStore,
   getContext: (
     req: Request,
+    res: Response,
     options: {stage: 'query' | 'mutation'},
-  ) => Context | PromiseLike<Context>,
-  fn: (client: FakeClient, req: Request, ...args: any[]) => TResult,
+  ) => Ctx<Context>,
+  fn: (
+    client: FakeClient,
+    req: Request,
+    res: Response,
+    ...args: any[]
+  ) => TResult,
 ): (
   req: Request,
+  res: Response,
   ...args: any[]
 ) => Promise<{serverPreparation: ServerPreparation; result: TResult}> {
-  return (req, ...args: any[]) => {
+  return (req, res, ...args: any[]) => {
     return Promise.all([
       getSessionID(sessionStore),
-      getContext(req, {stage: 'query'}),
+      getContext(req, res, {stage: 'query'}),
     ])
       .then(([sessionID, context]) => {
-        const queryContext = {schema, logging, context};
-        const client = new FakeClient(sessionID);
-        return new Promise<{
-          serverPreparation: ServerPreparation;
-          result: TResult;
-        }>((resolve, reject) => {
-          function next() {
-            try {
-              const oldServerPreparation = client._serverPreparation();
-              const result = fn(client, req, ...args);
-              const newServerPreparation = client._serverPreparation();
-              if (!notEqual(oldServerPreparation.q, newServerPreparation.q)) {
-                if (context.dispose) context.dispose();
-                return resolve({
-                  serverPreparation: newServerPreparation,
-                  result,
-                });
+        return withContext(context, context => {
+          const queryContext = {schema, logging, context};
+          const client = new FakeClient(sessionID);
+          return new Promise<{
+            serverPreparation: ServerPreparation;
+            result: TResult;
+          }>((resolve, reject) => {
+            function next() {
+              try {
+                const oldServerPreparation = client._serverPreparation();
+                const result = fn(client, req, res, ...args);
+                const newServerPreparation = client._serverPreparation();
+                if (!notEqual(oldServerPreparation.q, newServerPreparation.q)) {
+                  return resolve({
+                    serverPreparation: newServerPreparation,
+                    result,
+                  });
+                }
+                runQuery(newServerPreparation.q, queryContext).then(
+                  data => {
+                    if (notEqual(newServerPreparation.c, data)) {
+                      client._cache = data;
+                      return next();
+                    } else {
+                      return resolve({
+                        serverPreparation: newServerPreparation,
+                        result,
+                      });
+                    }
+                  },
+                  err => {
+                    reject(err);
+                  },
+                );
+              } catch (ex) {
+                reject(ex);
               }
-              runQuery(newServerPreparation.q, queryContext).then(
-                data => {
-                  if (notEqual(newServerPreparation.c, data)) {
-                    client._cache = data;
-                    return next();
-                  } else {
-                    if (context.dispose) context.dispose();
-                    return resolve({
-                      serverPreparation: newServerPreparation,
-                      result,
-                    });
-                  }
-                },
-                err => {
-                  if (context.dispose) context.dispose();
-                  reject(err);
-                },
-              );
-            } catch (ex) {
-              if (context.dispose) context.dispose();
-              reject(ex);
             }
-          }
-          next();
+            next();
+          });
         });
       })
       .then(result => {

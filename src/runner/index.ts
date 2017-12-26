@@ -12,7 +12,6 @@ import runQueryInternal from './runQuery';
 import runMutationInternal from './runMutation';
 
 import Cache from '../types/Cache';
-import IContext from '../types/IContext';
 import Logging from '../types/Logging';
 import MutationContext from '../types/MutationContext';
 import MutationResult from '../types/MutationResult';
@@ -30,7 +29,7 @@ export function enablePerformanceMonitoring() {
   IS_PERFORMANCE_MONITORING = true;
 }
 const lock = throat(1);
-export function runQuery<Context extends IContext>(
+export function runQuery<Context>(
   query: Query,
   {
     schema,
@@ -100,7 +99,7 @@ export function runQuery<Context extends IContext>(
   });
 }
 
-export function runMutation<Context extends IContext>(
+export function runMutation<Context>(
   mutation: {method: string; args: any},
   mCtx: MutationContext<Context>,
 ): Promise<MutationResult<any>> {

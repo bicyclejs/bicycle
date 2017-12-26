@@ -1,20 +1,21 @@
-import {Request, RequestHandler} from 'express';
+import {Request, Response, RequestHandler} from 'express';
 import {json} from 'body-parser';
 import handleMessage from './handleMessage';
 import SessionStore from './sessions/SessionStore';
-import IContext from './types/IContext';
 import Logging from './types/Logging';
 import Schema from './types/Schema';
+import {Ctx} from './Ctx';
 
 const jsonBody = json();
-export default function createBicycleMiddleware<Context extends IContext>(
+export default function createBicycleMiddleware<Context>(
   schema: Schema<Context>,
   logging: Logging,
   sessionStore: SessionStore,
   getContext: (
     req: Request,
+    res: Response,
     options: {stage: 'query' | 'mutation'},
-  ) => Context | PromiseLike<Context>,
+  ) => Ctx<Context>,
 ): RequestHandler {
   const processRequest: RequestHandler = (req, res, next) => {
     handleMessage(
@@ -22,8 +23,8 @@ export default function createBicycleMiddleware<Context extends IContext>(
       logging,
       sessionStore,
       req.body,
-      () => getContext(req, {stage: 'query'}),
-      () => getContext(req, {stage: 'mutation'}),
+      () => getContext(req, res, {stage: 'query'}),
+      () => getContext(req, res, {stage: 'mutation'}),
     ).then(response => res.json(response), err => next(err));
   };
   return (req, res, next) => {

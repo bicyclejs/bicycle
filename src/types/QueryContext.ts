@@ -1,9 +1,8 @@
 import Cache from './Cache';
-import IContext from './IContext';
 import Logging from './Logging';
 import Schema from './Schema';
 
-export default interface QueryContext<Context extends IContext> {
+export default interface QueryContext<Context> {
   schema: Schema<Context>;
   context: Context;
   result: Cache;
