@@ -1,7 +1,7 @@
 {
   "name": "bicycle",
   "private": true,
-  "version": "4.5.0",
+  "version": "5.0.0",
   "description": "A data synchronisation library for JavaScript",
   "keywords": [],
   "dependencies": {
@@ -45,18 +45,18 @@
   },
   "scripts": {
     "precommit": "lint-staged",
-    "prepublish": "npm run build",
+    "prepublish": "yarn build",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\"",
     "prettier:check": "prettier --list-different \"src/**/*.{ts,tsx}\"",
     "prebuild": "rimraf lib",
     "build": "tsc",
     "postbuild": "node lib/build",
-    "pretest": "npm run build",
+    "pretest": "yarn build",
     "test": "jest ./src --coverage",
     "watch": "jest ./src --coverage --watch",
-    "prerelease": "npm run prettier && npm run build",
-    "release": "cd lib && npm publish",
-    "prestart": "npm run build",
+    "prerelease": "yarn prettier && yarn build",
+    "release": "cd lib && yarn publish",
+    "prestart": "yarn build",
     "start": "node example"
   },
   "lint-staged": {
