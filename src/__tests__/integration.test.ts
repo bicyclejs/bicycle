@@ -55,9 +55,11 @@ test('a successful query', () => {
     .then(port => ({server: app.listen(port), port}))
     .then(({server, port}) => {
       return new Promise((resolve, reject) => {
-        const client = new BicycleClient(
-          new NetworkLayer('http://localhost:' + port + '/bicycle'),
-        );
+        const client = new BicycleClient({
+          networkLayer: new NetworkLayer(
+            'http://localhost:' + port + '/bicycle',
+          ),
+        });
         client.subscribe(
           {todos: {id: true, title: true, completed: true}},
           (result, loaded, errors, errorDetails) => {
@@ -227,9 +229,11 @@ test('a successful mutation with a result', () => {
         rejectMutation = reject;
       });
       return new Promise((resolve, reject) => {
-        const client = new BicycleClient(
-          new NetworkLayer('http://localhost:' + port + '/bicycle'),
-        );
+        const client = new BicycleClient({
+          networkLayer: new NetworkLayer(
+            'http://localhost:' + port + '/bicycle',
+          ),
+        });
         client.subscribeToNetworkErrors(reject);
         client.subscribeToMutationErrors(reject);
         let firstRun = true;
@@ -304,9 +308,11 @@ test('a failing query', () => {
     .then(port => ({server: app.listen(port), port}))
     .then(({server, port}) => {
       return new Promise((resolve, reject) => {
-        const client = new BicycleClient(
-          new NetworkLayer('http://localhost:' + port + '/bicycle'),
-        );
+        const client = new BicycleClient({
+          networkLayer: new NetworkLayer(
+            'http://localhost:' + port + '/bicycle',
+          ),
+        });
         client.subscribe(
           {todos: {id: true, title: true, completed: true}},
           (result, loaded, errors, errorDetails) => {

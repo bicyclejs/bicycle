@@ -18,6 +18,8 @@ import OptimisticValueStore from './OptimisticValueStore';
 import {createNodeID} from '../types/NodeID';
 import {BaseRootQuery, Mutation as TypedMutation} from '../typed-helpers/query';
 
+declare const BICYCLE_SERVER_PREPARATION: ServerPreparation | void;
+
 export {
   NetworkLayer,
   NetworkLayerInterface as INetworkLayer,
@@ -26,6 +28,8 @@ export {
 };
 
 export type ClientOptions = {
+  networkLayer?: NetworkLayerInterface;
+  serverPreparation?: ServerPreparation;
   cacheTimeout?: number;
 };
 export interface Subscription {
@@ -60,12 +64,14 @@ class Client<
   } = {};
   private readonly _request: RequestBatcher;
 
-  constructor(
-    networkLayer: NetworkLayerInterface = new NetworkLayer(),
-    serverPreparation?: ServerPreparation,
-    options: ClientOptions = {},
-  ) {
+  constructor(options: ClientOptions = {}) {
     this._options = options;
+    const serverPreparation =
+      options.serverPreparation !== undefined
+        ? options.serverPreparation
+        : typeof BICYCLE_SERVER_PREPARATION !== 'undefined'
+          ? BICYCLE_SERVER_PREPARATION
+          : undefined;
 
     this._cache =
       (serverPreparation && serverPreparation.c) ||
@@ -73,7 +79,9 @@ class Client<
     this._optimisticCache = this._cache;
 
     this._request = new RequestBatcher(
-      networkLayer,
+      options.networkLayer === undefined
+        ? new NetworkLayer()
+        : options.networkLayer,
       serverPreparation && serverPreparation.s,
       (serverPreparation && serverPreparation.q) || {},
       this,
