@@ -1,5 +1,10 @@
 # Changelog
 
+## v6.0.0: 2018-01-05
+
+* BREAKING: Take all client options as part of the object
+* Automatically detect `BICYCLE_SERVER_PREPARATION` as a global variable if set.
+
 ## v5.0.0: 2017-12-26
 
 * Pass the `res` as the second argument to `getContext` functions. This makes it
