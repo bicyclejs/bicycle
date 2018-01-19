@@ -6,7 +6,6 @@ import Cache, {
   NodeCacheUpdate,
   isCacheObject,
 } from '../types/Cache';
-import {isDeleteField} from '../types/DeleteField';
 import {isErrorResult} from '../types/ErrorResult';
 
 const EMPTY_OBJECT = {};
@@ -17,17 +16,13 @@ function mergeCacheObject(
   const result: CacheObject = {};
   if (cache !== EMPTY_OBJECT) {
     Object.keys(cache).forEach(key => {
-      if (!isDeleteField(update[key])) {
-        result[key] = cache[key];
-      }
+      result[key] = cache[key];
     });
   }
   Object.keys(update).forEach(key => {
     const c = cache[key];
     const u = update[key];
-    if (isDeleteField(u)) {
-      // do nothing
-    } else if (isErrorResult(u)) {
+    if (isErrorResult(u)) {
       result[key] = u;
     } else if (isCacheObject(u)) {
       if (isCacheObject(c)) {
@@ -46,14 +41,12 @@ function mergeNodeCache(cache: NodeCache, update: NodeCacheUpdate): NodeCache {
   const result: NodeCache = {};
   if (cache !== EMPTY_OBJECT) {
     Object.keys(cache).forEach(key => {
-      if (!isDeleteField(update[key])) {
-        result[key] = cache[key];
-      }
+      result[key] = cache[key];
     });
   }
   Object.keys(update).forEach(id => {
     const v = update[id];
-    if (v && !isDeleteField(v)) {
+    if (v) {
       result[id] = mergeCacheObject(cache[id] || EMPTY_OBJECT, v);
     }
   });
@@ -63,13 +56,11 @@ function mergeNodeCache(cache: NodeCache, update: NodeCacheUpdate): NodeCache {
 export default function mergeCache(cache: Cache, update: CacheUpdate): Cache {
   const result: Cache = {};
   Object.keys(cache).forEach(key => {
-    if (!isDeleteField(update[key])) {
-      result[key] = cache[key];
-    }
+    result[key] = cache[key];
   });
   Object.keys(update).forEach(typeName => {
     const v = update[typeName];
-    if (v && !isDeleteField(v)) {
+    if (v) {
       result[typeName] = mergeNodeCache(cache[typeName] || EMPTY_OBJECT, v);
     }
   });

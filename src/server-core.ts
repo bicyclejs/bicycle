@@ -10,7 +10,7 @@ import createServerRendererInner, {FakeClient} from './server-rendering';
 import MemoryStore from './sessions/MemorySessionStore';
 import SessionStore from './sessions/SessionStore';
 
-import ClientRequest from './types/ClientRequest';
+import BicycleRequest from './types/Request';
 import Logging from './types/Logging';
 import MutationResult from './types/MutationResult';
 import Query from './types/Query';
@@ -123,7 +123,7 @@ export default class BicycleServer<Context> {
   }
 
   handleMessage(
-    message: ClientRequest,
+    message: BicycleRequest,
     getContext: (
       options: {
         stage: 'query' | 'mutation';

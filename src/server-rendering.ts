@@ -1,3 +1,4 @@
+import cuid = require('cuid');
 import {Request, Response} from 'express';
 import notEqual from './utils/not-equal';
 import mergeQueries from './utils/merge-queries';
@@ -6,7 +7,6 @@ import runQueryAgainstCache, {
 } from './utils/run-query-against-cache';
 import getSessionID from './utils/get-session-id';
 import {runQuery} from './runner';
-import {serverPreparation as createServerPreparation} from './messages';
 
 import SessionStore from './sessions/SessionStore';
 import Cache from './types/Cache';
@@ -14,10 +14,13 @@ import Logging from './types/Logging';
 import Query from './types/Query';
 import Schema from './types/Schema';
 import SessionID from './types/SessionID';
-import ServerPreparation from './types/ServerPreparation';
+import ServerPreparation, {
+  createServerPreparation,
+} from './types/ServerPreparation';
 
 import {BaseRootQuery} from './typed-helpers/query';
 import withContext, {Ctx} from './Ctx';
+import SessionVersion from './types/SessionVersion';
 
 export class FakeClient {
   _sessionID: SessionID;
@@ -27,9 +30,6 @@ export class FakeClient {
     this._sessionID = sessionID;
     this._query = {};
     this._cache = {Root: {root: {}}};
-  }
-  _serverPreparation(): ServerPreparation {
-    return createServerPreparation(this._sessionID, this._query, this._cache);
   }
   queryCache<TResult>(query: BaseRootQuery<TResult>): QueryCacheResult<TResult>;
   queryCache(query: Query): QueryCacheResult<any>;
@@ -72,61 +72,63 @@ export default function prepare<Context, TResult>(
     return Promise.all([
       getSessionID(sessionStore),
       getContext(req, res, {stage: 'query'}),
-    ])
-      .then(([sessionID, context]) => {
-        return withContext(context, context => {
-          const queryContext = {schema, logging, context};
-          const client = new FakeClient(sessionID);
-          return new Promise<{
-            serverPreparation: ServerPreparation;
-            result: TResult;
-          }>((resolve, reject) => {
-            function next() {
-              try {
-                const oldServerPreparation = client._serverPreparation();
-                const result = fn(client, req, res, ...args);
-                const newServerPreparation = client._serverPreparation();
-                if (!notEqual(oldServerPreparation.q, newServerPreparation.q)) {
-                  return resolve({
-                    serverPreparation: newServerPreparation,
-                    result,
-                  });
-                }
-                runQuery(newServerPreparation.q, queryContext).then(
-                  data => {
-                    if (notEqual(newServerPreparation.c, data)) {
-                      client._cache = data;
-                      return next();
-                    } else {
-                      return resolve({
-                        serverPreparation: newServerPreparation,
-                        result,
-                      });
-                    }
-                  },
-                  err => {
-                    reject(err);
-                  },
-                );
-              } catch (ex) {
-                reject(ex);
+    ]).then(([sessionID, context]) => {
+      const client = new FakeClient(sessionID);
+      return withContext(context, context => {
+        const queryContext = {schema, logging, context};
+        return new Promise<TResult>((resolve, reject) => {
+          function next() {
+            try {
+              const oldQuery = client._query;
+              const oldCache = client._cache;
+              const result = fn(client, req, res, ...args);
+              const newQuery = client._query;
+              if (!notEqual(oldQuery, newQuery)) {
+                return resolve(result);
               }
+              runQuery(newQuery, queryContext).then(
+                data => {
+                  if (notEqual(oldCache, data)) {
+                    client._cache = data;
+                    return next();
+                  } else {
+                    return resolve(result);
+                  }
+                },
+                err => {
+                  reject(err);
+                },
+              );
+            } catch (ex) {
+              reject(ex);
             }
-            next();
-          });
+          }
+          next();
+        }).then(result => {
+          return sessionStore
+            .tx(sessionID, () => {
+              const version = cuid() as SessionVersion;
+              return Promise.resolve({
+                session: {
+                  versions: [
+                    {version, query: client._query, cache: client._cache},
+                  ],
+                  mutations: {},
+                },
+                result: version,
+              });
+            })
+            .then(version => ({
+              result,
+              serverPreparation: createServerPreparation(
+                sessionID,
+                version,
+                client._query,
+                client._cache,
+              ),
+            }));
         });
-      })
-      .then(result => {
-        return Promise.all([
-          sessionStore.setCache(
-            result.serverPreparation.s,
-            result.serverPreparation.c,
-          ),
-          sessionStore.setQuery(
-            result.serverPreparation.s,
-            result.serverPreparation.q,
-          ),
-        ]).then(() => result);
       });
+    });
   };
 }

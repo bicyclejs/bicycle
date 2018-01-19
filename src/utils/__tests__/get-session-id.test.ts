@@ -1,22 +1,8 @@
-import getSessionID from '../get-session-id';
-import Cache from '../../types/Cache';
-import Query from '../../types/Query';
+import SessionStore from '../../sessions/SessionStore';
 import SessionID from '../../types/SessionID';
+import getSessionID from '../get-session-id';
 
-const sessionStore = {
-  getCache(sessionId: SessionID): PromiseLike<Cache | null> {
-    return Promise.resolve({});
-  },
-  setCache(sessionId: SessionID, data: Object): PromiseLike<void> {
-    return Promise.resolve(undefined);
-  },
-  getQuery(sessionId: SessionID): PromiseLike<Query | null> {
-    return Promise.resolve({});
-  },
-  setQuery(sessionId: SessionID, query: Query): PromiseLike<void> {
-    return Promise.resolve(undefined);
-  },
-};
+const sessionStore = {} as SessionStore;
 
 test('generates a string of 16 random characters', () => {
   const results = [];
