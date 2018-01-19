@@ -25,9 +25,9 @@ function validate(
     ) {
       const actual = typeNameFromValue(value);
       throw createError(
-        `Expected ${options.name} to be of type "${expected}" but got "${
-          actual
-        }"`,
+        `Expected ${
+          options.name
+        } to be of type "${expected}" but got "${actual}"`,
         {
           exposeProd: options.exposeValueInProduction,
           code: options.code,
