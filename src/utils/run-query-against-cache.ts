@@ -51,7 +51,7 @@ export default function runQueryAgainstCache(
         result[key] = resolveValue(value[key], subQuery);
       });
       return result;
-    } else if (subQuery === true) {
+    } else {
       return value;
     }
   }

@@ -6,10 +6,16 @@ import runQueryAgainstCache from '../run-query-against-cache';
 test('returns the result of running the query', () => {
   const cache = freeze({
     Item: {foo: {a: 10, b: 20}},
-    Root: {root: {items: [createNodeID('Item', 'foo')]}},
+    Root: {root: {items: [createNodeID('Item', 'foo')], others: [null]}},
   });
   expect(runQueryAgainstCache(cache, {items: {a: true, b: true}})).toEqual({
     result: {items: [{a: 10, b: 20}]},
+    loaded: true,
+    errors: [],
+    errorDetails: [],
+  });
+  expect(runQueryAgainstCache(cache, {others: {a: true, b: true}})).toEqual({
+    result: {others: [null]},
     loaded: true,
     errors: [],
     errorDetails: [],
