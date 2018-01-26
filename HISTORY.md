@@ -1,5 +1,11 @@
 # Changelog
 
+## v7.0.0: 2018-01-26
+
+* BREAKING: Change the protocol used on the wire
+* BREAKING: Change the store API
+* Fix issue where a failed network response could lead to clients getting out of sync.
+
 ## v6.0.0: 2018-01-05
 
 * BREAKING: Take all client options as part of the object
@@ -109,8 +115,7 @@ Convert to typescript
 * Scalars `validate` method now has to return a boolean indicating whether the
   value is valid, and requires a "baseType".
 * Scalars can no longer have `parse` and `validate`.
-* The cache format, used by optimistic updaters, is now `{[typeName: string]:
-  {[id: string]: Node}}` where it used to be `{[typeName + ':' + id]: Node}`.
+* The cache format, used by optimistic updaters, is now `{[typeName: string]: {[id: string]: Node}}` where it used to be `{[typeName + ':' + id]: Node}`.
   This is to allow for strongly typed bicycle caches.
 * Void and Null are now treated as different, distinct values.
 * The empty object is no longer cast to undefined for mutation arguments
