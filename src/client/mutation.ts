@@ -1,10 +1,12 @@
+import cuid = require('cuid');
 import OptimisticValueStore, {
   PendingOptimisticValue,
 } from './OptimisticValueStore';
 import {BaseCache, OptimisticUpdateHandler} from './optimistic';
+import MutationID from '../types/MutationID';
 
 class Mutation {
-  public readonly mutation: {method: string; args: any};
+  public readonly mutation: {id: MutationID; method: string; args: any};
   private readonly _structuredMutation: {
     objectName: string;
     methodName: string;
@@ -30,7 +32,11 @@ class Mutation {
     this._optimisticValueStore = optimisticValueStore;
     const result = optimisticValueStore.normalizeValue(args);
     this._optimisticValuesRequired = result.pendingKeys;
-    this.mutation = {method, args: result.value};
+    this.mutation = {
+      id: cuid() as MutationID,
+      method,
+      args: result.value,
+    };
     this._structuredMutation = {
       objectName: method.split('.')[0],
       methodName: method.split('.')[1],

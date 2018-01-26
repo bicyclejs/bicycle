@@ -1,5 +1,5 @@
 import request, {Options} from 'then-request';
-import ClientRequest from './types/ClientRequest';
+import Request from './types/Request';
 import NetworkLayerInterface from './types/NetworkLayerInterface';
 import ServerResponse from './types/ServerResponse';
 
@@ -12,7 +12,7 @@ class NetworkLayer implements NetworkLayerInterface {
     this._url = url || '/bicycle';
     this._options = options || {};
   }
-  send(message: ClientRequest): Promise<ServerResponse> {
+  send(message: Request): Promise<ServerResponse> {
     return request('POST', this._url, {...this._options, json: message})
       .getBody('utf8')
       .then(JSON.parse);

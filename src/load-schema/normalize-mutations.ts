@@ -26,9 +26,7 @@ function normalizeMutations(
     }
     assert(
       /^[A-Za-z]+$/.test(mutationName),
-      `Expected ${typeName}'s mutation names to match [A-Za-z0-9]+ but got '${
-        mutationName
-      }'`,
+      `Expected ${typeName}'s mutation names to match [A-Za-z0-9]+ but got '${mutationName}'`,
     );
     if (mutationName === 'set') {
       const set = ta.Fn.validate(m.set, 'Set Mutation');

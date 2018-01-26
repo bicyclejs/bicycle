@@ -3,6 +3,7 @@ import MutationResult from '../types/MutationResult';
 import {Mutation} from '../types/Schema';
 import SchemaKind from '../types/SchemaKind';
 import {validateArg, validateResult} from './validate';
+import reportError from '../error-reporting';
 
 const enum AccessDeniedType {}
 const ACCESS_DENIED = {} as AccessDeniedType;
@@ -45,6 +46,7 @@ export default function runMutation<Arg, Result, Context>(
       return {s: true, v: value};
     })
     .catch((ex: any): MutationResult<Result> => {
+      reportError(ex, mCtx.logging);
       if (process.env.NODE_ENV === 'production' && !ex.exposeProd) {
         return {
           s: false,

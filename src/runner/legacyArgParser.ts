@@ -26,9 +26,7 @@ export default function parseArgs(args: string): {[key: string]: any} {
           args = args.substr(1);
           if (!currentKey) {
             throw createError(
-              `Argument name cannot be empty string, full string was "${
-                fullArgsString
-              }"`,
+              `Argument name cannot be empty string, full string was "${fullArgsString}"`,
               {
                 exposeProd: true,
                 code: 'ERROR_PARSING_ARGS',
@@ -63,9 +61,7 @@ export default function parseArgs(args: string): {[key: string]: any} {
         break;
       case 'terminated':
         throw createError(
-          `Closing bracket was reached before end of arguments, full string was "${
-            fullArgsString
-          }"`,
+          `Closing bracket was reached before end of arguments, full string was "${fullArgsString}"`,
           {
             exposeProd: true,
             code: 'ERROR_PARSING_ARGS',
@@ -76,9 +72,7 @@ export default function parseArgs(args: string): {[key: string]: any} {
   }
   if (state !== 'terminated') {
     throw createError(
-      `End of args string reached with no closing bracket, full string was "${
-        fullArgsString
-      }"`,
+      `End of args string reached with no closing bracket, full string was "${fullArgsString}"`,
       {exposeProd: true, code: 'ERROR_PARSING_ARGS', data: {fullArgsString}},
     );
   }

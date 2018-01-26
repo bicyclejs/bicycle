@@ -1,6 +1,6 @@
-import ClientRequest from './ClientRequest';
+import Request from './Request';
 import ServerResponse from './ServerResponse';
 
 export default interface NetworkLayerInterface {
-  send: (message: ClientRequest) => PromiseLike<ServerResponse>;
+  send: (message: Request) => PromiseLike<ServerResponse>;
 };

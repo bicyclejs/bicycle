@@ -6,7 +6,6 @@ import Cache, {
   NodeCacheUpdate,
   isCacheObject,
 } from '../types/Cache';
-import {createDeleteField} from '../types/DeleteField';
 
 function deepEqual(a: any, b: any): boolean {
   if (a === b) {
@@ -30,12 +29,6 @@ function diffCacheObject(
   after: CacheObject,
 ): void | CacheUpdateObject {
   let result: void | CacheUpdateObject = undefined;
-  Object.keys(before).forEach(key => {
-    if (after[key] === undefined) {
-      if (!result) result = {};
-      result[key] = createDeleteField();
-    }
-  });
   Object.keys(after).forEach(key => {
     const beforeProp = before[key];
     const afterProp = after[key];
@@ -66,12 +59,6 @@ function diffNodeCache(
   after: NodeCache,
 ): void | NodeCacheUpdate {
   let result: void | NodeCacheUpdate = undefined;
-  Object.keys(before).forEach(key => {
-    if (!after[key]) {
-      if (!result) result = {};
-      result[key] = createDeleteField();
-    }
-  });
   Object.keys(after).forEach(key => {
     const beforeValue = before[key];
     const afterValue = after[key];
@@ -95,12 +82,6 @@ export default function diffCache(
   after: Cache,
 ): void | CacheUpdate {
   let result: void | CacheUpdate = undefined;
-  Object.keys(before).forEach(key => {
-    if (!after[key]) {
-      if (!result) result = {};
-      result[key] = createDeleteField();
-    }
-  });
   Object.keys(after).forEach(key => {
     const beforeValue = before[key];
     const afterValue = after[key];

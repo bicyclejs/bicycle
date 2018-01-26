@@ -1,4 +1,3 @@
-import DeleteField, {isDeleteField} from './DeleteField';
 import ErrorResult, {isErrorResult} from './ErrorResult';
 import NodeID from './NodeID';
 
@@ -16,7 +15,6 @@ export type CacheDataBase = CacheDataPrimative | NodeID | CacheObject;
 export type CacheUpdateDataBase =
   | CacheDataPrimative
   | NodeID
-  | DeleteField
   | CacheUpdateObject;
 
 // use any here to support arbitrary nesting of arrays
@@ -41,16 +39,16 @@ interface Cache extends CacheUpdate {
 export default Cache;
 
 export interface NodeCacheUpdate {
-  [id: string]: void | CacheUpdateObject | DeleteField;
+  [id: string]: void | CacheUpdateObject;
 }
 export interface CacheUpdate {
-  [nodeName: string]: void | NodeCacheUpdate | DeleteField;
+  [nodeName: string]: void | NodeCacheUpdate;
 }
 
+export function isCacheObject(cache: CacheData): cache is CacheObject;
 export function isCacheObject(
   cache: CacheUpdateData,
 ): cache is CacheUpdateObject;
-export function isCacheObject(cache: CacheData): cache is CacheObject;
 export function isCacheObject(
   cache: CacheData | CacheUpdateData,
 ): cache is CacheObject | CacheUpdateObject {
@@ -58,7 +56,6 @@ export function isCacheObject(
     cache &&
     typeof cache === 'object' &&
     !Array.isArray(cache) &&
-    !isErrorResult(cache) &&
-    !isDeleteField(cache)
+    !isErrorResult(cache)
   );
 }

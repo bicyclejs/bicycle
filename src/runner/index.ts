@@ -119,9 +119,7 @@ export function runMutation<Context>(
       }
       if (Type.kind !== 'NodeType') {
         throw createError(
-          `The type ${typeName} is not an Object, so you cannot call the ${
-            mutationName
-          } mutation on it.`,
+          `The type ${typeName} is not an Object, so you cannot call the ${mutationName} mutation on it.`,
           {
             exposeProd: true,
             code: 'INVALID_MUTATION',
@@ -146,9 +144,7 @@ export function runMutation<Context>(
           mutationName,
         );
         throw createError(
-          `The type ${typeName} does not define a mutation ${mutationName}${
-            suggestion
-          }`,
+          `The type ${typeName} does not define a mutation ${mutationName}${suggestion}`,
           {
             exposeProd: true,
             code: 'INVALID_MUTATION',

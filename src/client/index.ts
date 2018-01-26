@@ -82,8 +82,7 @@ class Client<
       options.networkLayer === undefined
         ? new NetworkLayer()
         : options.networkLayer,
-      serverPreparation && serverPreparation.s,
-      (serverPreparation && serverPreparation.q) || {},
+      serverPreparation,
       this,
     );
   }
