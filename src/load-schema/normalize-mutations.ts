@@ -32,7 +32,7 @@ function normalizeMutations(
       const set = ta.Fn.validate(m.set, 'Set Mutation');
       result.set = {
         kind: SchemaKind.Mutation,
-        name: 'set',
+        name: typeName + '.set',
         description: 'Set a property on the given ' + typeName,
         argType: {
           kind: SchemaKind.Object,
