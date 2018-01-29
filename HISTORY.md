@@ -1,5 +1,9 @@
 # Changelog
 
+## v7.0.2: 2018-01-29
+
+* Fix bug that prevented a session being restored
+
 ## v7.0.1: 2018-01-29
 
 * Improve error message for `set` mutations using un-typed schemas
