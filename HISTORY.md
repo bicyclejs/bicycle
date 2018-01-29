@@ -1,5 +1,9 @@
 # Changelog
 
+## v7.0.1: 2018-01-29
+
+* Improve error message for `set` mutations using un-typed schemas
+
 ## v7.0.0: 2018-01-26
 
 * BREAKING: Change the protocol used on the wire
