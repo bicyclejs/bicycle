@@ -94,7 +94,7 @@ export default async function handleMessage<Context>(
     }
     if (message.k === RequestKind.RESTORE_SESSION) {
       const cache = await withContext(context(), queryContext =>
-        runQuery(query, {schema, logging, context: queryContext}),
+        runQuery(message.q, {schema, logging, context: queryContext}),
       );
       const version = cuid() as SessionVersion;
       return {
