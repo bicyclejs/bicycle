@@ -1,4 +1,8 @@
-# BicycleServer
+---
+id: server
+title: BicycleServer
+sidebar_label: Server
+---
 
 Define a schema by creating a `'schema'` folder and putting two folders in it called `'objects'` and `'scalars'` respectively.  In the `'objects'` folder, create a file called `root.js`.  In that file, put something like:
 

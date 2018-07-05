@@ -1,0 +1,7 @@
+{
+  "docs": {},
+  "docs-other": {
+    "API": ["client", "server"],
+    "Sessions": ["memory-session"]
+  }
+}

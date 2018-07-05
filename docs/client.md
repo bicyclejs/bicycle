@@ -1,4 +1,14 @@
-# BicycleClient
+---
+id: client
+title: BicycleClient
+sidebar_label: Client
+---
+
+The BicycleClient is the client you can use to subscribe to and manage bicycle state. If you just need to run a single mutation or query, you can do so directly with the [BicycleServer](server.md) object instead.
+
+## Constructor
+
+...
 
 If you don't need to customise any details about the networking, server side
 rendering etc. you can just do:
