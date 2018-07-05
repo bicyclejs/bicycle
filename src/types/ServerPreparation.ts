@@ -8,7 +8,7 @@ export default interface ServerPreparation {
   readonly v: SessionVersion;
   readonly q: Query;
   readonly c: Cache;
-};
+}
 
 export function createServerPreparation(
   sessionID: SessionID,

@@ -51,47 +51,53 @@ export function runQuery<Context>(
   };
   logging.onQueryStart({query, context});
   if (IS_PERFORMANCE_MONITORING) {
-    return lock((): Promise<Cache> => {
-      const start = Date.now();
-      startMonitoringPerformance();
-      return runQueryInternal(schema.Root, context, query, qCtx).then(() => {
-        const {count, timings} = stopMonitoringPerformance();
-        const end = Date.now();
-        console.log('Query completed in ' + ms(end - start));
-        console.log('');
-        console.log('Fields that took over 10ms to resolve:');
-        console.log('');
-        Object.keys(timings)
-          .sort((a, b) => {
-            return timings[a] - timings[b];
-          })
-          .forEach(name => {
-            if (timings[name] > 10 * NS_PER_MS) {
-              // although we compute timing in nanoseconds, this is to account for having potentially
-              // thousands of calls, each less than a millisecond.  We actually report at 1ms accuracy
-              // because everything less than that is likely just random noise.
-              console.log(
-                ` * ${name} - ${ms(Math.round(timings[name] / NS_PER_MS))} (${
-                  count[name]
-                } call${count[name] !== 1 ? 's' : ''})`,
-              );
-            }
-          });
-        console.log('');
-        console.log(
-          'Note that this is the **total** time to reolve the fields,',
-        );
-        console.log('so you may be seeing some fields that are requested only');
-        console.log('once, but are very slow, and some fields that are quick,');
-        console.log('but are requested thousands of times.');
-        if (logging) {
-          return Promise.resolve(
-            logging.onQueryEnd({query, cacheResult: result, context}),
-          ).then(() => result);
-        }
-        return result;
-      });
-    });
+    return lock(
+      (): Promise<Cache> => {
+        const start = Date.now();
+        startMonitoringPerformance();
+        return runQueryInternal(schema.Root, context, query, qCtx).then(() => {
+          const {count, timings} = stopMonitoringPerformance();
+          const end = Date.now();
+          console.log('Query completed in ' + ms(end - start));
+          console.log('');
+          console.log('Fields that took over 10ms to resolve:');
+          console.log('');
+          Object.keys(timings)
+            .sort((a, b) => {
+              return timings[a] - timings[b];
+            })
+            .forEach(name => {
+              if (timings[name] > 10 * NS_PER_MS) {
+                // although we compute timing in nanoseconds, this is to account for having potentially
+                // thousands of calls, each less than a millisecond.  We actually report at 1ms accuracy
+                // because everything less than that is likely just random noise.
+                console.log(
+                  ` * ${name} - ${ms(Math.round(timings[name] / NS_PER_MS))} (${
+                    count[name]
+                  } call${count[name] !== 1 ? 's' : ''})`,
+                );
+              }
+            });
+          console.log('');
+          console.log(
+            'Note that this is the **total** time to reolve the fields,',
+          );
+          console.log(
+            'so you may be seeing some fields that are requested only',
+          );
+          console.log(
+            'once, but are very slow, and some fields that are quick,',
+          );
+          console.log('but are requested thousands of times.');
+          if (logging) {
+            return Promise.resolve(
+              logging.onQueryEnd({query, cacheResult: result, context}),
+            ).then(() => result);
+          }
+          return result;
+        });
+      },
+    );
   }
   return runQueryInternal(schema.Root, context, query, qCtx).then(() => {
     logging.onQueryEnd({query, cacheResult: result, context});

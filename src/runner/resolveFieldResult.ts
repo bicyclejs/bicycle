@@ -103,18 +103,20 @@ export default async function resolveFieldResult<Context>(
           throw getError(type, value);
         }
         return Promise.all(
-          value.map(async (v): Promise<CacheDataBase> => {
-            const result = await resolveFieldResult(
-              type.element,
-              v,
-              subQuery,
-              qCtx,
-            );
-            if (Array.isArray(result)) {
-              return result as any;
-            }
-            return result;
-          }),
+          value.map(
+            async (v): Promise<CacheDataBase> => {
+              const result = await resolveFieldResult(
+                type.element,
+                v,
+                subQuery,
+                qCtx,
+              );
+              if (Array.isArray(result)) {
+                return result as any;
+              }
+              return result;
+            },
+          ),
         );
       case SchemaKind.Object:
         if (

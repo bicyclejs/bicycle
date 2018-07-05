@@ -20,4 +20,4 @@ export default interface Logging {
   readonly onQueryEnd: (
     e: {query: Object; cacheResult: Object; context: any},
   ) => any;
-};
+}

@@ -17,7 +17,7 @@ export default interface QueryContext<Context> {
    * the fields within that object once.
    */
   startedQueries: NormalizedQuery;
-};
+}
 
 export interface MutableQuery {
   [key: string]: true | MutableQuery;

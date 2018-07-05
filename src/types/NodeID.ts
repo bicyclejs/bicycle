@@ -7,7 +7,7 @@ export default interface NodeID {
   n: string;
   // the node's id
   i: string | number;
-};
+}
 export function createNodeID(name: string, id: string): NodeID {
   return {_type: CacheUpdateType.NODE_ID, n: name, i: id};
 }

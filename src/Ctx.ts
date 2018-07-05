@@ -18,5 +18,7 @@ export default function withContext<Context, Result>(
 ): Promise<Result> {
   return isPromiseLike(ctx)
     ? Promise.resolve(ctx).then(ctx => withContext(ctx, fn))
-    : typeof ctx === 'function' ? ctx(fn) : fn(ctx);
+    : typeof ctx === 'function'
+      ? ctx(fn)
+      : fn(ctx);
 }

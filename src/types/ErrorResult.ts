@@ -25,4 +25,4 @@ export default interface ErrorResult {
   readonly message: string;
   readonly data: any;
   readonly code?: string;
-};
+}

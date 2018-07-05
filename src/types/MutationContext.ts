@@ -5,4 +5,4 @@ export default interface MutationContext<Context> {
   schema: Schema<Context>;
   logging: Logging;
   context: Context;
-};
+}
