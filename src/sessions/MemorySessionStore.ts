@@ -13,7 +13,7 @@ class MemorySessionStore implements SessionStore {
     id: SessionID,
     fn: (session: Session | null) => Promise<{session: Session; result: T}>,
   ): Promise<T> {
-    return this._lock.withLock(id, async () => {
+    return this._lock.withLock(SessionID.extract(id), async () => {
       const {session, result} = await fn(this._cache.get(id) || null);
       this._cache.set(id, session);
       return result;

@@ -107,7 +107,7 @@ export default function prepare<Context, TResult>(
         }).then(result => {
           return sessionStore
             .tx(sessionID, () => {
-              const version = cuid() as SessionVersion;
+              const version = SessionVersion.unsafeCast(cuid());
               return Promise.resolve({
                 session: {
                   versions: [

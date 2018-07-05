@@ -21,8 +21,8 @@ class Mutation {
   private _pending: boolean = true;
   private _rejected: boolean = false;
   private readonly _result: Promise<any>;
-  private _resolve: (value: any) => void;
-  private _reject: (err: any) => void;
+  private _resolve!: ((value: any) => void);
+  private _reject!: ((err: any) => void);
   constructor(
     method: string,
     args: any,
@@ -33,7 +33,7 @@ class Mutation {
     const result = optimisticValueStore.normalizeValue(args);
     this._optimisticValuesRequired = result.pendingKeys;
     this.mutation = {
-      id: cuid() as MutationID,
+      id: MutationID.unsafeCast(cuid()),
       method,
       args: result.value,
     };

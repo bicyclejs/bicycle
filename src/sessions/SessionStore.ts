@@ -1,5 +1,4 @@
 import Cache from '../types/Cache';
-// import MutationID from '../types/MutationID';
 import MutationResult from '../types/MutationResult';
 import Query from '../types/Query';
 import SessionID from '../types/SessionID';
@@ -22,4 +21,4 @@ export default interface SessionStore {
     id: SessionID,
     fn: (session: Session | null) => Promise<{session: Session; result: T}>,
   ): Promise<T>;
-};
+}

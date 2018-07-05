@@ -1,14 +1,15 @@
-export const enum PendingOptimisticValueBrand {}
-export const enum FulfilledOptimisticValueBrand {}
-export const enum RejectedOptimisticValueBrand {}
+import OptimisticValue, {
+  PendingOptimisticValue,
+  FulfilledOptimisticValue,
+  RejectedOptimisticValue,
+} from './OptimisticValue';
 
-export type PendingOptimisticValue = string & PendingOptimisticValueBrand;
-export type FulfilledOptimisticValue = string & FulfilledOptimisticValueBrand;
-export type RejectedOptimisticValue = string & RejectedOptimisticValueBrand;
-export type OptimisticValue =
-  | PendingOptimisticValue
-  | FulfilledOptimisticValue
-  | RejectedOptimisticValue;
+export {
+  OptimisticValue,
+  PendingOptimisticValue,
+  FulfilledOptimisticValue,
+  RejectedOptimisticValue,
+};
 
 function extractID(value: OptimisticValue): number {
   const match = /^__bicycle_optimistic_value_[0-9a-f]+_([0-9]+)__$/.exec(value);
@@ -41,9 +42,9 @@ export default class OptimisticValueStore {
   }
   createValue(): PendingOptimisticValue {
     const id = this._nextID++;
-    return `__bicycle_optimistic_value_${
-      this._key
-    }_${id}__` as PendingOptimisticValue;
+    return PendingOptimisticValue.unsafeCast(
+      `__bicycle_optimistic_value_${this._key}_${id}__`,
+    );
   }
   resolve(optimisticValue: PendingOptimisticValue, value: string) {
     const id = extractID(optimisticValue);

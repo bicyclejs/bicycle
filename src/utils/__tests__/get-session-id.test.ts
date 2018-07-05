@@ -12,7 +12,7 @@ test('generates a string of 16 random characters', () => {
     results.push(
       getSessionID(sessionStore).then(id => {
         expect(typeof id).toBe('string');
-        expect(id.length).toBe(16);
+        expect(SessionID.extract(id).length).toBe(16);
         // Note that we verify that there are no `=` signs used for padding.
         expect(id).toMatch(/^[A-Za-z0-9\+\/]{16}$/);
         return id;
@@ -30,7 +30,7 @@ test('defers to store if provided', () => {
   return getSessionID({
     ...sessionStore,
     getSessionID() {
-      return Promise.resolve('1' as SessionID);
+      return Promise.resolve(SessionID.unsafeCast('1'));
     },
   }).then(id => {
     expect(id).toBe('1');

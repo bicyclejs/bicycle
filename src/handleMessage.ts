@@ -16,6 +16,7 @@ import getSessionID from './utils/get-session-id';
 import {runQuery, runMutation} from './runner';
 import Logging from './types/Logging';
 import Schema from './types/Schema';
+import MutationID from './types/MutationID';
 
 export default async function handleMessage<Context>(
   schema: Schema<Context>,
@@ -39,7 +40,7 @@ export default async function handleMessage<Context>(
       ),
     ]);
     return sessionStore.tx<ServerResponse>(sessionID, async session => {
-      const version = cuid() as SessionVersion;
+      const version = SessionVersion.unsafeCast(cuid());
       return {
         session: {
           versions: [
@@ -73,12 +74,12 @@ export default async function handleMessage<Context>(
       await withContext((mutationContext || context)(), async context => {
         for (let i = 0; i < m.length; i++) {
           const result =
-            (session && session.mutations[m[i].i]) ||
+            (session && session.mutations[MutationID.extract(m[i].i)]) ||
             (await runMutation(
               {method: m[i].m, args: m[i].a},
               {schema, logging, context},
             ));
-          mutations[m[i].i] = result;
+          mutations[MutationID.extract(m[i].i)] = result;
           mutationResults.push(result);
         }
       });
@@ -96,7 +97,7 @@ export default async function handleMessage<Context>(
       const cache = await withContext(context(), queryContext =>
         runQuery(message.q, {schema, logging, context: queryContext}),
       );
-      const version = cuid() as SessionVersion;
+      const version = SessionVersion.unsafeCast(cuid());
       return {
         session: {
           versions: [
@@ -135,7 +136,7 @@ export default async function handleMessage<Context>(
     const cacheUpdate = diffCache(state.cache, cache);
     let version = message.v;
     if (cacheUpdate || message.q) {
-      version = cuid() as SessionVersion;
+      version = SessionVersion.unsafeCast(cuid());
       versions.push({version, query, cache});
     }
     return {

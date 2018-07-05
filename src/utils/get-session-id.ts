@@ -16,7 +16,7 @@ export default function getSessionID(
 ): Promise<SessionID> {
   return sessionStore && sessionStore.getSessionID
     ? Promise.resolve(null).then(() => sessionStore.getSessionID!())
-    : randomBytesAsync(12).then(
-        sessionID => sessionID.toString('base64') as SessionID,
+    : randomBytesAsync(12).then(sessionID =>
+        SessionID.unsafeCast(sessionID.toString('base64')),
       );
 }
