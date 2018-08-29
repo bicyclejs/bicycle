@@ -1,5 +1,9 @@
 # Changelog
 
+## v8.1.1: 2018-08-29
+
+- Support configuring memory cache size via `sessionStoreSize` or setting the `BICYCLE_SESSION_STORE_SIZE` environment variable. It still defaults to 100.
+
 ## v8.0.0: 2018-07-05
 
 - Use new opaque types module and fix handling of opaque types on latest version of typescipt
