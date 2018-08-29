@@ -25,6 +25,7 @@ import withContext, {Ctx} from './Ctx';
 export interface Options {
   readonly disableDefaultLogging?: boolean;
   readonly sessionStore?: SessionStore;
+  readonly sessionStoreSize?: number;
   readonly onError?: (e: {error: Error}) => any;
   readonly onMutationStart?: (
     e: {mutation: {readonly method: string; readonly args: Object}},
@@ -48,7 +49,8 @@ export default class BicycleServer<Context> {
 
   constructor(schema: Schema<Context>, options: Options = {}) {
     this._schema = schema;
-    this._sessionStore = options.sessionStore || new MemoryStore();
+    this._sessionStore =
+      options.sessionStore || new MemoryStore(options.sessionStoreSize);
     this._logging = {
       disableDefaultLogging: options.disableDefaultLogging || false,
       onError: options.onError || noop,

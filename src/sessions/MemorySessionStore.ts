@@ -3,10 +3,13 @@ import SessionID from '../types/SessionID';
 import SessionStore, {Session} from './SessionStore';
 import HashLRU from './HashLRU';
 
+const DEFAULT_SIZE = process.env.BICYCLE_SESSION_STORE_SIZE
+  ? parseInt(process.env.BICYCLE_SESSION_STORE_SIZE, 10)
+  : 100;
 class MemorySessionStore implements SessionStore {
   private readonly _cache: HashLRU<SessionID, Session>;
   private readonly _lock = new LockByID();
-  constructor(size: number = 100) {
+  constructor(size: number = DEFAULT_SIZE) {
     this._cache = new HashLRU(size);
   }
   tx<T>(
