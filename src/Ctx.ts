@@ -1,10 +1,11 @@
+export type ContextFunction<Context> = (<Result>(
+  fn: (ctx: Context) => Promise<Result>,
+) => PromiseLike<Result>);
 export type Ctx<Context> =
   | Context
-  | (<Result>(fn: (ctx: Context) => Promise<Result>) => Promise<Result>)
-  | PromiseLike<
-      | Context
-      | (<Result>(fn: (ctx: Context) => Promise<Result>) => Promise<Result>)
-    >;
+  | ContextFunction<Context>
+  | PromiseLike<Context | ContextFunction<Context>>;
+
 function isPromiseLike<T>(v: PromiseLike<T> | T): v is PromiseLike<T> {
   return (
     v &&
@@ -12,13 +13,18 @@ function isPromiseLike<T>(v: PromiseLike<T> | T): v is PromiseLike<T> {
     typeof (v as any).then === 'function'
   );
 }
+function isContextFunction<Context>(
+  v: Context | ContextFunction<Context>,
+): v is ContextFunction<Context> {
+  return typeof v === 'function';
+}
 export default function withContext<Context, Result>(
   ctx: Ctx<Context>,
   fn: (context: Context) => Promise<Result>,
 ): Promise<Result> {
   return isPromiseLike(ctx)
     ? Promise.resolve(ctx).then(ctx => withContext(ctx, fn))
-    : typeof ctx === 'function'
-      ? ctx(fn)
+    : isContextFunction(ctx)
+      ? Promise.resolve(ctx(fn))
       : fn(ctx);
 }
