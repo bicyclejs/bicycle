@@ -1,5 +1,9 @@
 # Changelog
 
+## v8.2.0: 2019-02-06
+
+- Add `server.getNetworkLayer` API that allows you to get a network layer that can be passed directly to the client, for use when the client and server are actually both running in the same node.js process.
+
 ## v8.1.1: 2018-08-29
 
 - Support configuring memory cache size via `sessionStoreSize` or setting the `BICYCLE_SESSION_STORE_SIZE` environment variable. It still defaults to 100.
