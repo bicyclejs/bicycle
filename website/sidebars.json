@@ -1,6 +1,6 @@
 {
   "docs": {
-    "Getting Started": ["getting-started", "getting-started-js"],
-    "Getting Started - JS": ["getting-started-js-schema"]
+    "Getting Started": ["getting-started", "getting-started-js", "getting-started-ts"],
+    "JavaScript Reference": ["js-schema"]
   }
 }

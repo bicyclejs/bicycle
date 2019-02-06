@@ -1,34 +1,38 @@
-export default function notEqual(oldValue: Object, newValue: Object): boolean {
+export default function notEqual(
+  oldValue: {readonly [key: string]: unknown},
+  newValue: {readonly [key: string]: unknown},
+): boolean {
   if (oldValue === newValue) return false;
   return (
     Object.keys(oldValue).some(key => {
       const oldProp = oldValue[key];
       const newProp = newValue[key];
       if (oldProp === newProp) return false;
-      if (oldProp && newProp) {
-        if (
-          Array.isArray(oldProp) &&
-          Array.isArray(newProp) &&
-          oldProp.length === newProp.length
-        ) {
-          return oldProp.some((val, i) => {
-            if (val === newProp[i]) return false;
-            if (
-              val &&
-              newProp[i] &&
-              typeof val === 'object' &&
-              typeof newProp[i] === 'object'
-            ) {
-              return notEqual(val, newProp[i]);
-            }
-            return true;
-          });
+      if (
+        typeof oldProp === 'object' &&
+        oldProp &&
+        typeof newProp === 'object' &&
+        newProp
+      ) {
+        if (Array.isArray(oldProp) && Array.isArray(newProp)) {
+          return (
+            oldProp.length !== newProp.length ||
+            oldProp.some((valOld: unknown, i) => {
+              const valNew: unknown = newProp[i];
+              if (valOld === valNew) return false;
+              if (
+                typeof valOld === 'object' &&
+                typeof valNew === 'object' &&
+                valOld &&
+                valNew
+              ) {
+                return notEqual(valOld, valNew);
+              }
+              return true;
+            })
+          );
         }
-        if (
-          !Array.isArray(oldProp) &&
-          typeof oldProp === 'object' &&
-          typeof newProp === 'object'
-        ) {
+        if (!Array.isArray(oldProp)) {
           return notEqual(oldProp, newProp);
         }
       }

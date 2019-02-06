@@ -11,9 +11,21 @@
 // List of projects/orgs using your project for the users page.
 const users = [
   {
+    caption: 'Save Willpower',
+    image: '/img/users/savewillpower.svg',
+    infoLink: 'https://savewillpower.com/',
+    pinned: true,
+  },
+  {
     caption: 'Canoe Slalom Entries',
     image: 'https://www.canoeslalomentries.co.uk/favicon.ico',
     infoLink: 'https://www.canoeslalomentries.co.uk',
+    pinned: true,
+  },
+  {
+    caption: 'Jepso',
+    image: '/img/users/jepso.svg',
+    infoLink: 'https://www.jepso.com/',
     pinned: true,
   },
 ];
@@ -90,7 +102,7 @@ const siteConfig = {
 
   // You may provide arbitrary config keys to be used as needed by your
   // template. For example, if you need your repo's URL...
-  //   repoUrl: 'https://github.com/facebook/test-site',
+  repoUrl: 'https://github.com/bicyclejs/bicycle',
 };
 
 module.exports = siteConfig;

@@ -64,9 +64,16 @@ class HomeSplash extends React.Component {
         <div className="inner">
           <ProjectTitle siteConfig={siteConfig} />
           <PromoSection>
-            <Button href="#try">Try It Out</Button>
-            <Button href={docUrl('doc1.html')}>Example Link</Button>
-            <Button href={docUrl('doc2.html')}>Example Link 2</Button>
+            {/* <Button href="#try">Try It Out</Button> */}
+            <Button href={docUrl('getting-started-js.html')}>
+              Getting Started (JavaScript)
+            </Button>
+            <Button href={docUrl('getting-started-ts.html')}>
+              Getting Started (TypeScript)
+            </Button>
+            {/* <Button href={docUrl('js-schema.html')}>
+              JavaScript API Reference
+            </Button> */}
           </PromoSection>
         </div>
       </SplashContainer>
@@ -83,7 +90,8 @@ class Index extends React.Component {
       <Container
         padding={['bottom', 'top']}
         id={props.id}
-        background={props.background}>
+        background={props.background}
+      >
         <GridBlock
           align="center"
           contents={props.children}
@@ -95,47 +103,54 @@ class Index extends React.Component {
     const FeatureCallout = () => (
       <div
         className="productShowcaseSection paddingBottom"
-        style={{textAlign: 'center'}}>
-        <h2>Feature Callout</h2>
-        <MarkdownBlock>These are features of this project</MarkdownBlock>
+        style={{textAlign: 'center'}}
+      >
+        <h2>Automatic Mutations</h2>
+        <MarkdownBlock>
+          There is no need to manually specify how your cache should be updated
+          after a mutation. Bicycle tracks what data is on your client, so that
+          it can simply re-run the query to find out waht changed.
+        </MarkdownBlock>
       </div>
     );
 
-    const TryOut = () => (
-      <Block id="try">
-        {[
-          {
-            content: 'Talk about trying this out',
-            image: `${baseUrl}img/docusaurus.svg`,
-            imageAlign: 'left',
-            title: 'Try it Out',
-          },
-        ]}
-      </Block>
-    );
-
-    const Description = () => (
-      <Block background="dark">
+    const RequestWhatYouNeed = ({id, background}) => (
+      <Block id={id} background={background}>
         {[
           {
             content:
-              'This is another description of how this project is useful',
+              "Bicycle lets you query exactly what you need, and even combine multiple partial queries. Because you can specify what data you require along with the components that require that data, it's easy to avoid fetching data you don't need. Using TypeScript, you can further improve the refactoring experience, by ensuring you get immediate type errors if you remove a field that a component depended on.",
             image: `${baseUrl}img/docusaurus.svg`,
             imageAlign: 'right',
-            title: 'Description',
+            title: 'Request What You Need',
           },
         ]}
       </Block>
     );
 
-    const LearnHow = () => (
-      <Block background="light">
+    const CombineBackendServices = ({id, background}) => (
+      <Block id={id} background={background}>
         {[
           {
-            content: 'Talk about learning how to use this',
+            content:
+              "Bicycle is not tied to any one database or storage system. In fact, you can use one Bicycle Schema to combine search results from elastic search, SQL queries from Postgres, images from Amazon S3, and anything else you can think of. Because of Bicycle's tree structure for querying data, you can do all this with only a single round trip from the client to the server, making Bicycle a great fit for mobile web apps.",
             image: `${baseUrl}img/docusaurus.svg`,
+            imageAlign: 'left',
+            title: 'Bring Your Own Database',
+          },
+        ]}
+      </Block>
+    );
+
+    const StronglyTyped = ({id, background}) => (
+      <Block id={id} background={background}>
+        {[
+          {
+            content:
+              "Bicycle supports TypeScript all the way from defining your schema, to querying it on the client. When we say we support TypeScript, we don't just mean our API has a `.d.ts` definition file, we mean you can rely on TypeScript to know what type the data returned from query has, and what type the arguments to a mutation need to be.",
+            image: `${baseUrl}img/typescript.svg`,
             imageAlign: 'right',
-            title: 'Learn How',
+            title: 'Strongly Typed',
           },
         ]}
       </Block>
@@ -145,16 +160,25 @@ class Index extends React.Component {
       <Block layout="fourColumn">
         {[
           {
-            content: 'This is the content of my feature',
+            content:
+              'Bicycle only expose data you explicitly include in your schema, and validates all requests.',
             image: `${baseUrl}img/docusaurus.svg`,
             imageAlign: 'top',
-            title: 'Feature One',
+            title: 'Secure',
           },
           {
-            content: 'The content of my second feature',
+            content:
+              "Bicycle offers a TypeScript API that's genuinely strongly typed, from server to client.",
+            image: `${baseUrl}img/typescript.svg`,
+            imageAlign: 'top',
+            title: 'Strongly Typed',
+          },
+          {
+            content:
+              'Bicycle figures out what changed for you, making mutating data a breeze',
             image: `${baseUrl}img/docusaurus.svg`,
             imageAlign: 'top',
-            title: 'Feature Two',
+            title: 'Easy To Use',
           },
         ]}
       </Block>
@@ -180,11 +204,13 @@ class Index extends React.Component {
           <h2>Who is Using This?</h2>
           <p>This project is used by all these people</p>
           <div className="logos">{showcase}</div>
-          <div className="more-users">
-            <a className="button" href={pageUrl('users.html')}>
-              More {siteConfig.title} Users
-            </a>
-          </div>
+          {showcase.length === siteConfig.users.length ? null : (
+            <div className="more-users">
+              <a className="button" href={pageUrl('users.html')}>
+                More {siteConfig.title} Users
+              </a>
+            </div>
+          )}
         </div>
       );
     };
@@ -195,9 +221,9 @@ class Index extends React.Component {
         <div className="mainContainer">
           <Features />
           <FeatureCallout />
-          <LearnHow />
-          <TryOut />
-          <Description />
+          <CombineBackendServices background="light" />
+          <StronglyTyped />
+          <RequestWhatYouNeed background="dark" />
           <Showcase />
         </div>
       </div>

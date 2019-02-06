@@ -6,7 +6,7 @@ import * as ta from './TypeAssertions';
 import {validateArg} from '../runner/validate';
 
 function normalizeMutations(
-  mutations: {},
+  mutations: unknown,
   typeName: string,
   typeNames: string[],
   fields: {[name: string]: Field<any, any, any, any>},

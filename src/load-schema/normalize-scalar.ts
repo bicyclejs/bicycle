@@ -5,7 +5,7 @@ import getType from './get-type';
 import * as TA from './TypeAssertions';
 
 function normalizeScalar(
-  Scalar: {},
+  Scalar: unknown,
   typeNames: string[],
 ): ScalarDeclaration<any, any> {
   const s = TA.ObjectKeys([

@@ -7,7 +7,7 @@ declare global {
 }
 function createError(
   msg: string,
-  data: Object,
+  data: {readonly [key: string]: unknown},
   Constructor: typeof Error = Error,
 ) {
   const result = new Constructor(msg);

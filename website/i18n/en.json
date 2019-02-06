@@ -9,20 +9,21 @@
         "title": "BicycleServer",
         "sidebar_label": "Server API"
       },
-      "getting-started-js-schema": {
-        "title": "Getting Started - JavaScript Schema",
-        "sidebar_label": "Schema"
-      },
       "getting-started-js": {
         "title": "Getting Started - JavaScript",
         "sidebar_label": "JavaScript"
       },
-      "getting-started-ts-schema": {
-        "title": "getting-started-ts-schema"
+      "getting-started-ts": {
+        "title": "Getting Started - TypeScript",
+        "sidebar_label": "TypeScript"
       },
       "getting-started": {
         "title": "Getting Started",
         "sidebar_label": "Intro"
+      },
+      "js-schema": {
+        "title": "JavaScript Schema",
+        "sidebar_label": "Schema"
       },
       "sessions-memory": {
         "title": "MemorySession",
@@ -39,7 +40,7 @@
     },
     "categories": {
       "Getting Started": "Getting Started",
-      "Getting Started - JS": "Getting Started - JS"
+      "JavaScript Reference": "JavaScript Reference"
     }
   },
   "pages-strings": {

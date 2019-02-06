@@ -77,9 +77,9 @@ export default {
       },
     },
     toggle: {
-      args: {id: 'id', checked: 'boolean'},
-      resolve({id, checked}, {user}) {
-        return toggle(id, checked);
+      args: {id: 'id', completed: 'boolean'},
+      resolve({id, completed}, {user}) {
+        return toggle(id, completed);
       },
     },
     setTitle: {
@@ -176,6 +176,54 @@ It also adds a `/bicycle` endpoint that can be used for bicycle queries.
 
 ## Client
 
+Add an `index.html` file:
+
+```html
+<div>Open dev tools to see results of bicycle queries</div>
+<script src="/client.js"></script>
+```
+
+Add a `client.js` file:
+
 ```js
 import BicycleClient from 'bicycle/client';
+
+// defaults to using the `/bicycle` path
+const client = new BicycleClient();
+
+const subscription = this._client.subscribe({
+  todos: {id: true, title: true, completed: true},
+}, (result, loaded, errors) => {
+  if (loaded) { // ignore partial results
+    // this will be called each time the list
+    // of todo items changes
+    console.log(result);
+  }
+});
+
+async function run() {
+  const {id} = await client.update('Todo.addTodo', {
+    title: 'Hello World',
+    completed: false,
+  });
+
+  await client.update('Todo.toggle', {id, completed: true},
+    (mutation, cache) => {
+      // this function lets you update the cache optimistically
+      // its effects are reverted once the mutation has completed
+      // or failed
+      cache
+        .getObject('Todo', mutation.args.id)
+        .set('completed', mutation.args.completed);
+    }
+  );
+
+  // stop listening for updates from the server
+  subscription.unsubscribe();
+}
+
+setTimeout(() => {
+  run().catch(ex => console.error(ex.stack || ex.message || ex));
+}, 1000);
 ```
+
