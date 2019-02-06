@@ -17,6 +17,8 @@ import {OptimisticUpdateHandler, BaseCache} from './optimistic';
 import OptimisticValueStore from './OptimisticValueStore';
 import {createNodeID} from '../types/NodeID';
 import {BaseRootQuery, Mutation as TypedMutation} from '../typed-helpers/query';
+import ServerResponse from '../types/ServerResponse';
+import Request from '../types/Request';
 
 declare const BICYCLE_SERVER_PREPARATION: ServerPreparation | void;
 
@@ -25,6 +27,8 @@ export {
   NetworkLayerInterface as INetworkLayer,
   QueryCacheResult,
   createNodeID,
+  Request,
+  ServerResponse,
 };
 
 export type ClientOptions = {

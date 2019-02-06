@@ -21,6 +21,7 @@ import ServerResponse from './types/ServerResponse';
 import {BaseRootQuery, Mutation} from './typed-helpers/query';
 
 import withContext, {Ctx} from './Ctx';
+import NetworkLayerInterface from './types/NetworkLayerInterface';
 
 export interface Options {
   readonly disableDefaultLogging?: boolean;
@@ -126,11 +127,7 @@ export default class BicycleServer<Context> {
 
   handleMessage(
     message: BicycleRequest,
-    getContext: (
-      options: {
-        stage: 'query' | 'mutation';
-      },
-    ) => Ctx<Context>,
+    getContext: (options: {stage: 'query' | 'mutation'}) => Ctx<Context>,
   ): Promise<ServerResponse> {
     return handleMessageInternal(
       this._schema,
@@ -266,5 +263,10 @@ export default class BicycleServer<Context> {
       getContext,
       fn,
     );
+  }
+  getNetworkLayer(
+    getContext: (options: {stage: 'query' | 'mutation'}) => Ctx<Context>,
+  ): NetworkLayerInterface {
+    return {send: request => this.handleMessage(request, getContext)};
   }
 }
