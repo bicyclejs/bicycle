@@ -1,4 +1,8 @@
-# BicycleClient
+---
+id: server-api
+title: BicycleClient
+sidebar_label: Client API
+---
 
 If you don't need to customise any details about the networking, server side
 rendering etc. you can just do:
