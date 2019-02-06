@@ -7,7 +7,7 @@ import SchemaKind from '../types/SchemaKind';
 import {NodeType} from '../types/Schema';
 
 function normalizeObject(
-  Type: {},
+  Type: unknown,
   typeNames: Array<string>,
 ): NodeType<any, any> {
   const typeName = TA.String.validate(
@@ -61,16 +61,14 @@ function normalizeObject(
       };
     }
   }
-  const fields = normalizeFields(
-    TA.AnyObject.validate(t.fields, typeName + '.fields'),
+  const fields = normalizeFields(t.fields, typeName, typeNames);
+
+  const mutations = normalizeMutations(
+    t.mutations,
     typeName,
     typeNames,
+    fields,
   );
-  const m = TA.Void.or(TA.AnyObject).validate(
-    t.mutations,
-    typeName + '.mutations',
-  );
-  const mutations = m ? normalizeMutations(m, typeName, typeNames, fields) : {};
   return {
     kind: SchemaKind.NodeType,
     name: typeName,

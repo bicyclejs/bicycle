@@ -4,7 +4,7 @@ import {Field} from '../types/Schema';
 import * as ta from './TypeAssertions';
 
 function normalizeField(
-  field: {},
+  field: unknown,
   fieldName: string,
   typeName: string,
   typeNames: Array<string>,

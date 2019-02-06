@@ -4,7 +4,7 @@ import normalizeField from './normalize-field';
 import * as ta from './TypeAssertions';
 
 function normalizeFields(
-  fields: {},
+  fields: unknown,
   typeName: string,
   typeNames: Array<string>,
 ): {[fieldName: string]: Field<any, any, any, any>} {

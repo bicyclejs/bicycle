@@ -3,15 +3,15 @@ import typeNameFromValue from '../utils/type-name-from-value';
 
 export class Type<T> {
   typeName: string;
-  _validate: (value: any, context: string) => value is T;
+  _validate: (value: unknown, context: string) => value is T;
   constructor(
     typeName: string,
-    validate: (value: any, context: string) => value is T,
+    validate: (value: unknown, context: string) => value is T,
   ) {
     this.typeName = typeName;
     this._validate = validate;
   }
-  validate(value: {}, name: string = 'value'): T {
+  validate(value: unknown, name: string = 'value'): T {
     if (!this._validate(value, name)) {
       throw new Error(
         'Expected ' +
@@ -58,10 +58,10 @@ export const ArrayOf = <T>(elementType: Type<T>) =>
   );
 
 export const ObjectKeys = <T extends string>(keys: T[]) =>
-  new Type<Record<T, {}>>(
+  new Type<Record<T, unknown>>(
     '{' + keys.join(', ') + '}',
-    (v, context): v is Record<T, {}> => {
-      if (!(v && typeof v === 'object')) {
+    (v, context): v is Record<T, unknown> => {
+      if (typeof v !== 'object' || !v) {
         return false;
       }
       Object.keys(v).forEach(key => {
@@ -73,9 +73,9 @@ export const ObjectKeys = <T extends string>(keys: T[]) =>
       return true;
     },
   );
-export const AnyObject = new Type<Record<string, {}>>(
+export const AnyObject = new Type<Record<string, unknown>>(
   'Object',
-  (v): v is Record<string, {}> => {
+  (v): v is Record<string, unknown> => {
     return v && typeof v === 'object' && !Array.isArray(v);
   },
 );

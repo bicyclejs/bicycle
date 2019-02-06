@@ -5,8 +5,8 @@ import Schema from '../types/Schema';
 import * as TA from './TypeAssertions';
 
 export default function loadSchema(input: {
-  objects: any[];
-  scalars?: any[];
+  objects: unknown[];
+  scalars?: unknown[];
 }): Schema<any> {
   const i = TA.ObjectKeys(['scalars', 'objects']).validate(input, 'input');
   const objects = TA.ArrayOf(TA.AnyObject).validate(i.objects, 'input.objects');
@@ -17,7 +17,7 @@ export default function loadSchema(input: {
   const types: Schema<any> = {Root: null as any};
   const typeNames: string[] = [];
 
-  let rootObject: null | Record<string, {}> = null;
+  let rootObject: null | Record<string, unknown> = null;
   objects.forEach(Type => {
     const typeName = TA.String.validate(Type.name, 'Type.name');
     if (typeName === 'Root') {

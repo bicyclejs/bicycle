@@ -59,7 +59,7 @@ function getTypeFromString(
   return {kind: SchemaKind.Named, name: strType};
 }
 function getTypeFromObject(
-  objType: Object,
+  objType: {[key: string]: unknown},
   context: string,
   typeNames: Array<string>,
 ): ValueType {
@@ -70,13 +70,13 @@ function getTypeFromObject(
   return {kind: SchemaKind.Object, properties};
 }
 function getType(
-  type: {},
+  type: unknown,
   context: string,
   typeNames: Array<string>,
 ): ValueType {
   if (typeof type === 'string') {
     return getTypeFromString(type, context, typeNames);
-  } else if (type && typeof type === 'object' && !Array.isArray(type)) {
+  } else if (typeof type === 'object' && type && !Array.isArray(type)) {
     return getTypeFromObject(type, context, typeNames);
   } else {
     throw new Error(

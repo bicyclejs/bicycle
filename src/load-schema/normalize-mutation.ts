@@ -4,7 +4,7 @@ import {Mutation} from '../types/Schema';
 import * as ta from './TypeAssertions';
 
 function normalizeMutation(
-  mutation: {},
+  mutation: unknown,
   typeName: string,
   mutationName: string,
   typeNames: Array<string>,

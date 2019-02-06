@@ -1,4 +1,8 @@
-# bicycle/sessions/memory
+---
+id: sessions-memory
+title: MemorySession
+sidebar_label: MemorySession
+---
 
 This module implements a bicycle session store in memory.  It's perfect for small scale applications and for testing/development.  For larger deployments you should consider storing the session in something like redis or mongo.
 
