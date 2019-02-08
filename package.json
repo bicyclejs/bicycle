@@ -1,7 +1,7 @@
 {
   "name": "bicycle",
   "private": true,
-  "version": "8.2.0",
+  "version": "9.0.0",
   "description": "A data synchronisation library for JavaScript",
   "keywords": [],
   "dependencies": {

@@ -1,5 +1,9 @@
 # Changelog
 
+## v9.0.0: 2019-02-06
+
+- BREAKING CHANGE: makes use of the new `unknown` type in TypeScript. If you're using TypeScript, you must be on at least version 3 to use this version of Bicycle.
+
 ## v8.2.0: 2019-02-06
 
 - Add `server.getNetworkLayer` API that allows you to get a network layer that can be passed directly to the client, for use when the client and server are actually both running in the same node.js process.
