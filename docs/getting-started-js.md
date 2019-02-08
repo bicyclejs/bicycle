@@ -163,7 +163,7 @@ app.get('/client.js', browserify(__dirname + '/client.js', {transform: [babelify
 
 // req is the express web request
 // {id: 42} will be the "user" value in the bicycle schema
-app.use('/bicycle', bicycle.createMiddleware(req => ({user: {id: 42})));
+app.use('/bicycle', bicycle.createMiddleware(req => ({user: {id: 42}})));
 
 app.listen(3000);
 ```
