@@ -14,7 +14,6 @@ A bicycle setup consists of three parts:
 
 Inside you're project's directory, create a folder called "src/bicycle-schema".
 
-
 ### Schema Objects
 
 In `src/bicycle-schema/` create a new file, `Root.ts`:
@@ -211,4 +210,87 @@ async function run() {
 setTimeout(() => {
   run().catch(ex => console.error(ex.stack || ex.message || ex));
 }, 1000);
+```
+
+## React
+
+To use with React, you can use `react-bicycle`.
+
+Update `index.html`:
+
+```html
+<div id="app"></div>
+<script src="/client.js"></script>
+```
+
+Update `client.ts`:
+
+```ts
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import BicycleClient from './bicycle/client';
+import * as q from './bicycle/query';
+import {BicycleProvider, useClient, useQuery} from 'react-bicycle';
+
+const client = new BicycleClient();
+
+const TodoQuery = q.Todo.id.title.completed;
+function Todo({todo}: {todo: typeof TodoQuery.$type}) {
+  const client = useClient();
+  return (
+    <li>
+      <input
+        type="checkbox"
+        checked={todo.completed}
+        onChange={e => client.update(Todo.toggle({
+          id: todo.id,
+          completed: e.target.checked
+        }))}
+      />
+      {todo.title}
+    </li>
+  )
+}
+function App() {
+  const client = useClient();
+  const [newTitle, setNewTitle] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const query = useQuery(q.Root.todos(TodoQuery));
+  return (
+    <>
+      {
+        !query.loaded
+          ?  query.render() // render loading/error indicator
+          : (
+            <ul>
+              {query.result.todos.map(todo => <Todo key={todo.id} todo={todo} />)}
+            </ul>
+          )
+      }
+      <form
+        onSubmit={async e => {
+          e.preventDefault();
+          if (submitting || newTitle === '') return;
+          setSubmitting(true);
+          try {
+            await client.update(Todo.addTodo({title: newTitle, completed: false}));
+          } finally {
+            setSubmitting(false);
+          }
+          setNewTitle('');
+        }}
+      >
+        <input disabled={submitting} value={newTitle} onChange={e => setNewTitle(e.target.value)} />
+        <button disabled={submitting || newTitle === ''} type="submit">Add Todo</button>
+      </form>
+    </>
+  )
+}
+
+ReactDOM.render(
+  <BicycleProvider client={client}>
+    <App/>
+  </BicycleProvider>,
+  document.getElementById('app'),
+);
 ```

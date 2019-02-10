@@ -6,8 +6,8 @@
     "tagline": "A data fetching and synchronisation library for JavaScript",
     "docs": {
       "server-api": {
-        "title": "BicycleServer",
-        "sidebar_label": "Server API"
+        "title": "BicycleClient",
+        "sidebar_label": "Client API"
       },
       "getting-started-js": {
         "title": "Getting Started - JavaScript",
@@ -24,6 +24,10 @@
       "js-schema": {
         "title": "JavaScript Schema",
         "sidebar_label": "Schema"
+      },
+      "js-server": {
+        "title": "BicycleServer",
+        "sidebar_label": "Server"
       },
       "sessions-memory": {
         "title": "MemorySession",

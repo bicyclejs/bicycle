@@ -121,7 +121,7 @@ class Index extends React.Component {
             content:
               "Bicycle lets you query exactly what you need, and even combine multiple partial queries. Because you can specify what data you require along with the components that require that data, it's easy to avoid fetching data you don't need. Using TypeScript, you can further improve the refactoring experience, by ensuring you get immediate type errors if you remove a field that a component depended on.",
             image: `${baseUrl}img/docusaurus.svg`,
-            imageAlign: 'right',
+            imageAlign: 'left',
             title: 'Request What You Need',
           },
         ]}
