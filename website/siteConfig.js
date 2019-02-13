@@ -33,7 +33,7 @@ const users = [
 const siteConfig = {
   title: 'Bicycle', // Title for your website.
   tagline: 'A data fetching and synchronisation library for JavaScript',
-  url: 'https://www.bicyclejs.org/', // Your website URL
+  url: 'https://www.bicyclejs.org', // Your website URL
   baseUrl: '/', // Base URL for your project */
 
   // Used for publishing and more
