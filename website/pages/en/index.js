@@ -60,7 +60,7 @@ class HomeSplash extends React.Component {
 
     return (
       <SplashContainer>
-        <Logo img_src={`${baseUrl}img/docusaurus.svg`} />
+        <Logo img_src={`${baseUrl}img/tmp/color.png`} />
         <div className="inner">
           <ProjectTitle siteConfig={siteConfig} />
           <PromoSection>
@@ -120,7 +120,7 @@ class Index extends React.Component {
           {
             content:
               "Bicycle lets you query exactly what you need, and even combine multiple partial queries. Because you can specify what data you require along with the components that require that data, it's easy to avoid fetching data you don't need. Using TypeScript, you can further improve the refactoring experience, by ensuring you get immediate type errors if you remove a field that a component depended on.",
-            image: `${baseUrl}img/docusaurus.svg`,
+            image: `${baseUrl}img/tmp/color.png`,
             imageAlign: 'left',
             title: 'Request What You Need',
           },
@@ -134,7 +134,7 @@ class Index extends React.Component {
           {
             content:
               "Bicycle is not tied to any one database or storage system. In fact, you can use one Bicycle Schema to combine search results from elastic search, SQL queries from Postgres, images from Amazon S3, and anything else you can think of. Because of Bicycle's tree structure for querying data, you can do all this with only a single round trip from the client to the server, making Bicycle a great fit for mobile web apps.",
-            image: `${baseUrl}img/docusaurus.svg`,
+            image: `${baseUrl}img/tmp/color.png`,
             imageAlign: 'left',
             title: 'Bring Your Own Database',
           },
@@ -162,7 +162,7 @@ class Index extends React.Component {
           {
             content:
               'Bicycle only expose data you explicitly include in your schema, and validates all requests.',
-            image: `${baseUrl}img/docusaurus.svg`,
+            image: `${baseUrl}img/tmp/color.png`,
             imageAlign: 'top',
             title: 'Secure',
           },
@@ -176,7 +176,7 @@ class Index extends React.Component {
           {
             content:
               'Bicycle figures out what changed for you, making mutating data a breeze',
-            image: `${baseUrl}img/docusaurus.svg`,
+            image: `${baseUrl}img/tmp/color.png`,
             imageAlign: 'top',
             title: 'Easy To Use',
           },
