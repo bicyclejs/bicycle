@@ -32,13 +32,49 @@ const bicycle = new BicycleServer({
 
 ## options
 
- - `sessionStore` (default: MemoryStore) - lets you pass a custom session store (see sessions).
- - `disableDefaultLogging` (default: `false`) - silence error logging
- - `onError` (`({error: Error}) => void`) - called on errors
- - `onMutationStart` (`({mutation: {+method: string, +args: Object}}) => void`) - called before each mutation. The mutation will wait for any promise returned by this function.
- - `onMutationEnd` (`({mutation: {+method: string, +args: Object}, result: MutationResult}) => void`) - called after each mutation. The next mutation/query will wait for any promise returned by this function.
-  - `onQueryStart` (`({query: Object}) => void`) - called before each query
-  - `onQueryEnd` (`({query: Object, cacheResult: Object}) => void`) - called after each query
+<!-- tsdoc:start ./server#Options -->
+
+<table class="interface-table"><thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><pre><code>disableDefaultLogging</code></pre></td><td><pre><code class="lang-ts">boolean</code></pre></td><td><p>silence error logging</p><p><b>@default</b> false</p>
+</td></tr>
+<tr><td><pre><code>onError</code></pre></td><td><pre><code class="lang-ts">(e: {error: Error}) => any</code></pre></td><td><p>Event triggered when an error is thrown by a mutaiton or query resolver</p><p><b>@default</b> no-op</p>
+</td></tr>
+<tr><td><pre><code>onMutationEnd</code></pre></td><td><pre><code class="lang-ts">(
+  e: {
+    mutation: {
+      readonly method: string;
+      readonly args: Object;
+    };
+    result: MutationResult<any>;
+  },
+) => any</code></pre></td><td><p>Event triggered when a mutation ends</p><p><b>@default</b> no-op</p>
+</td></tr>
+<tr><td><pre><code>onMutationStart</code></pre></td><td><pre><code class="lang-ts">(
+  e: {
+    mutation: {
+      readonly method: string;
+      readonly args: Object;
+    };
+  },
+) => any</code></pre></td><td><p>Event triggered when a mutation starts</p><p><b>@default</b> no-op</p>
+</td></tr>
+<tr><td><pre><code>onQueryEnd</code></pre></td><td><pre><code class="lang-ts">(
+  e: {
+    query: Object;
+    cacheResult: Object;
+  },
+) => any</code></pre></td><td><p>Event triggered when a query ends</p><p><b>@default</b> no-op</p>
+</td></tr>
+<tr><td><pre><code>onQueryStart</code></pre></td><td><pre><code class="lang-ts">(e: {query: Object}) => any</code></pre></td><td><p>Event triggered when a query starts</p><p><b>@default</b> no-op</p>
+</td></tr>
+<tr><td><pre><code>sessionStore</code></pre></td><td><pre><code class="lang-ts">SessionStore</code></pre></td><td><p>a custom session store</p><p><b>@default</b> MemorySessionStore</p>
+</td></tr>
+<tr><td><pre><code>sessionStoreSize</code></pre></td><td><pre><code class="lang-ts">number</code></pre></td><td><p>The maximum number of active sessions.</p><p>You can also set via the <code>BICYCLE_SESSION_STORE_SIZE</code> environment variable.</p><p><b>@defualt</b> 100</p>
+</td></tr>
+</tbody></table>
+
+<!-- tsdoc:end -->
 
 ## `createMiddleware`
 

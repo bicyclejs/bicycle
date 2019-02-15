@@ -2,7 +2,15 @@ import BicycleServerCore, {Options} from './server-core';
 import loadSchema, {loadSchemaFromFiles} from './load-schema';
 
 export {Options};
-export default class BicycleServer<Context> extends BicycleServerCore<Context> {
+
+/**
+ * BicycleServer provides methods for exposing your
+ * schema over a network, and for directly querying
+ * your schema on the server.
+ *
+ * @public
+ */
+class BicycleServer<Context> extends BicycleServerCore<Context> {
   constructor(
     schema: {objects: any[]; scalars?: any[]} | string,
     options: Options = {},
@@ -15,3 +23,5 @@ export default class BicycleServer<Context> extends BicycleServerCore<Context> {
     );
   }
 }
+
+export default BicycleServer;

@@ -25,8 +25,11 @@
     "throat": "^3.0.0"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "7",
+    "@microsoft/tsdoc": "^0.12.5",
     "@types/get-port": "0.0.4",
     "@types/jest": "*",
+    "@types/rimraf": "^2.0.2",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.24.1",
     "babel-preset-react-app": "^3.0.1",
     "babel-register": "^6.24.1",
@@ -45,15 +48,16 @@
     "todomvc-app-css": "^2.0.3",
     "todomvc-common": "^1.0.2",
     "ts-jest": "*",
+    "ts-node": "^8.0.2",
     "typescript": "^3.3.1"
   },
   "scripts": {
     "precommit": "lint-staged",
     "prettier": "prettier --write \"src/**/*.{ts,tsx}\"",
     "prettier:check": "prettier --list-different \"src/**/*.{ts,tsx}\"",
-    "prebuild": "rimraf lib",
-    "build": "opaque-types && tsc",
-    "postbuild": "node lib/build",
+    "prebuild": "rimraf lib && opaque-types",
+    "build": "tsc",
+    "postbuild": "node lib/scripts/prepare-docs && rimraf lib/scripts && node lib/build",
     "pretest": "yarn build",
     "test": "jest ./src --coverage",
     "watch": "jest ./src --coverage --watch",

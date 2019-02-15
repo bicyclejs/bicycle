@@ -14,3 +14,13 @@
 
 @media only screen and (min-width: 1500px) {
 }
+
+.interface-table pre {
+  margin: 0;
+  padding: 0;
+}
+.interface-table pre code {
+  margin: 0;
+  padding: 0;
+  background: none;
+}

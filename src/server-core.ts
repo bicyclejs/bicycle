@@ -7,7 +7,7 @@ import {
 import handleMessageInternal from './handleMessage';
 import createBicycleMiddlewareInner from './middleware';
 import createServerRendererInner, {FakeClient} from './server-rendering';
-import MemoryStore from './sessions/MemorySessionStore';
+import MemorySessionStore from './sessions/MemorySessionStore';
 import SessionStore from './sessions/SessionStore';
 
 import BicycleRequest from './types/Request';
@@ -23,21 +23,70 @@ import {BaseRootQuery, Mutation} from './typed-helpers/query';
 import withContext, {Ctx} from './Ctx';
 import NetworkLayerInterface from './types/NetworkLayerInterface';
 
+/**
+ * Options for BicycleServer
+ *
+ * @public
+ */
 export interface Options {
+  /**
+   * silence error logging
+   *
+   * @default false
+   */
   readonly disableDefaultLogging?: boolean;
+  /**
+   * a custom session store
+   *
+   * @default MemorySessionStore
+   */
   readonly sessionStore?: SessionStore;
+  /**
+   * The maximum number of active sessions.
+   *
+   * You can also set via the `BICYCLE_SESSION_STORE_SIZE` environment
+   * variable.
+   *
+   * @defualt 100
+   */
   readonly sessionStoreSize?: number;
+  /**
+   * Event triggered when an error is thrown by
+   * a mutaiton or query resolver
+   *
+   * @default no-op
+   */
   readonly onError?: (e: {error: Error}) => any;
+  /**
+   * Event triggered when a mutation starts
+   *
+   * @default no-op
+   */
   readonly onMutationStart?: (
     e: {mutation: {readonly method: string; readonly args: Object}},
   ) => any;
+  /**
+   * Event triggered when a mutation ends
+   *
+   * @default no-op
+   */
   readonly onMutationEnd?: (
     e: {
       mutation: {readonly method: string; readonly args: Object};
       result: MutationResult<any>;
     },
   ) => any;
+  /**
+   * Event triggered when a query starts
+   *
+   * @default no-op
+   */
   readonly onQueryStart?: (e: {query: Object}) => any;
+  /**
+   * Event triggered when a query ends
+   *
+   * @default no-op
+   */
   readonly onQueryEnd?: (e: {query: Object; cacheResult: Object}) => any;
 }
 function noop() {
@@ -51,7 +100,7 @@ export default class BicycleServer<Context> {
   constructor(schema: Schema<Context>, options: Options = {}) {
     this._schema = schema;
     this._sessionStore =
-      options.sessionStore || new MemoryStore(options.sessionStoreSize);
+      options.sessionStore || new MemorySessionStore(options.sessionStoreSize);
     this._logging = {
       disableDefaultLogging: options.disableDefaultLogging || false,
       onError: options.onError || noop,
