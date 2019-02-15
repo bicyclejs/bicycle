@@ -2,7 +2,7 @@ import assert = require('assert');
 import getTypeName from '../utils/type-name-from-value';
 import normalizeFields from './normalize-fields';
 import normalizeMutations from './normalize-mutations';
-import * as TA from './TypeAssertions';
+import ta from './TypeAssertions';
 import SchemaKind from '../types/SchemaKind';
 import {NodeType} from '../types/Schema';
 
@@ -10,23 +10,19 @@ function normalizeObject(
   Type: unknown,
   typeNames: Array<string>,
 ): NodeType<any, any> {
-  const typeName = TA.String.validate(
-    TA.AnyObject.validate(Type, 'ObjectType').name,
+  const typeName = ta.String.validate(
+    ta.AnyObject.validate(Type, 'ObjectType').name,
     'ObjectType.name',
   );
-  const t = TA.ObjectKeys([
-    'name',
-    'id',
-    'description',
-    'fields',
-    'mutations',
-  ]).validate(Type, typeName);
+  const t = ta
+    .ObjectKeys(['name', 'id', 'description', 'fields', 'mutations'])
+    .validate(Type, typeName);
   assert(
     /^[A-Za-z]+$/.test(typeName),
     `Expected ObjectType.name to match [A-Za-z]+ but got '${typeName}'`,
   );
-  const id = TA.Void.or(TA.Fn).validate(t.id, typeName + '.id');
-  const description = TA.Void.or(TA.String).validate(
+  const id = ta.Void.or(ta.Fn).validate(t.id, typeName + '.id');
+  const description = ta.Void.or(ta.String).validate(
     t.description,
     typeName + '.description',
   );

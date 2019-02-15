@@ -1,7 +1,7 @@
 import getType from './get-type';
 import SchemaKind from '../types/SchemaKind';
 import {Mutation} from '../types/Schema';
-import * as ta from './TypeAssertions';
+import ta from './TypeAssertions';
 
 function normalizeMutation(
   mutation: unknown,

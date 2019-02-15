@@ -2,7 +2,7 @@ import assert = require('assert');
 import normalizeMutation from './normalize-mutation';
 import SchemaKind from '../types/SchemaKind';
 import {Field, Mutation} from '../types/Schema';
-import * as ta from './TypeAssertions';
+import ta from './TypeAssertions';
 import {validateArg} from '../runner/validate';
 
 function normalizeMutations(

@@ -2,15 +2,15 @@ import {readdirSync} from 'fs';
 import normalizeObject from './normalize-object';
 import normalizeScalar from './normalize-scalar';
 import Schema from '../types/Schema';
-import * as TA from './TypeAssertions';
+import ta from './TypeAssertions';
 
 export default function loadSchema(input: {
   objects: unknown[];
   scalars?: unknown[];
 }): Schema<any> {
-  const i = TA.ObjectKeys(['scalars', 'objects']).validate(input, 'input');
-  const objects = TA.ArrayOf(TA.AnyObject).validate(i.objects, 'input.objects');
-  const scalars = TA.Void.or(TA.ArrayOf(TA.AnyObject)).validate(
+  const i = ta.ObjectKeys(['scalars', 'objects']).validate(input, 'input');
+  const objects = ta.ArrayOf(ta.AnyObject).validate(i.objects, 'input.objects');
+  const scalars = ta.Void.or(ta.ArrayOf(ta.AnyObject)).validate(
     i.scalars,
     'input.objects',
   );
@@ -19,7 +19,7 @@ export default function loadSchema(input: {
 
   let rootObject: null | Record<string, unknown> = null;
   objects.forEach(Type => {
-    const typeName = TA.String.validate(Type.name, 'Type.name');
+    const typeName = ta.String.validate(Type.name, 'Type.name');
     if (typeName === 'Root') {
       if (rootObject !== null) {
         throw new Error(
@@ -39,7 +39,7 @@ export default function loadSchema(input: {
 
   if (scalars) {
     scalars.forEach(Scalar => {
-      const scalarName = TA.String.validate(Scalar.name, 'Scalar.name');
+      const scalarName = ta.String.validate(Scalar.name, 'Scalar.name');
       if (typeNames.indexOf(scalarName) !== -1) {
         throw new Error(
           `Duplicate Scalar, "${scalarName}".  Each object & scalar must have a unique name.`,
@@ -53,14 +53,14 @@ export default function loadSchema(input: {
   }
   if (scalars) {
     scalars.forEach(Scalar => {
-      const scalarName = TA.String.validate(Scalar.name, 'Scalar.name');
+      const scalarName = ta.String.validate(Scalar.name, 'Scalar.name');
       types[scalarName] = normalizeScalar(Scalar, typeNames);
     });
   }
 
   // objects have `id`s and a collection of `fields`
   objects.forEach(Type => {
-    const typeName = TA.String.validate(Type.name, 'Type.name');
+    const typeName = ta.String.validate(Type.name, 'Type.name');
     types[typeName] = normalizeObject(Type, typeNames);
   });
   if (!types.Root) {

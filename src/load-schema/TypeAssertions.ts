@@ -79,3 +79,5 @@ export const AnyObject = new Type<Record<string, unknown>>(
     return v && typeof v === 'object' && !Array.isArray(v);
   },
 );
+
+export default {Fn, String, Void, Literal, ArrayOf, ObjectKeys, AnyObject};

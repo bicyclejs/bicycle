@@ -1,7 +1,7 @@
 import getType from './get-type';
 import SchemaKind from '../types/SchemaKind';
 import {Field} from '../types/Schema';
-import * as ta from './TypeAssertions';
+import ta from './TypeAssertions';
 
 function normalizeField(
   field: unknown,
