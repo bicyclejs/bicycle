@@ -50,14 +50,14 @@ const siteConfig = {
   users,
 
   /* path to images for header/footer */
-  headerIcon: 'img/tmp/white.svg',
-  footerIcon: 'img/tmp/color.png',
-  favicon: 'img/tmp/color.png',
+  headerIcon: 'img/logo/logo-white.svg',
+  footerIcon: 'img/logo/logo-color.svg',
+  favicon: 'img/favicon.png',
 
   /* Colors for website */
   colors: {
-    primaryColor: 'rgb(83,61,233)',
-    secondaryColor: 'rgb(83,97,242)',
+    primaryColor: '#5A3AF4',
+    secondaryColor: '#6C4FF5',
   },
 
   /* Custom fonts for website */
@@ -91,8 +91,8 @@ const siteConfig = {
   cleanUrl: true,
 
   // Open Graph and Twitter card images.
-  ogImage: 'img/tmp/color.png',
-  twitterImage: 'img/tmp/color.png',
+  ogImage: 'img/logo/logo-word-color.svg',
+  twitterImage: 'img/logo/logo-word-color.svg',
 
   // Show documentation's last contributor's name.
   // enableUpdateBy: true,
