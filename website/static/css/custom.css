@@ -24,3 +24,16 @@
   padding: 0;
   background: none;
 }
+
+.gridBlock .twoByGridBlock img {
+  width: 100%;
+  max-width: 400px;
+}
+
+.gridBlock .threeByGridBlock img,
+.gridBlock .fourByGridBlock img {
+  max-width: 120px;
+  max-height: 120px;
+  width: 120px;
+  height: 120px;
+}
