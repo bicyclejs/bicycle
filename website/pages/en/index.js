@@ -143,17 +143,19 @@ class Index extends React.Component {
     );
 
     const StronglyTyped = ({id, background}) => (
-      <Block id={id} background={background}>
-        {[
-          {
-            content:
-              "Bicycle supports TypeScript all the way from defining your schema, to querying it on the client. When we say we support TypeScript, we don't just mean our API has a `.d.ts` definition file, we mean you can rely on TypeScript to know what type the data returned from query has, and what type the arguments to a mutation need to be.",
-            image: `${baseUrl}img/typescript.svg`,
-            imageAlign: 'right',
-            title: 'Strongly Typed',
-          },
-        ]}
-      </Block>
+      <div className="typescript-big-image">
+        <Block id={id} background={background}>
+          {[
+            {
+              content:
+                "Bicycle supports TypeScript all the way from defining your schema, to querying it on the client. When we say we support TypeScript, we don't just mean our API has a `.d.ts` definition file, we mean you can rely on TypeScript to know what type the data returned from query has, and what type the arguments to a mutation need to be.",
+              image: `${baseUrl}img/typescript.svg`,
+              imageAlign: 'right',
+              title: 'Strongly Typed',
+            },
+          ]}
+        </Block>
+      </div>
     );
 
     const Features = () => (
