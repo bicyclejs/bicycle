@@ -29,15 +29,12 @@ class HomeSplash extends React.Component {
       </div>
     );
 
-    const Logo = props => (
-      <div className="projectLogo">
-        <img src={props.img_src} alt="Project Logo" />
-      </div>
-    );
-
     const ProjectTitle = () => (
       <h2 className="projectTitle">
-        {siteConfig.title}
+        <img
+          src={`${baseUrl}img/logo/logo-word-color.svg`}
+          alt="Project Logo"
+        />
         <small>{siteConfig.tagline}</small>
       </h2>
     );
@@ -60,9 +57,9 @@ class HomeSplash extends React.Component {
 
     return (
       <SplashContainer>
-        <Logo img_src={`${baseUrl}img/logo/logo-color.svg`} />
+        {/* <Logo img_src={`${baseUrl}img/logo/logo-color.svg`} /> */}
         <div className="inner">
-          <ProjectTitle siteConfig={siteConfig} />
+          <ProjectTitle />
           <PromoSection>
             {/* <Button href="#try">Try It Out</Button> */}
             <Button href={docUrl('getting-started-js.html')}>
