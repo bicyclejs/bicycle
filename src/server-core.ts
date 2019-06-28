@@ -191,13 +191,11 @@ export default class BicycleServer<Context> {
     });
   }
 
-  async handleMessage(
+  handleMessage(
     message: BicycleRequest,
     getContext: (options: {stage: 'query' | 'mutation'}) => Ctx<Context>,
   ): Promise<ServerResponse> {
-    this._logging.onRequestStart({request: message});
-
-    const result = await handleMessageInternal(
+    return handleMessageInternal(
       this._schema,
       this._logging,
       this._sessionStore,
@@ -205,9 +203,6 @@ export default class BicycleServer<Context> {
       () => getContext({stage: 'query'}),
       () => getContext({stage: 'mutation'}),
     );
-
-    this._logging.onRequestEnd({request: message, response: result});
-    return result;
   }
 
   createMiddleware(

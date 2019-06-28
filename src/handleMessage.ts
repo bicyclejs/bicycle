@@ -26,6 +26,7 @@ export default async function handleMessage<Context>(
   context: () => Ctx<Context>,
   mutationContext?: () => Ctx<Context>,
 ) {
+  logging.onRequestStart({request: message});
   // New sessions have the complete query so we can immediately respond with
   // the data to initialise the application.
   // They do not yet have a sessionID as these are assigned on the server.
@@ -39,112 +40,122 @@ export default async function handleMessage<Context>(
         runQuery(query, {schema, logging, context: queryContext}),
       ),
     ]);
-    return sessionStore.tx<ServerResponse>(sessionID, async session => {
-      const version = SessionVersion.unsafeCast(cuid());
-      return {
-        session: {
-          versions: [
-            {
-              version,
-              query,
-              cache,
-            },
-          ],
-          mutations: {},
-        },
-        result: createNewSessionResponse(sessionID, version, cache),
-      };
-    });
+    return sessionStore
+      .tx<ServerResponse>(sessionID, async session => {
+        const version = SessionVersion.unsafeCast(cuid());
+        return {
+          session: {
+            versions: [
+              {
+                version,
+                query,
+                cache,
+              },
+            ],
+            mutations: {},
+          },
+          result: createNewSessionResponse(sessionID, version, cache),
+        };
+      })
+      .then(response => {
+        logging.onRequestEnd({request: message, response});
+        return response;
+      });
   }
 
   const sessionID = message.s;
-  return sessionStore.tx<ServerResponse>(sessionID, async session => {
-    // Once we have a session ID, we can run mutations, even if the
-    // session has expired, because we will be able to "restore" the
-    // session with those mutations already recorded.
-    // We assume that getting a request from the client means that all
-    // existing mutation results (not in this request) have been processed,
-    // so we discard the old cache of mutation results and replace it with
-    // the new one.
+  return sessionStore
+    .tx<ServerResponse>(sessionID, async session => {
+      // Once we have a session ID, we can run mutations, even if the
+      // session has expired, because we will be able to "restore" the
+      // session with those mutations already recorded.
+      // We assume that getting a request from the client means that all
+      // existing mutation results (not in this request) have been processed,
+      // so we discard the old cache of mutation results and replace it with
+      // the new one.
 
-    const mutations: {[key: string]: MutationResult<any>} = {};
-    const mutationResults: MutationResult<any>[] = [];
-    if (message.m && message.m.length) {
-      const m = message.m;
-      await withContext((mutationContext || context)(), async context => {
-        for (let i = 0; i < m.length; i++) {
-          const result =
-            (session && session.mutations[MutationID.extract(m[i].i)]) ||
-            (await runMutation(
-              {method: m[i].m, args: m[i].a},
-              {schema, logging, context},
-            ));
-          mutations[MutationID.extract(m[i].i)] = result;
-          mutationResults.push(result);
-        }
-      });
-    }
-    if (!session) {
-      return {
-        session: {
-          versions: [],
-          mutations,
-        },
-        result: createExpiredSessionResponse(mutationResults),
-      };
-    }
-    if (message.k === RequestKind.RESTORE_SESSION) {
+      const mutations: {[key: string]: MutationResult<any>} = {};
+      const mutationResults: MutationResult<any>[] = [];
+      if (message.m && message.m.length) {
+        const m = message.m;
+        await withContext((mutationContext || context)(), async context => {
+          for (let i = 0; i < m.length; i++) {
+            const result =
+              (session && session.mutations[MutationID.extract(m[i].i)]) ||
+              (await runMutation(
+                {method: m[i].m, args: m[i].a},
+                {schema, logging, context},
+              ));
+            mutations[MutationID.extract(m[i].i)] = result;
+            mutationResults.push(result);
+          }
+        });
+      }
+      if (!session) {
+        return {
+          session: {
+            versions: [],
+            mutations,
+          },
+          result: createExpiredSessionResponse(mutationResults),
+        };
+      }
+      if (message.k === RequestKind.RESTORE_SESSION) {
+        const cache = await withContext(context(), queryContext =>
+          runQuery(message.q, {schema, logging, context: queryContext}),
+        );
+        const version = SessionVersion.unsafeCast(cuid());
+        return {
+          session: {
+            versions: [
+              {
+                version,
+                query: message.q,
+                cache,
+              },
+            ],
+            mutations,
+          },
+          result: createRestoreResponse(version, cache, mutationResults),
+        };
+      }
+      const states = session.versions.filter(v => v.version === message.v);
+      if (!states.length) {
+        return {
+          session: {
+            versions: session.versions,
+            mutations,
+          },
+          result: createExpiredSessionResponse(mutationResults),
+        };
+      }
+      const state = states[0];
+
+      const query = message.q
+        ? mergeQueries(state.query, message.q)
+        : state.query;
       const cache = await withContext(context(), queryContext =>
-        runQuery(message.q, {schema, logging, context: queryContext}),
+        runQuery(query, {schema, logging, context: queryContext}),
       );
-      const version = SessionVersion.unsafeCast(cuid());
+
+      const versions = session.versions.filter(s => s.version >= message.v);
+
+      const cacheUpdate = diffCache(state.cache, cache);
+      let version = message.v;
+      if (cacheUpdate || message.q) {
+        version = SessionVersion.unsafeCast(cuid());
+        versions.push({version, query, cache});
+      }
       return {
         session: {
-          versions: [
-            {
-              version,
-              query: message.q,
-              cache,
-            },
-          ],
+          versions,
           mutations,
         },
-        result: createRestoreResponse(version, cache, mutationResults),
+        result: createUpdateResponse(version, cacheUpdate, mutationResults),
       };
-    }
-    const states = session.versions.filter(v => v.version === message.v);
-    if (!states.length) {
-      return {
-        session: {
-          versions: session.versions,
-          mutations,
-        },
-        result: createExpiredSessionResponse(mutationResults),
-      };
-    }
-    const state = states[0];
-
-    const query = message.q
-      ? mergeQueries(state.query, message.q)
-      : state.query;
-    const cache = await withContext(context(), queryContext =>
-      runQuery(query, {schema, logging, context: queryContext}),
-    );
-
-    const versions = session.versions.filter(s => s.version >= message.v);
-
-    const cacheUpdate = diffCache(state.cache, cache);
-    let version = message.v;
-    if (cacheUpdate || message.q) {
-      version = SessionVersion.unsafeCast(cuid());
-      versions.push({version, query, cache});
-    }
-    return {
-      session: {
-        versions,
-        mutations,
-      },
-      result: createUpdateResponse(version, cacheUpdate, mutationResults),
-    };
-  });
+    })
+    .then(response => {
+      logging.onRequestEnd({request: message, response});
+      return response;
+    });
 }
