@@ -69,7 +69,10 @@ const bicycle = new BicycleServer({
 <tr><td><pre><code>onQueryStart</code></pre></td><td><pre><code class="lang-ts">(e: {query: Object}) => any</code></pre></td><td><p>Event triggered when a query starts</p><p><b>@default</b> no-op</p>
 </td></tr>
 <tr><td><pre><code>onRequestEnd</code></pre></td><td><pre><code class="lang-ts">(
-  e: {readonly request: BicycleRequest},
+  e: {
+    readonly request: BicycleRequest;
+    readonly response: ServerResponse;
+  },
 ) => any</code></pre></td><td><p>Event triggered when a request ends</p><p><b>@default</b> no-op</p>
 </td></tr>
 <tr><td><pre><code>onRequestStart</code></pre></td><td><pre><code class="lang-ts">(

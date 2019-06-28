@@ -69,7 +69,9 @@ export interface Options {
    *
    * @default no-op
    */
-  readonly onRequestEnd?: (e: {readonly request: BicycleRequest}) => any;
+  readonly onRequestEnd?: (
+    e: {readonly request: BicycleRequest; readonly response: ServerResponse},
+  ) => any;
   /**
    * Event triggered when a mutation starts
    *
