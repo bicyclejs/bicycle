@@ -1,5 +1,9 @@
 # Changelog
 
+## v9.1.2: 2019-06-28
+
+ - Fix `onRequestStart` and `onRequestEnd` were not being triggered when request used default middleware
+
 ## v9.1.1: 2019-06-28
 
 - Add `onRequestStart` and `onRequestEnd` events to help with certain logging scenarios.
