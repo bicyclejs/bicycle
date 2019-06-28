@@ -6,6 +6,7 @@ import HashLRU from './HashLRU';
 const DEFAULT_SIZE = process.env.BICYCLE_SESSION_STORE_SIZE
   ? parseInt(process.env.BICYCLE_SESSION_STORE_SIZE, 10)
   : 100;
+
 class MemorySessionStore implements SessionStore {
   private readonly _cache: HashLRU<SessionID, Session>;
   private readonly _lock = new LockByID();
@@ -21,6 +22,12 @@ class MemorySessionStore implements SessionStore {
       this._cache.set(id, session);
       return result;
     });
+  }
+  getSessionCount() {
+    return this._cache.getSize();
+  }
+  getMaxSessionCount() {
+    return this._cache.getMaxSize() * 2;
   }
 }
 

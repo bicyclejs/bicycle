@@ -57,6 +57,21 @@ export interface Options {
    * @default no-op
    */
   readonly onError?: (e: {error: Error}) => any;
+
+  /**
+   * Event triggered when a request starts
+   *
+   * @default no-op
+   */
+  readonly onRequestStart?: (e: {readonly request: BicycleRequest}) => any;
+  /**
+   * Event triggered when a request ends
+   *
+   * @default no-op
+   */
+  readonly onRequestEnd?: (
+    e: {readonly request: BicycleRequest; readonly response: ServerResponse},
+  ) => any;
   /**
    * Event triggered when a mutation starts
    *
@@ -104,6 +119,8 @@ export default class BicycleServer<Context> {
     this._logging = {
       disableDefaultLogging: options.disableDefaultLogging || false,
       onError: options.onError || noop,
+      onRequestStart: options.onRequestStart || noop,
+      onRequestEnd: options.onRequestEnd || noop,
       onMutationStart: options.onMutationStart || noop,
       onMutationEnd: options.onMutationEnd || noop,
       onQueryStart: options.onQueryStart || noop,
@@ -174,11 +191,13 @@ export default class BicycleServer<Context> {
     });
   }
 
-  handleMessage(
+  async handleMessage(
     message: BicycleRequest,
     getContext: (options: {stage: 'query' | 'mutation'}) => Ctx<Context>,
   ): Promise<ServerResponse> {
-    return handleMessageInternal(
+    this._logging.onRequestStart({request: message});
+
+    const result = await handleMessageInternal(
       this._schema,
       this._logging,
       this._sessionStore,
@@ -186,6 +205,9 @@ export default class BicycleServer<Context> {
       () => getContext({stage: 'query'}),
       () => getContext({stage: 'mutation'}),
     );
+
+    this._logging.onRequestEnd({request: message, response: result});
+    return result;
   }
 
   createMiddleware(
@@ -317,5 +339,16 @@ export default class BicycleServer<Context> {
     getContext: (options: {stage: 'query' | 'mutation'}) => Ctx<Context>,
   ): NetworkLayerInterface {
     return {send: request => this.handleMessage(request, getContext)};
+  }
+
+  getActiveSessionCount(): number | null {
+    return this._sessionStore.getSessionCount
+      ? this._sessionStore.getSessionCount()
+      : null;
+  }
+  getMaxSessionCount(): number | null {
+    return this._sessionStore.getMaxSessionCount
+      ? this._sessionStore.getMaxSessionCount()
+      : null;
   }
 }

@@ -21,4 +21,6 @@ export default interface SessionStore {
     id: SessionID,
     fn: (session: Session | null) => Promise<{session: Session; result: T}>,
   ): Promise<T>;
+  getSessionCount?: () => number;
+  getMaxSessionCount?: () => number;
 }
