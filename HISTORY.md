@@ -1,5 +1,10 @@
 # Changelog
 
+## v9.1.1: 2019-06-28
+
+- Add `onRequestStart` and `onRequestEnd` events to help with certain logging scenarios.
+- Add `getActiveSessionCount` and `getMaxSessionCount` methods to allow inspecting how full the session store is.
+
 ## v9.0.0: 2019-02-06
 
 - BREAKING CHANGE: makes use of the new `unknown` type in TypeScript. If you're using TypeScript, you must be on at least version 3 to use this version of Bicycle.
