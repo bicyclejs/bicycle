@@ -68,6 +68,14 @@ const bicycle = new BicycleServer({
 </td></tr>
 <tr><td><pre><code>onQueryStart</code></pre></td><td><pre><code class="lang-ts">(e: {query: Object}) => any</code></pre></td><td><p>Event triggered when a query starts</p><p><b>@default</b> no-op</p>
 </td></tr>
+<tr><td><pre><code>onRequestEnd</code></pre></td><td><pre><code class="lang-ts">(
+  e: {readonly request: BicycleRequest},
+) => any</code></pre></td><td><p>Event triggered when a request ends</p><p><b>@default</b> no-op</p>
+</td></tr>
+<tr><td><pre><code>onRequestStart</code></pre></td><td><pre><code class="lang-ts">(
+  e: {readonly request: BicycleRequest},
+) => any</code></pre></td><td><p>Event triggered when a request starts</p><p><b>@default</b> no-op</p>
+</td></tr>
 <tr><td><pre><code>sessionStore</code></pre></td><td><pre><code class="lang-ts">SessionStore</code></pre></td><td><p>a custom session store</p><p><b>@default</b> MemorySessionStore</p>
 </td></tr>
 <tr><td><pre><code>sessionStoreSize</code></pre></td><td><pre><code class="lang-ts">number</code></pre></td><td><p>The maximum number of active sessions.</p><p>You can also set via the <code>BICYCLE_SESSION_STORE_SIZE</code> environment variable.</p><p><b>@defualt</b> 100</p>
@@ -171,3 +179,20 @@ class MockNetworkLayer {
   }
 }
 ```
+
+## `getActiveSessionCount`
+
+Returns the number of active sessions in the session store, if the session store supports this method:
+
+```js
+const activeSessionCount = bicycle.getActiveSessionCount();
+```
+
+## `getMaxSessionCount`
+
+Return the maximum number of active sessions in the session store, if the session store supports this method. Note that the default Memory session store discards half of the sessions when this maximum is reached, rather than discarding essions one at a time.
+
+```js
+const usage = `${(bicycle.getActiveSessionCount() / bicycle.getMaxSessionCount()) * 100}%`;
+```
+
